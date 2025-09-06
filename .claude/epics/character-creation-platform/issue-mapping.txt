@@ -1,0 +1,4 @@
+.claude/epics/character-creation-platform/001.md:6
+.claude/epics/character-creation-platform/002.md:7
+.claude/epics/character-creation-platform/003.md:8
+.claude/epics/character-creation-platform/004.md:9

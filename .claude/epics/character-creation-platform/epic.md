@@ -4,7 +4,7 @@ status: backlog
 created: 2025-09-06T07:56:56Z
 progress: 0%
 prd: .claude/prds/character-creation-platform.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/aipjn/character-creation-platform/issues/1
 ---
 
 # Epic: Character Creation Platform
@@ -158,16 +158,15 @@ High-level task categories that will be created:
 **Risk Buffer**: 20% additional time allocated for nanoBanana API integration challenges and performance optimization.
 
 ## Tasks Created
-- [ ] 001.md - Project Setup and Infrastructure (parallel: true)
-- [ ] 002.md - Authentication System with Auth0 (parallel: true, conflicts with 003)
-- [ ] 003.md - Backend API Foundation (parallel: false, depends on 001)
-- [ ] 004.md - nanoBanana API Integration (parallel: false, depends on 003)
-- [ ] 005.md - Payment System with Stripe (parallel: true)
-- [ ] 006.md - File Management and Storage (parallel: true)
-- [ ] 007.md - Character Generation Interface (parallel: true)
-- [ ] 008.md - Character Gallery and Management (parallel: true)
+- [ ] #2 - Payment System with Stripe (parallel: true)
+- [ ] #3 - File Management and Storage (parallel: true)
+- [ ] #4 - Character Generation Interface (parallel: true)
+- [ ] #5 - Character Gallery and Management (parallel: true)
+- [ ] #6 - Project Setup and Infrastructure (parallel: true)
+- [ ] #7 - Authentication System with Auth0 (parallel: true)
+- [ ] #8 - Backend API Foundation (parallel: false)
+- [ ] #9 - nanoBanana API Integration (parallel: false)
 
-Total tasks: 8
-Parallel tasks: 6
+Total tasks:        8
+Parallel tasks:        6
 Sequential tasks: 2
-Estimated total effort: 122 hours (15+ weeks)
