@@ -1,0 +1,19 @@
+{
+  "id": "1757228439474_0",
+  "name": "Generated Character 1",
+  "prompt": "a cute puppy",
+  "styleType": "REALISTIC",
+  "s3Url": "/uploads/characters/1757228439474_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757228439474_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T07:00:39.477Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757228439474",
+    "error": "Received text response instead of image data. Check model configuration.",
+    "errorType": "Error"
+  },
+  "completedAt": "2025-09-07T07:00:47.615Z"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "1757229465985_0",
+  "name": "Generated Character 1",
+  "prompt": "a beautiful dragon",
+  "styleType": "FANTASY",
+  "s3Url": "/uploads/characters/1757229465985_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757229465985_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "COMPLETED",
+  "createdAt": "2025-09-07T07:17:45.990Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "gemini-2.5-flash-image-preview (nanoBanana)",
+    "jobId": "1757229465985",
+    "imageGenerated": true,
+    "thumbnailGenerated": true
+  },
+  "completedAt": "2025-09-07T07:17:55.507Z"
+}

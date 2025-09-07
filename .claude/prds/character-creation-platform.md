@@ -3,6 +3,7 @@ name: character-creation-platform
 description: AI-powered character generation platform for video and advertising professionals using Google's nanoBanana model
 status: backlog
 created: 2025-09-06T07:52:36Z
+updated: 2025-09-07T08:29:21Z
 ---
 
 # PRD: Character Creation Platform
@@ -33,7 +34,7 @@ Video creators and advertising professionals need quick, high-quality character 
 - Budget-conscious but willing to pay for professional results
 
 **2. Advertising Creative (Primary)**  
-- Works at agencies or in-house marketing teams
+- Creates marketing content and advertisements
 - Needs characters that match specific brand guidelines
 - Requires multiple variations of characters for A/B testing
 - Has higher budget but strict timeline requirements
@@ -46,21 +47,50 @@ Video creators and advertising professionals need quick, high-quality character 
 
 ### User Journeys
 
-**Journey 1: Quick Character Generation**
-1. User logs into platform
-2. Selects "Create New Character" 
-3. Provides text description or uploads reference photo
-4. Selects character style (cartoon/realistic)
-5. Clicks "Generate" and receives 4 character variations
-6. Downloads preferred character for immediate use
+**Journey 1: Quick Character Generation (New User)**
+1. **Landing Page**: User visits homepage, sees hero with example generations
+   - *UI*: Clean hero section with "Try Free" CTA button, scrolling gallery of examples
+2. **Sign Up Flow**: User clicks "Get Started" → simple email/password form
+   - *UI*: Modal overlay with social login options, progress indicator (step 1 of 2)
+3. **Dashboard First Visit**: Welcomes user with "Create Your First Character" empty state
+   - *UI*: Illustrated empty state, large "Create Character" button, usage counter shows "3 free credits"
+4. **Character Creation**: User clicks create → taken to generation workspace
+   - *UI*: Split screen: input panel (left 40%) + preview area (right 60%, initially empty)
+5. **Input Method Selection**: User chooses text prompt or photo upload
+   - *UI*: Tab interface with "Text Description" and "Upload Photo" options
+6. **Text Prompt Entry**: User types "professional woman in business suit"
+   - *UI*: Large textarea with character counter, suggested prompts below, style toggle (Cartoon/Realistic)
+7. **Generation Process**: User clicks "Generate Character" button
+   - *UI*: Button animates to loading state, progress bar appears, preview area shows skeleton placeholders
+8. **Results Display**: After 20-30 seconds, 4 character variations appear in 2x2 grid
+   - *UI*: Each result shows in card with hover effects, "Use This" button overlay on hover
+9. **Character Selection**: User hovers over preferred variation, clicks "Use This"
+   - *UI*: Selected character enlarges to full preview area, others fade to thumbnails at bottom
+10. **Download Action**: User clicks "Download" button
+    - *UI*: Dropdown with format options (PNG/JPG), resolution choices, then download begins
 
-**Journey 2: Advanced Character Styling**
-1. User generates base character (Journey 1)
-2. Selects character for further customization
-3. Uses styling tools to modify pose, action, or scene
-4. Previews changes in real-time
-5. Generates final styled character
-6. Downloads high-resolution output
+**Journey 2: Advanced Character Styling (Returning User)**
+1. **Dashboard Return**: User logs in, sees recent characters in grid layout
+   - *UI*: Grid cards show character thumbnails, creation date, quick action buttons
+2. **Character Selection**: User clicks on existing character or creates new one
+   - *UI*: Character opens in full-screen detail view with styling controls
+3. **Styling Interface Access**: User clicks "Customize" button on character
+   - *UI*: Right sidebar slides out with tabbed styling controls (Pose/Expression/Scene/Style)
+4. **Pose Modification**: User selects "Pose" tab, chooses "Action Pose" category
+   - *UI*: Grid of preset pose thumbnails, selected pose highlights with accent color
+5. **Real-time Preview**: As user hovers over poses, main character preview updates instantly
+   - *UI*: Smooth transition animations between pose changes, loading spinner for processing
+6. **Expression Change**: User switches to "Expression" tab, adjusts "Confidence" slider
+   - *UI*: Horizontal slider with emoji indicators, live preview updates as user drags
+7. **Scene Background**: User selects "Scene" tab, chooses "Modern Office" background
+   - *UI*: Background thumbnails in grid, selected background blends behind character smoothly  
+8. **Final Generation**: User satisfied with styling, clicks "Generate Styled Character"
+   - *UI*: All styling controls lock, progress indicator shows processing, estimated time display
+9. **Results & Save**: New styled character appears, user clicks "Save to Gallery"
+   - *UI*: Success animation, character added to user's gallery with auto-generated name
+10. **Batch Download**: User goes to Gallery, selects multiple characters, downloads as ZIP
+    - *UI*: Checkbox selection mode, bulk actions bar appears, download progress modal
+
 
 ### Pain Points Being Addressed
 - Time-consuming manual character design
@@ -80,12 +110,64 @@ Video creators and advertising professionals need quick, high-quality character 
 - Batch generation of up to 4 character variations per request
 - Character consistency across multiple generations
 
-**User Interface**
-- Clean, intuitive web interface optimized for creative professionals
-- Two-step workflow: Base Generation → Character Styling
-- Real-time preview of character modifications
-- Drag-and-drop photo upload functionality
-- Text input with suggested prompts and style guides
+**User Interface & Frontend Design**
+
+*Layout & Navigation*
+- **Header**: Minimalist top navigation with logo, user avatar, and credit counter
+- **Main Canvas**: Large central workspace (70% viewport) for character display
+- **Control Panel**: Right sidebar (30% viewport) with generation controls
+- **Footer**: Simple links and status indicators
+- **Mobile-responsive**: Stacked layout for tablets, simplified for phones
+
+*Visual Design System*
+- **Color Palette**: Modern neutral base (grays/whites) with vibrant accent colors
+  - Primary: Deep blue (#2563EB) for CTAs and active states  
+  - Secondary: Purple gradient (#8B5CF6 to #EC4899) for AI features
+  - Success: Emerald green (#10B981) for completion states
+  - Background: Clean white (#FFFFFF) with subtle gray sections (#F8FAFC)
+- **Typography**: Clean sans-serif stack (Inter/Roboto) with clear hierarchy
+  - Headers: Bold, generous spacing
+  - Body: 16px base, 1.5 line height for readability
+  - UI Labels: Medium weight, 14px for form elements
+- **Spacing**: 8px grid system for consistent alignment
+- **Shadows**: Subtle elevation with modern drop shadows
+
+*Component Design*
+- **Cards**: Rounded corners (12px), subtle shadows, hover animations
+- **Buttons**: 
+  - Primary: Gradient backgrounds with smooth hover transitions
+  - Secondary: Outlined style with fill animation on hover
+  - Icon buttons: Circular with subtle background on hover
+- **Form Elements**:
+  - Text inputs: Clean borders, focus states with accent colors
+  - File upload: Large drag-drop zone with animated feedback
+  - Select dropdowns: Custom styled with smooth animations
+- **Loading States**: Skeleton screens and progress indicators with smooth animations
+
+*Interactive Elements*
+- **Character Generation**:
+  - Large "Generate Character" button with loading animation
+  - Progress bar showing generation stages
+  - Result grid: 2x2 layout for 4 variations with hover previews
+- **Character Preview**:
+  - Full-size character display with zoom capabilities
+  - Thumbnail navigation at bottom
+  - "Use This Character" action button overlay
+- **Styling Controls**:
+  - Tabbed interface: Pose, Expression, Scene, Style
+  - Slider controls for adjustments with real-time preview
+  - Preset buttons for common modifications
+- **Gallery Management**:
+  - Grid view with filter/sort options
+  - Bulk selection with checkbox overlays
+  - Quick actions menu on right-click
+
+*User Experience Flow*
+- **Onboarding**: 3-step guided tour with interactive hotspots
+- **Empty States**: Illustrated placeholders with clear action prompts
+- **Error Handling**: Friendly error messages with suggested solutions
+- **Success Feedback**: Celebratory micro-animations for completed generations
+- **Accessibility**: WCAG 2.1 AA compliance with keyboard navigation and screen reader support
 
 **Character Styling System**
 - Pose modification (standing, sitting, action poses)
@@ -107,6 +189,67 @@ Video creators and advertising professionals need quick, high-quality character 
 - Search functionality across user's generated characters
 - Bulk download capabilities
 - Character sharing via secure links
+
+### Frontend Architecture Requirements
+
+**Technology Stack**
+- **Framework**: React 18+ with TypeScript for type safety and maintainability
+- **Styling**: Tailwind CSS with custom design tokens for consistent theming
+- **State Management**: Zustand for lightweight, reactive state management
+- **HTTP Client**: Axios with interceptors for API error handling and authentication
+- **Animation**: Framer Motion for smooth transitions and micro-interactions
+- **Image Handling**: Next.js Image component with optimization and lazy loading
+- **Form Management**: React Hook Form with Zod validation schemas
+
+**Page Structure & Routing**
+- **Landing Page** (`/`): Hero section, feature overview, pricing, CTA to sign up
+- **Dashboard** (`/dashboard`): User's main workspace with recent characters and quick actions
+- **Character Generator** (`/create`): Two-step generation flow (input → results → styling)
+- **Character Gallery** (`/gallery`): Grid view of user's saved characters with management tools
+- **Account Settings** (`/settings`): Profile, billing, usage limits, preferences
+- **Character Detail** (`/character/:id`): Full-screen character view with styling controls
+
+**Component Architecture**
+- **Layout Components**: Header, Footer with responsive behavior
+- **UI Components**: Button, Input, Card, Modal, Toast notifications (reusable design system)
+- **Feature Components**: CharacterGenerator, CharacterPreview, StyleEditor, GalleryGrid
+- **Data Components**: API hooks, loading states, error boundaries
+- **Form Components**: TextPromptInput, ImageUploader, StyleSelector, PresetButtons
+
+**State Management Structure**
+```typescript
+// Global State
+interface AppState {
+  user: UserProfile | null
+  credits: number
+  currentCharacter: Character | null
+  generationHistory: Character[]
+  uiState: {
+    isGenerating: boolean
+    activeModal: string | null
+    notifications: Notification[]
+  }
+}
+```
+
+**Responsive Design Breakpoints**
+- **Desktop**: 1200px+ (full sidebar, 4-column character grid)
+- **Tablet**: 768px-1199px (collapsible sidebar, 2-column grid)  
+- **Mobile**: <768px (bottom navigation, single column, simplified UI)
+
+**Performance Optimizations**
+- **Code Splitting**: Route-based splitting with React.lazy()
+- **Image Optimization**: WebP/AVIF formats, responsive images, progressive loading
+- **Caching Strategy**: React Query for server state, IndexedDB for offline character storage
+- **Bundle Optimization**: Tree shaking, dynamic imports for heavy dependencies
+- **Loading States**: Skeleton screens during data fetching, progressive enhancement
+
+**Accessibility Standards**
+- **ARIA Labels**: Comprehensive labeling for screen readers
+- **Keyboard Navigation**: Full tab order, escape key handling, focus management
+- **Color Contrast**: WCAG AA compliance (4.5:1 ratio minimum)
+- **Font Scaling**: Support up to 200% zoom without horizontal scrolling
+- **Screen Reader**: Semantic HTML, live regions for dynamic content updates
 
 ### Non-Functional Requirements
 
@@ -186,7 +329,7 @@ Video creators and advertising professionals need quick, high-quality character 
 - Social features (sharing, commenting, community)
 - Mobile app development (web-only initially)
 - Integration with video editing software
-- Real-time collaboration features
+- Advanced sharing features
 - Custom AI model development beyond nanoBanana
 
 **Future Considerations**
@@ -194,7 +337,7 @@ Video creators and advertising professionals need quick, high-quality character 
 - API integrations with popular creative tools
 - White-label solutions for agencies
 - Advanced prompt engineering features
-- Team collaboration and workspace features
+- Advanced export and batch processing features
 
 ## Dependencies
 
@@ -205,8 +348,8 @@ Video creators and advertising professionals need quick, high-quality character 
 - **CDN Service**: CloudFlare or AWS CloudFront for global image delivery
 - **Authentication Service**: Auth0 or similar for user management
 
-### Internal Team Dependencies
-- **Frontend Development**: React/Vue.js web application development
+### Development Dependencies
+- **Frontend Development**: React/TypeScript web application development
 - **Backend Development**: API development and Google nanoBanana integration
 - **UI/UX Design**: User interface and experience design for creative workflows
 - **DevOps**: Infrastructure setup, deployment, and monitoring

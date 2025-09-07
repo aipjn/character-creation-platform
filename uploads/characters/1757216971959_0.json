@@ -1,0 +1,19 @@
+{
+  "id": "1757216971959_0",
+  "name": "Generated Character 1",
+  "prompt": "a magical fairy with butterfly wings",
+  "styleType": "FANTASY",
+  "s3Url": "/uploads/characters/1757216971959_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757216971959_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T03:49:31.961Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757216971959",
+    "error": "exception TypeError: fetch failed sending request",
+    "errorType": "Error"
+  },
+  "completedAt": "2025-09-07T03:49:42.009Z"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "1757231145179_0",
+  "name": "Generated Character 1",
+  "prompt": "test",
+  "styleType": "REALISTIC",
+  "s3Url": "/uploads/characters/1757231145179_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757231145179_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "COMPLETED",
+  "createdAt": "2025-09-07T07:45:45.181Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "gemini-2.5-flash-image-preview (nanoBanana)",
+    "jobId": "1757231145179",
+    "imageGenerated": true,
+    "thumbnailGenerated": true
+  },
+  "completedAt": "2025-09-07T07:45:52.695Z"
+}

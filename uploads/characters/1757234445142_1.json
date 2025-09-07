@@ -1,0 +1,17 @@
+{
+  "id": "1757234445142_1",
+  "name": "Generated Character 2",
+  "prompt": "A professional businesswoman in a modern office",
+  "styleType": "REALISTIC",
+  "s3Url": "/uploads/characters/1757234445142_1.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757234445142_1_thumb.png",
+  "isPublic": true,
+  "generationStatus": "COMPLETED",
+  "createdAt": "2025-09-07T08:40:45.143Z",
+  "metadata": {
+    "generatedBy": "nanoBanana",
+    "model": "imagen-2",
+    "apiKey": "not configured"
+  },
+  "completedAt": "2025-09-07T08:40:50.147Z"
+}

@@ -1,0 +1,19 @@
+{
+  "id": "1757216628602_0",
+  "name": "Generated Character 1",
+  "prompt": "a simple red apple",
+  "styleType": "REALISTIC",
+  "s3Url": "/uploads/characters/1757216628602_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757216628602_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T03:43:48.608Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757216628602",
+    "error": "fetch failed",
+    "errorType": "TypeError"
+  },
+  "completedAt": "2025-09-07T03:43:58.656Z"
+}

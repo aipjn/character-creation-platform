@@ -1,0 +1,19 @@
+{
+  "id": "1757228357461_0",
+  "name": "Generated Character 1",
+  "prompt": "a red sports car",
+  "styleType": "REALISTIC",
+  "s3Url": "/uploads/characters/1757228357461_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757228357461_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T06:59:17.464Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757228357461",
+    "error": "nanoBanana API error: 400 - {\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Invalid JSON payload received. Unknown name \\\"outputMimeType\\\" at 'generation_config': Cannot find field.\",\n    \"status\": \"INVALID_ARGUMENT\",\n    \"details\": [\n      {\n        \"@type\": \"type.googleapis.com/google.rpc.BadRequest\",\n        \"fieldViolations\": [\n          {\n            \"field\": \"generation_config\",\n            \"description\": \"Invalid JSON payload received. Unknown name \\\"outputMimeType\\\" at 'generation_config': Cannot find field.\"\n          }\n        ]\n      }\n    ]\n  }\n}\n",
+    "errorType": "Error"
+  },
+  "completedAt": "2025-09-07T06:59:18.108Z"
+}

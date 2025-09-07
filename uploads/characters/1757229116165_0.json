@@ -1,0 +1,19 @@
+{
+  "id": "1757229116165_0",
+  "name": "Generated Character 1",
+  "prompt": "a simple cartoon cat",
+  "styleType": "CARTOON",
+  "s3Url": "/uploads/characters/1757229116165_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757229116165_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T07:11:56.168Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757229116165",
+    "error": "Received text response instead of image data. Check model configuration.",
+    "errorType": "Error"
+  },
+  "completedAt": "2025-09-07T07:12:06.347Z"
+}

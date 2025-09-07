@@ -1,0 +1,17 @@
+{
+  "id": "1757214370427_1",
+  "name": "Generated Character 2",
+  "prompt": "a fantasy warrior with magical armor",
+  "styleType": "FANTASY",
+  "s3Url": "/uploads/characters/1757214370427_1.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757214370427_1_thumb.png",
+  "isPublic": true,
+  "generationStatus": "COMPLETED",
+  "createdAt": "2025-09-07T03:06:10.428Z",
+  "metadata": {
+    "generatedBy": "nanoBanana",
+    "model": "imagen-2",
+    "apiKey": "not configured"
+  },
+  "completedAt": "2025-09-07T03:06:15.435Z"
+}

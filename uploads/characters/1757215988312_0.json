@@ -1,0 +1,19 @@
+{
+  "id": "1757215988312_0",
+  "name": "Generated Character 1",
+  "prompt": "一个魔法师角色",
+  "styleType": "ANIME",
+  "s3Url": "/uploads/characters/1757215988312_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757215988312_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T03:33:08.314Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757215988312",
+    "error": "fetch failed",
+    "errorType": "TypeError"
+  },
+  "completedAt": "2025-09-07T03:33:18.373Z"
+}

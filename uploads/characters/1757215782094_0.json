@@ -1,0 +1,19 @@
+{
+  "id": "1757215782094_0",
+  "name": "Generated Character 1",
+  "prompt": "一个穿着蓝色盔甲的幻想战士",
+  "styleType": "FANTASY",
+  "s3Url": "/uploads/characters/1757215782094_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757215782094_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "FAILED",
+  "createdAt": "2025-09-07T03:29:42.095Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "imagen-3.0-generate-001",
+    "jobId": "1757215782094",
+    "error": "fetch failed",
+    "errorType": "TypeError"
+  },
+  "completedAt": "2025-09-07T03:29:52.149Z"
+}

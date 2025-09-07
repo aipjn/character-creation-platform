@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  auth0Id       String?  @unique @map("auth0_id")
+  name          String?
+  avatar        String?
+  subscriptionTier SubscriptionTier @default(FREE) @map("subscription_tier")
+  dailyQuota    Int      @default(3) @map("daily_quota")
+  dailyUsed     Int      @default(0) @map("daily_used")
+  totalGenerated Int     @default(0) @map("total_generated")
+  lastResetDate DateTime @default(now()) @map("last_reset_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  characters    Character[]
+  generations   Generation[]
+
+  @@map("users")
+}
+
+model Character {
+  id          String        @id @default(cuid())
+  userId      String        @map("user_id")
+  name        String?
+  prompt      String
+  styleType   StyleType     @default(REALISTIC) @map("style_type")
+  s3Url       String?       @map("s3_url")
+  thumbnailUrl String?      @map("thumbnail_url")
+  metadata    Json?
+  tags        String[]
+  isPublic    Boolean       @default(false) @map("is_public")
+  generationStatus GenerationStatus @default(PENDING) @map("generation_status")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generations Generation[]
+
+  @@map("characters")
+}
+
+model Generation {
+  id            String           @id @default(cuid())
+  userId        String           @map("user_id")
+  characterId   String?          @map("character_id")
+  status        GenerationStatus @default(PENDING)
+  batchSize     Int              @default(1) @map("batch_size")
+  nanoBananaRequestId String?    @map("nano_banana_request_id")
+  prompt        String
+  styleType     StyleType        @default(REALISTIC) @map("style_type")
+  errorMessage  String?          @map("error_message")
+  completedAt   DateTime?        @map("completed_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character     Character?       @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  @@map("generations")
+}
+
+model CharacterTemplate {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  prompt      String
+  styleType   StyleType @default(REALISTIC) @map("style_type")
+  tags        String[]
+  isActive    Boolean   @default(true) @map("is_active")
+  usageCount  Int       @default(0) @map("usage_count")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("character_templates")
+}
+
+// Enums
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+  PRO
+}
+
+enum StyleType {
+  REALISTIC
+  CARTOON
+  ANIME
+  FANTASY
+  CYBERPUNK
+  VINTAGE
+  MINIMALIST
+}
+
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}

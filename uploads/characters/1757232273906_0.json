@@ -1,0 +1,19 @@
+{
+  "id": "1757232273906_0",
+  "name": "Generated Character 1",
+  "prompt": "战士",
+  "styleType": "REALISTIC",
+  "s3Url": "/uploads/characters/1757232273906_0.png",
+  "thumbnailUrl": "/uploads/thumbnails/1757232273906_0_thumb.png",
+  "isPublic": true,
+  "generationStatus": "COMPLETED",
+  "createdAt": "2025-09-07T08:04:33.907Z",
+  "metadata": {
+    "generatedBy": "nanoBanana-API",
+    "model": "gemini-2.5-flash-image-preview (nanoBanana)",
+    "jobId": "1757232273906",
+    "imageGenerated": true,
+    "thumbnailGenerated": true
+  },
+  "completedAt": "2025-09-07T08:04:43.040Z"
+}
