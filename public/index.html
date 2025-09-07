@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Creation Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563EB;
+            --primary-gradient: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            --success: #10B981;
+            --background: #FFFFFF;
+            --gray-light: #F8FAFC;
+            --gray-border: #E1E5E9;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--gray-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: var(--background);
+            border-bottom: 1px solid var(--gray-border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .credits {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .canvas-area {
+            background: var(--background);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            min-height: 600px;
+        }
+
+        .control-panel {
+            background: var(--background);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+
+        /* Forms */
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: var(--background);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--text-primary);
+            border: 2px solid var(--gray-border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Character Display */
+        .character-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            background: var(--gray-light);
+            border-radius: 0.75rem;
+            border: 2px dashed var(--gray-border);
+        }
+
+        .character-preview.has-results {
+            background: var(--background);
+            border: 1px solid var(--gray-border);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .character-result {
+            position: relative;
+            background: var(--gray-light);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .character-result:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .character-result img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .character-result .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(37, 99, 235, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .character-result:hover .overlay {
+            opacity: 1;
+        }
+
+        /* Gallery */
+        .gallery-section {
+            grid-column: 1 / -1;
+            margin-top: 2rem;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .gallery-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .character-card {
+            background: var(--background);
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+        }
+
+        .character-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .character-card .image-container {
+            aspect-ratio: 1;
+            background: var(--gray-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .character-card .content {
+            padding: 1rem;
+        }
+
+        .character-card .title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .character-card .prompt {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .character-card .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .status-processing {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-completed {
+            background: #D1FAE5;
+            color: #047857;
+        }
+
+        .status-pending {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--gray-border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                padding: 0 1rem;
+                gap: 1rem;
+            }
+            
+            .header-content {
+                padding: 0 1rem;
+            }
+            
+            .canvas-area, .control-panel {
+                padding: 1rem;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">CharacterAI</div>
+            <div class="user-info">
+                <span>Welcome back</span>
+                <div class="credits">3 credits</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <div id="character-preview" class="character-preview">
+                <div class="empty-state">
+                    <h3>Create Your First Character</h3>
+                    <p>Use the controls on the right to generate AI-powered characters</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <form id="generate-form">
+                <div class="form-section">
+                    <h3>Character Input</h3>
+                    
+                    <div class="form-group">
+                        <label for="prompt">Character Description</label>
+                        <textarea 
+                            id="prompt" 
+                            placeholder="A professional businesswoman in a modern office setting"
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="style-type">Art Style</label>
+                        <select id="style-type">
+                            <option value="REALISTIC">Realistic</option>
+                            <option value="CARTOON">Cartoon</option>
+                            <option value="ANIME">Anime</option>
+                            <option value="FANTASY">Fantasy</option>
+                            <option value="CYBERPUNK">Cyberpunk</option>
+                            <option value="VINTAGE">Vintage</option>
+                            <option value="MINIMALIST">Minimalist</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="batch-size">Number of Variations</label>
+                        <select id="batch-size">
+                            <option value="1">1 Character</option>
+                            <option value="2">2 Characters</option>
+                            <option value="3">3 Characters</option>
+                            <option value="4">4 Characters</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="generate-btn">
+                        Generate Character
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gallery Section -->
+    <div class="main-layout gallery-section">
+        <div class="canvas-area">
+            <div class="gallery-header">
+                <h2>Character Gallery</h2>
+                <button class="btn btn-secondary" onclick="loadCharacters()">
+                    Refresh
+                </button>
+            </div>
+            <div id="gallery" class="gallery-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading your characters...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        
+        // Load characters on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCharacters();
+        });
+
+        // Form submission
+        document.getElementById('generate-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prompt = document.getElementById('prompt').value;
+            const styleType = document.getElementById('style-type').value;
+            const batchSize = parseInt(document.getElementById('batch-size').value);
+            
+            const generateBtn = document.getElementById('generate-btn');
+            const previewArea = document.getElementById('character-preview');
+            
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            
+            // Show loading state
+            previewArea.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Generating your character...</p>
+                    <small>This may take up to 30 seconds</small>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/characters/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt, styleType, batchSize })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(`Generation started! ${result.data.message}`, 'success');
+                    
+                    // Refresh gallery after a delay
+                    setTimeout(() => {
+                        loadCharacters();
+                    }, 6000);
+                } else {
+                    showNotification(`Generation failed: ${result.error}`, 'error');
+                    previewArea.innerHTML = `
+                        <div class="empty-state">
+                            <h3>Generation Failed</h3>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                showNotification(`Request failed: ${error.message}`, 'error');
+                previewArea.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Connection Error</h3>
+                        <p>Unable to connect to the server. Please try again.</p>
+                    </div>
+                `;
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate Character';
+            }
+        });
+
+        // Load characters gallery
+        async function loadCharacters() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading your characters...</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${API_BASE}/characters`);
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    gallery.innerHTML = result.data.map(character => {
+                        const statusClass = character.generationStatus.toLowerCase().replace('_', '-');
+                        const statusText = {
+                            'COMPLETED': 'Completed',
+                            'PROCESSING': 'Processing', 
+                            'PENDING': 'Pending',
+                            'FAILED': 'Failed'
+                        }[character.generationStatus] || character.generationStatus;
+
+                        return `
+                            <div class="character-card">
+                                <div class="image-container">
+                                    ${character.generationStatus === 'COMPLETED' && character.s3Url ? 
+                                      `<img src="http://localhost:3000${character.s3Url}" alt="${character.name}" 
+                                           onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'empty-state\\'><p>Image failed to load</p></div>'">` : 
+                                      `<div class="empty-state"><p>Generating...</p></div>`
+                                    }
+                                </div>
+                                <div class="content">
+                                    <div class="title">${character.name}</div>
+                                    <div class="prompt">${character.prompt}</div>
+                                    <div class="meta">
+                                        <span>${character.styleType}</span>
+                                        <span class="status-badge status-${statusClass}">
+                                            ${statusText}
+                                        </span>
+                                    </div>
+                                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-secondary);">
+                                        Created: ${new Date(character.createdAt).toLocaleDateString()}
+                                        ${character.completedAt ? `<br>Completed: ${new Date(character.completedAt).toLocaleDateString()}` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    gallery.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <h3>No Characters Yet</h3>
+                            <p>Start creating your first AI-generated character using the form above!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                gallery.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>Connection Error</h3>
+                        <p>Unable to load characters. Please make sure the server is running.</p>
+                        <button class="btn btn-primary" onclick="loadCharacters()" style="margin-top: 1rem;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 2rem;
+                right: 2rem;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                ${type === 'success' ? 'background: var(--success);' : 'background: #EF4444;'}
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadCharacters, 30000);
+    </script>
+
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</body>
+</html>
