@@ -673,6 +673,61 @@
             <div class="content-area">
                 <!-- Character Library Page -->
                 <div id="library-page" class="page-content active">
+                    <!-- Hero Banner -->
+                    <div class="hero-banner" style="
+                        background: var(--gradient-hero);
+                        border-radius: var(--radius-lg);
+                        padding: 3rem 2rem;
+                        text-align: center;
+                        color: white;
+                        margin-bottom: 3rem;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><defs><pattern id=\"grid\" width=\"10\" height=\"10\" patternUnits=\"userSpaceOnUse\"><path d=\"M 10 0 L 0 0 0 10\" fill=\"none\" stroke=\"rgba(255,255,255,0.1)\" stroke-width=\"0.5\"/></pattern></defs><rect width=\"100\" height=\"100\" fill=\"url(%23grid)\" /></svg>');
+                            opacity: 0.3;
+                        "></div>
+                        <div style="position: relative; z-index: 1;">
+                            <div style="
+                                display: inline-block;
+                                background: rgba(255,255,255,0.2);
+                                border-radius: 50%;
+                                padding: 1.5rem;
+                                margin-bottom: 1.5rem;
+                                backdrop-filter: blur(10px);
+                            ">
+                                <i class="fas fa-magic" style="font-size: 2.5rem;"></i>
+                            </div>
+                            <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                                Your Character Collection
+                            </h1>
+                            <p style="font-size: 1.2rem; opacity: 0.9; max-width: 600px; margin: 0 auto; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+                                Discover and manage all your AI-generated characters. Each one is unique, crafted with advanced artificial intelligence.
+                            </p>
+                            <div style="margin-top: 2rem;">
+                                <button class="btn" onclick="switchPage('create')" style="
+                                    background: rgba(255,255,255,0.2);
+                                    color: white;
+                                    border: 2px solid rgba(255,255,255,0.3);
+                                    padding: 12px 24px;
+                                    border-radius: var(--radius);
+                                    font-weight: 600;
+                                    backdrop-filter: blur(10px);
+                                    transition: var(--transition);
+                                " onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                                    <i class="fas fa-plus"></i>
+                                    Create New Character
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div id="character-gallery" class="character-gallery">
                         <div class="empty-state">
                             <i class="fas fa-images"></i>
@@ -688,13 +743,46 @@
 
                 <!-- Character Creation Page -->
                 <div id="create-page" class="page-content">
-                    <div style="background: var(--background); border-radius: var(--radius-lg); padding: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow);">
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <h2 style="font-size: 2rem; margin-bottom: 1rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <!-- Creation Banner -->
+                    <div class="creation-banner" style="
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+                        border-radius: var(--radius-lg);
+                        padding: 2.5rem 2rem;
+                        text-align: center;
+                        color: white;
+                        margin-bottom: 2rem;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+                        "></div>
+                        <div style="position: relative; z-index: 1;">
+                            <div style="
+                                display: inline-block;
+                                background: rgba(255,255,255,0.15);
+                                border-radius: 50%;
+                                padding: 1rem;
+                                margin-bottom: 1rem;
+                                backdrop-filter: blur(10px);
+                            ">
+                                <i class="fas fa-palette" style="font-size: 1.8rem;"></i>
+                            </div>
+                            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                                 Create New Character
                             </h2>
-                            <p style="color: var(--text-secondary);">Generate unique character designs with AI technology</p>
+                            <p style="opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-size: 1.1rem;">
+                                Design unique characters with advanced AI technology
+                            </p>
                         </div>
+                    </div>
+                    
+                    <div style="background: var(--background); border-radius: var(--radius-lg); padding: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow);">
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                             <div>
@@ -709,6 +797,59 @@
                                     <option value="anime">Anime</option>
                                     <option value="cartoon">Cartoon</option>
                                     <option value="fantasy">Fantasy</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Gender</label>
+                                <select id="character-gender" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                                    <option value="">Choose gender...</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="non-binary">Non-binary</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Profession</label>
+                                <select id="character-profession" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                                    <option value="">Choose profession...</option>
+                                    <option value="warrior">Warrior</option>
+                                    <option value="mage">Mage</option>
+                                    <option value="archer">Archer</option>
+                                    <option value="knight">Knight</option>
+                                    <option value="assassin">Assassin</option>
+                                    <option value="healer">Healer</option>
+                                    <option value="scholar">Scholar</option>
+                                    <option value="merchant">Merchant</option>
+                                    <option value="noble">Noble</option>
+                                    <option value="peasant">Peasant</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Age Range</label>
+                                <select id="character-age" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                                    <option value="">Choose age...</option>
+                                    <option value="child">Child (8-12)</option>
+                                    <option value="teen">Teen (13-17)</option>
+                                    <option value="young-adult">Young Adult (18-25)</option>
+                                    <option value="adult">Adult (26-40)</option>
+                                    <option value="middle-aged">Middle-aged (41-60)</option>
+                                    <option value="elderly">Elderly (60+)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Hair Color</label>
+                                <select id="character-hair" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                                    <option value="">Choose hair color...</option>
+                                    <option value="black">Black</option>
+                                    <option value="brown">Brown</option>
+                                    <option value="blonde">Blonde</option>
+                                    <option value="red">Red</option>
+                                    <option value="white">White</option>
+                                    <option value="gray">Gray</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="green">Green</option>
+                                    <option value="purple">Purple</option>
+                                    <option value="pink">Pink</option>
                                 </select>
                             </div>
                         </div>
@@ -928,11 +1069,31 @@
         async function generateCharacter() {
             const name = document.getElementById('character-name').value.trim();
             const style = document.getElementById('character-style').value;
+            const gender = document.getElementById('character-gender').value;
+            const profession = document.getElementById('character-profession').value;
+            const age = document.getElementById('character-age').value;
+            const hair = document.getElementById('character-hair').value;
             const description = document.getElementById('character-description').value.trim();
             
             if (!name) {
                 showNotification('Please enter character name', 'error');
                 return;
+            }
+            
+            // Build enhanced description from all fields
+            let enhancedDescription = description || '';
+            const traits = [];
+            
+            if (gender) traits.push(`${gender} character`);
+            if (profession) traits.push(`works as a ${profession}`);
+            if (age) traits.push(`${age.replace('-', ' ')}`);
+            if (hair) traits.push(`with ${hair} hair`);
+            if (style) traits.push(`in ${style} art style`);
+            
+            if (traits.length > 0) {
+                enhancedDescription = enhancedDescription 
+                    ? `${enhancedDescription}. ${traits.join(', ')}.`
+                    : `A ${traits.join(', ')}.`;
             }
             
             // Show loading
@@ -944,10 +1105,22 @@
                     id: Date.now(),
                     name: name,
                     style: style || 'realistic',
-                    description: description || 'A mysterious character',
+                    description: enhancedDescription || 'A mysterious character',
                     imageUrl: null,
                     createdAt: new Date().toISOString(),
-                    tags: [style || 'realistic', 'ai-generated']
+                    tags: [
+                        style || 'realistic',
+                        gender,
+                        profession,
+                        'ai-generated'
+                    ].filter(tag => tag && tag.trim() !== ''),
+                    metadata: {
+                        gender: gender,
+                        profession: profession,
+                        ageRange: age,
+                        hairColor: hair,
+                        artStyle: style
+                    }
                 };
                 
                 characters.push(character);
@@ -1033,6 +1206,10 @@
         function clearCreateForm() {
             document.getElementById('character-name').value = '';
             document.getElementById('character-style').selectedIndex = 0;
+            document.getElementById('character-gender').selectedIndex = 0;
+            document.getElementById('character-profession').selectedIndex = 0;
+            document.getElementById('character-age').selectedIndex = 0;
+            document.getElementById('character-hair').selectedIndex = 0;
             document.getElementById('character-description').value = '';
         }
         
@@ -1113,7 +1290,7 @@
                         createdAt: char.createdAt,
                         tags: char.tags || []
                     }));
-                    renderGallery();
+                    updateCharacterGallery();
                 } else {
                     console.error('Failed to load characters:', data.error);
                     showNotification('Failed to load characters', 'error');
@@ -1133,7 +1310,7 @@
                         tags: ["demo"]
                     }
                 ];
-                renderGallery();
+                updateCharacterGallery();
             }
         }
 
