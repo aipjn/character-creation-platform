@@ -135,7 +135,7 @@ app.get('/api/v1/characters', (req, res) => {
 });
 
 // 实际的nanoBanana API调用函数
-async function callNanoBananaAPI(prompt, styleType) {
+async function callNanoBananaAPI(prompt, styleType, referenceImagePath = null) {
   if (!process.env.NANOBANANA_API_KEY) {
     throw new Error('nanoBanana API key not configured');
   }
@@ -150,13 +150,38 @@ async function callNanoBananaAPI(prompt, styleType) {
     'MINIMALIST': 'minimalist style, clean, simple'
   }[styleType] || 'high quality, detailed';
 
-  const enhancedPrompt = `Generate an image: ${prompt}, ${stylePrompt}`;
+  const enhancedPrompt = referenceImagePath 
+    ? `Modify this character image: ${prompt}, ${stylePrompt}`
+    : `Generate an image: ${prompt}, ${stylePrompt}`;
 
   try {
     console.log('🔗 正在通过代理调用nanoBanana API...');
     
     // 配置代理
     const proxyAgent = new HttpsProxyAgent('http://127.0.0.1:7890');
+    
+    // 准备请求内容
+    const parts = [{ text: enhancedPrompt }];
+    
+    // 如果有参考图片，添加到请求中
+    if (referenceImagePath && fs.existsSync(referenceImagePath)) {
+      try {
+        const imageBuffer = fs.readFileSync(referenceImagePath);
+        const imageBase64 = imageBuffer.toString('base64');
+        const mimeType = referenceImagePath.endsWith('.png') ? 'image/png' : 'image/jpeg';
+        
+        parts.push({
+          inlineData: {
+            mimeType: mimeType,
+            data: imageBase64
+          }
+        });
+        
+        console.log(`🖼️ 已添加参考图片: ${referenceImagePath}`);
+      } catch (imageError) {
+        console.warn('⚠️ 读取参考图片失败，使用文本生成:', imageError.message);
+      }
+    }
     
     // 使用原生fetch + 代理
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${process.env.NANOBANANA_API_KEY}`, {
@@ -167,9 +192,7 @@ async function callNanoBananaAPI(prompt, styleType) {
       },
       body: JSON.stringify({
         contents: [{
-          parts: [{
-            text: enhancedPrompt
-          }]
+          parts: parts
         }],
         generationConfig: {
           temperature: 0.4
@@ -341,6 +364,153 @@ app.post('/api/v1/characters/generate', async (req, res) => {
         console.error('保存失败状态时出错:', saveError.message);
       }
     }
+  }
+});
+
+// Character Styling API (Step 2)
+app.post('/api/v1/characters/:id/style', async (req, res) => {
+  const { id } = req.params;
+  const { pose, expression, scene, intensity = 50 } = req.body;
+
+  if (!id) {
+    return res.status(400).json({
+      success: false,
+      error: 'Character ID is required'
+    });
+  }
+
+  if (!pose || !expression || !scene) {
+    return res.status(400).json({
+      success: false,
+      error: 'Pose, expression, and scene are required'
+    });
+  }
+
+  try {
+    // Find the original character
+    const charactersDir = path.join(uploadsPath, 'characters');
+    let originalCharacter = null;
+    
+    // Look for character JSON file
+    const files = fs.readdirSync(charactersDir).filter(f => f.endsWith('.json'));
+    for (const file of files) {
+      const character = JSON.parse(fs.readFileSync(path.join(charactersDir, file), 'utf8'));
+      if (character.id === id) {
+        originalCharacter = character;
+        break;
+      }
+    }
+
+    if (!originalCharacter) {
+      return res.status(404).json({
+        success: false,
+        error: 'Character not found'
+      });
+    }
+
+    // Generate new styled character ID
+    const styledId = `${Date.now()}_styled`;
+    
+    // Create enhanced prompt for styling
+    const styledPrompt = `${originalCharacter.prompt}, in a ${pose} pose, with a ${expression} expression, intensity ${intensity}%, in a ${scene} setting`;
+    
+    // Get reference image path
+    const originalImagePath = path.join(uploadsPath, 'characters', `${id}.png`);
+    
+    // Generate styled character using nanoBanana with reference image
+    console.log(`🎨 Generating styled character with prompt: ${styledPrompt}`);
+    console.log(`🖼️ Using reference image: ${originalImagePath}`);
+    
+    const result = await callNanoBananaAPI(styledPrompt, originalCharacter.styleType, originalImagePath);
+    
+    // Create character data
+    const styledCharacter = {
+      id: styledId,
+      name: `${originalCharacter.name} (Styled)`,
+      prompt: styledPrompt,
+      originalId: id,
+      styleType: originalCharacter.styleType,
+      s3Url: `/uploads/characters/${styledId}.png`,
+      thumbnailUrl: `/uploads/thumbnails/${styledId}_thumb.png`,
+      isPublic: true,
+      generationStatus: 'PROCESSING',
+      createdAt: new Date().toISOString(),
+      styling: {
+        pose,
+        expression,
+        scene,
+        intensity: parseInt(intensity)
+      },
+      metadata: {
+        generatedBy: 'nanoBanana',
+        model: 'imagen-2',
+        apiKey: process.env.NANOBANANA_API_KEY ? 'configured' : 'not configured',
+        basedOn: originalCharacter.id
+      }
+    };
+
+    // Save character metadata
+    const characterPath = path.join(charactersDir, `${styledId}.json`);
+    fs.writeFileSync(characterPath, JSON.stringify(styledCharacter, null, 2));
+
+    // Process the image in background
+    setTimeout(async () => {
+      try {
+        if (result && result.image_base64) {
+          // Save main image
+          const imagePath = path.join(charactersDir, `${styledId}.png`);
+          if (saveBase64Image(result.image_base64, imagePath)) {
+            console.log(`✅ Styled character ${styledId} image saved`);
+            
+            // Update status to completed
+            styledCharacter.generationStatus = 'COMPLETED';
+            styledCharacter.completedAt = new Date().toISOString();
+            
+            fs.writeFileSync(characterPath, JSON.stringify(styledCharacter, null, 2));
+            console.log(`✅ Styled character ${styledId} generation completed`);
+          } else {
+            throw new Error('Failed to save styled character image');
+          }
+        } else {
+          throw new Error('No image data received for styled character');
+        }
+      } catch (error) {
+        console.error(`❌ Styling character ${styledId} failed:`, error.message);
+        
+        // Update status to failed
+        styledCharacter.generationStatus = 'FAILED';
+        styledCharacter.completedAt = new Date().toISOString();
+        styledCharacter.metadata.error = error.message;
+        styledCharacter.metadata.errorType = error.name || 'StylingError';
+        
+        try {
+          fs.writeFileSync(characterPath, JSON.stringify(styledCharacter, null, 2));
+        } catch (saveError) {
+          console.error('Error saving failed status:', saveError.message);
+        }
+      }
+    }, 100);
+
+    // Return immediate response
+    res.json({
+      success: true,
+      data: {
+        id: styledId,
+        name: styledCharacter.name,
+        s3Url: styledCharacter.s3Url,
+        generationStatus: 'PROCESSING',
+        styling: styledCharacter.styling,
+        estimatedTime: '10-15 seconds'
+      },
+      message: 'Character styling started successfully'
+    });
+
+  } catch (error) {
+    console.error('Character styling API error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to style character'
+    });
   }
 });
 

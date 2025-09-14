@@ -27,6 +27,9 @@ model User {
   // Relations
   characters    Character[]
   generations   Generation[]
+  collections   CharacterCollection[]
+  scenes        Scene[]
+  sceneGenerations SceneGeneration[]
 
   @@map("users")
 }
@@ -39,16 +42,31 @@ model Character {
   styleType   StyleType     @default(REALISTIC) @map("style_type")
   s3Url       String?       @map("s3_url")
   thumbnailUrl String?      @map("thumbnail_url")
+  referenceImageUrl String?  @map("reference_image_url")
   metadata    Json?
   tags        String[]
   isPublic    Boolean       @default(false) @map("is_public")
+  isFavorite  Boolean       @default(false) @map("is_favorite")
+  isInLibrary Boolean       @default(false) @map("is_in_library")
   generationStatus GenerationStatus @default(PENDING) @map("generation_status")
+  
+  // Comprehensive Character Attributes
+  age         String?
+  gender      String?
+  occupation  String?
+  personality String[]
+  physicalTraits Json?      // Height, build, hair, eyes, etc.
+  clothing    String?
+  background  String?       // Character backstory
+  
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
   // Relations
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   generations Generation[]
+  collectionItems CharacterCollectionItem[]
+  scenes      SceneCharacter[]
 
   @@map("characters")
 }
@@ -87,6 +105,96 @@ model CharacterTemplate {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("character_templates")
+}
+
+model CharacterCollection {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  name        String
+  description String?
+  isPublic    Boolean   @default(false) @map("is_public")
+  coverImageUrl String? @map("cover_image_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CharacterCollectionItem[]
+
+  @@map("character_collections")
+}
+
+model CharacterCollectionItem {
+  id           String    @id @default(cuid())
+  collectionId String    @map("collection_id")
+  characterId  String    @map("character_id")
+  addedAt      DateTime  @default(now()) @map("added_at")
+
+  // Relations
+  collection   CharacterCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, characterId])
+  @@map("character_collection_items")
+}
+
+model Scene {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  name        String
+  description String?
+  environment String?   // Indoor, outdoor, fantasy world, etc.
+  setting     String?   // Specific location description
+  mood        String?   // Happy, dramatic, mysterious, etc.
+  lighting    String?   // Bright, dark, cinematic, etc.
+  s3Url       String?   @map("s3_url")
+  thumbnailUrl String? @map("thumbnail_url")
+  isPublic    Boolean   @default(false) @map("is_public")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characters  SceneCharacter[]
+  generations SceneGeneration[]
+
+  @@map("scenes")
+}
+
+model SceneCharacter {
+  id          String    @id @default(cuid())
+  sceneId     String    @map("scene_id")
+  characterId String    @map("character_id")
+  pose        String?   // Standing, sitting, running, etc.
+  expression  String?   // Happy, sad, surprised, etc.
+  action      String?   // What the character is doing
+  position    Json?     // X, Y coordinates or positioning info
+  addedAt     DateTime  @default(now()) @map("added_at")
+
+  // Relations
+  scene       Scene     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([sceneId, characterId])
+  @@map("scene_characters")
+}
+
+model SceneGeneration {
+  id            String           @id @default(cuid())
+  userId        String           @map("user_id")
+  sceneId       String           @map("scene_id")
+  status        GenerationStatus @default(PENDING)
+  prompt        String
+  errorMessage  String?          @map("error_message")
+  completedAt   DateTime?        @map("completed_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scene         Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+
+  @@map("scene_generations")
 }
 
 // Enums

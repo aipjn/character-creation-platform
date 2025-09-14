@@ -1,7 +1,19 @@
 // Character-specific types for gallery display and management
 import { StyleType, GenerationStatus, SubscriptionTier } from '@prisma/client';
 
-// Main Character interface based on Prisma model
+// Physical traits structure
+export interface PhysicalTraits {
+  height?: string;
+  build?: string;
+  hairColor?: string;
+  hairStyle?: string;
+  eyeColor?: string;
+  skinTone?: string;
+  facialFeatures?: string[];
+  distinguishingMarks?: string[];
+}
+
+// Main Character interface based on Prisma model with comprehensive attributes
 export interface Character {
   id: string;
   userId: string;
@@ -10,10 +22,23 @@ export interface Character {
   styleType: StyleType;
   s3Url?: string;
   thumbnailUrl?: string;
+  referenceImageUrl?: string;
   metadata?: Record<string, any>;
   tags: string[];
   isPublic: boolean;
+  isFavorite: boolean;
+  isInLibrary: boolean;
   generationStatus: GenerationStatus;
+  
+  // Comprehensive Character Attributes
+  age?: string;
+  gender?: string;
+  occupation?: string;
+  personality?: string[];
+  physicalTraits?: PhysicalTraits;
+  clothing?: string;
+  background?: string;
+  
   createdAt: Date;
   updatedAt: Date;
   user?: {
@@ -31,9 +56,22 @@ export interface CharacterDisplayData {
   styleType: StyleType;
   imageUrl?: string;
   thumbnailUrl?: string;
+  referenceImageUrl?: string;
   tags: string[];
   isPublic: boolean;
+  isFavorite: boolean;
+  isInLibrary: boolean;
   status: GenerationStatus;
+  
+  // Comprehensive attributes for display
+  age?: string;
+  gender?: string;
+  occupation?: string;
+  personality?: string[];
+  physicalTraits?: PhysicalTraits;
+  clothing?: string;
+  background?: string;
+  
   createdAt: Date;
   author?: {
     id: string;
@@ -45,6 +83,42 @@ export interface CharacterDisplayData {
     fileSize?: number;
     format?: string;
   };
+}
+
+// Character creation form data
+export interface CharacterCreateFormData {
+  name?: string;
+  prompt: string;
+  styleType: StyleType;
+  referenceImageUrl?: string;
+  tags: string[];
+  isPublic: boolean;
+  
+  // Comprehensive character attributes
+  age?: string;
+  gender?: string;
+  occupation?: string;
+  personality: string[];
+  physicalTraits?: PhysicalTraits;
+  clothing?: string;
+  background?: string;
+}
+
+// Character attribute suggestions and presets
+export interface CharacterAttributePresets {
+  ages: string[];
+  genders: string[];
+  occupations: string[];
+  personalityTraits: string[];
+  physicalOptions: {
+    heights: string[];
+    builds: string[];
+    hairColors: string[];
+    hairStyles: string[];
+    eyeColors: string[];
+    skinTones: string[];
+  };
+  clothingStyles: string[];
 }
 
 // Character filtering and sorting options

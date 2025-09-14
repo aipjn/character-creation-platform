@@ -40,8 +40,14 @@ export class CharacterModel {
     take?: number;
     styleType?: StyleType;
     tags?: string[];
+    isInLibrary?: boolean;
+    isFavorite?: boolean;
+    age?: string;
+    gender?: string;
+    occupation?: string;
+    personality?: string[];
   }): Promise<Character[]> {
-    const { skip = 0, take = 20, styleType, tags } = options || {};
+    const { skip = 0, take = 20, styleType, tags, isInLibrary, isFavorite, age, gender, occupation, personality } = options || {};
     
     return this.prisma.character.findMany({
       where: {
@@ -50,6 +56,16 @@ export class CharacterModel {
         ...(tags && tags.length > 0 && {
           tags: {
             hasSome: tags,
+          },
+        }),
+        ...(isInLibrary !== undefined && { isInLibrary }),
+        ...(isFavorite !== undefined && { isFavorite }),
+        ...(age && { age: { contains: age, mode: 'insensitive' } }),
+        ...(gender && { gender: { contains: gender, mode: 'insensitive' } }),
+        ...(occupation && { occupation: { contains: occupation, mode: 'insensitive' } }),
+        ...(personality && personality.length > 0 && {
+          personality: {
+            hasSome: personality,
           },
         }),
       },
@@ -62,6 +78,16 @@ export class CharacterModel {
             id: true,
             email: true,
             name: true,
+          },
+        },
+        collectionItems: {
+          include: {
+            collection: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -527,6 +553,259 @@ export class CharacterModel {
         },
       },
     });
+  }
+
+  // Library management methods
+  async addToLibrary(characterId: string): Promise<Character> {
+    return this.update(characterId, { isInLibrary: true });
+  }
+
+  async removeFromLibrary(characterId: string): Promise<Character> {
+    return this.update(characterId, { isInLibrary: false });
+  }
+
+  async toggleFavorite(characterId: string): Promise<Character> {
+    const character = await this.findById(characterId);
+    if (!character) {
+      throw new Error('Character not found');
+    }
+    return this.update(characterId, { isFavorite: !character.isFavorite });
+  }
+
+  async findLibraryCharacters(userId: string, options?: {
+    skip?: number;
+    take?: number;
+    filters?: {
+      styleType?: StyleType;
+      tags?: string[];
+      age?: string;
+      gender?: string;
+      occupation?: string;
+      personality?: string[];
+    };
+  }): Promise<Character[]> {
+    const { skip = 0, take = 20, filters } = options || {};
+    
+    return this.findByUserId(userId, {
+      skip,
+      take,
+      isInLibrary: true,
+      ...filters,
+    });
+  }
+
+  async findFavoriteCharacters(userId: string, options?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Character[]> {
+    const { skip = 0, take = 20 } = options || {};
+    
+    return this.findByUserId(userId, {
+      skip,
+      take,
+      isFavorite: true,
+    });
+  }
+
+  async updateCharacterAttributes(characterId: string, attributes: {
+    age?: string;
+    gender?: string;
+    occupation?: string;
+    personality?: string[];
+    physicalTraits?: any;
+    clothing?: string;
+    background?: string;
+  }): Promise<Character> {
+    return this.update(characterId, attributes);
+  }
+
+  async getCharacterAttributeStats(userId: string): Promise<{
+    ageDistribution: Record<string, number>;
+    genderDistribution: Record<string, number>;
+    occupationDistribution: Record<string, number>;
+    popularPersonalityTraits: { trait: string; count: number }[];
+  }> {
+    const characters = await this.prisma.character.findMany({
+      where: { userId },
+      select: {
+        age: true,
+        gender: true,
+        occupation: true,
+        personality: true,
+      },
+    });
+
+    const ageDistribution: Record<string, number> = {};
+    const genderDistribution: Record<string, number> = {};
+    const occupationDistribution: Record<string, number> = {};
+    const personalityTraits = new Map<string, number>();
+
+    characters.forEach(char => {
+      if (char.age) {
+        ageDistribution[char.age] = (ageDistribution[char.age] || 0) + 1;
+      }
+      if (char.gender) {
+        genderDistribution[char.gender] = (genderDistribution[char.gender] || 0) + 1;
+      }
+      if (char.occupation) {
+        occupationDistribution[char.occupation] = (occupationDistribution[char.occupation] || 0) + 1;
+      }
+      if (char.personality) {
+        char.personality.forEach(trait => {
+          personalityTraits.set(trait, (personalityTraits.get(trait) || 0) + 1);
+        });
+      }
+    });
+
+    const popularPersonalityTraits = Array.from(personalityTraits.entries())
+      .map(([trait, count]) => ({ trait, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 20);
+
+    return {
+      ageDistribution,
+      genderDistribution,
+      occupationDistribution,
+      popularPersonalityTraits,
+    };
+  }
+
+  async searchCharactersByAttributes(userId: string, search: {
+    query?: string;
+    age?: string;
+    gender?: string;
+    occupation?: string;
+    personality?: string[];
+    tags?: string[];
+    styleType?: StyleType;
+  }, options?: {
+    skip?: number;
+    take?: number;
+  }): Promise<Character[]> {
+    const { skip = 0, take = 20 } = options || {};
+    const { query, age, gender, occupation, personality, tags, styleType } = search;
+
+    return this.prisma.character.findMany({
+      where: {
+        userId,
+        ...(query && {
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { prompt: { contains: query, mode: 'insensitive' } },
+            { background: { contains: query, mode: 'insensitive' } },
+            { clothing: { contains: query, mode: 'insensitive' } },
+          ],
+        }),
+        ...(age && { age: { contains: age, mode: 'insensitive' } }),
+        ...(gender && { gender: { contains: gender, mode: 'insensitive' } }),
+        ...(occupation && { occupation: { contains: occupation, mode: 'insensitive' } }),
+        ...(personality && personality.length > 0 && {
+          personality: { hasSome: personality },
+        }),
+        ...(tags && tags.length > 0 && {
+          tags: { hasSome: tags },
+        }),
+        ...(styleType && { styleType }),
+      },
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+        collectionItems: {
+          include: {
+            collection: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getCharacterWorkflowSuggestions(characterId: string): Promise<{
+    suggestedCollections: { id: string; name: string; characterCount: number }[];
+    suggestedScenes: { id: string; name: string; environment?: string; characterCount: number }[];
+    similarCharacters: Character[];
+  }> {
+    const character = await this.findById(characterId);
+    if (!character) {
+      throw new Error('Character not found');
+    }
+
+    // Get user's collections
+    const collections = await this.prisma.characterCollection.findMany({
+      where: { 
+        userId: character.userId,
+        items: {
+          none: {
+            characterId: character.id,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: {
+            items: true,
+          },
+        },
+      },
+      take: 5,
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Get user's scenes that might work with this character
+    const scenes = await this.prisma.scene.findMany({
+      where: {
+        userId: character.userId,
+        characters: {
+          none: {
+            characterId: character.id,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        environment: true,
+        _count: {
+          select: {
+            characters: true,
+          },
+        },
+      },
+      take: 5,
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // Get similar characters
+    const similarCharacters = await this.findSimilarCharacters(character.id, 3);
+
+    return {
+      suggestedCollections: collections.map(c => ({
+        id: c.id,
+        name: c.name,
+        characterCount: c._count.items,
+      })),
+      suggestedScenes: scenes.map(s => ({
+        id: s.id,
+        name: s.name,
+        environment: s.environment,
+        characterCount: s._count.characters,
+      })),
+      similarCharacters,
+    };
   }
 }
 

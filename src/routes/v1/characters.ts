@@ -588,4 +588,360 @@ router.post('/:id/generate', async (req: ApiRequest, res: express.Response) => {
   }
 });
 
+/**
+ * POST /api/v1/characters/:id/library
+ * Add character to user's library
+ */
+router.post('/:id/library', async (req: ApiRequest, res: express.Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
+          message: 'Character ID is required',
+          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.requestId,
+          version: '1.0.0',
+          path: req.path
+        }
+      };
+
+      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
+    }
+
+    // TODO: Implement library functionality when database integration is complete
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
+        message: 'Character not found',
+        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Failed to add character to library',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
+/**
+ * DELETE /api/v1/characters/:id/library
+ * Remove character from user's library
+ */
+router.delete('/:id/library', async (req: ApiRequest, res: express.Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
+          message: 'Character ID is required',
+          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.requestId,
+          version: '1.0.0',
+          path: req.path
+        }
+      };
+
+      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
+    }
+
+    // TODO: Implement library functionality when database integration is complete
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
+        message: 'Character not found',
+        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Failed to remove character from library',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
+/**
+ * POST /api/v1/characters/:id/favorite
+ * Toggle character favorite status
+ */
+router.post('/:id/favorite', async (req: ApiRequest, res: express.Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
+          message: 'Character ID is required',
+          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.requestId,
+          version: '1.0.0',
+          path: req.path
+        }
+      };
+
+      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
+    }
+
+    // TODO: Implement favorite functionality when database integration is complete
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
+        message: 'Character not found',
+        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Failed to toggle character favorite',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
+/**
+ * GET /api/v1/characters/library
+ * Get user's character library with filters
+ */
+router.get('/library', async (req: ApiRequest, res: express.Response) => {
+  try {
+    // TODO: Implement library retrieval when database integration is complete
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        items: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: 20,
+          hasNextPage: false,
+          hasPreviousPage: false
+        }
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Failed to retrieve character library',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
+/**
+ * GET /api/v1/characters/favorites
+ * Get user's favorite characters
+ */
+router.get('/favorites', async (req: ApiRequest, res: express.Response) => {
+  try {
+    // TODO: Implement favorites retrieval when database integration is complete
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        items: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalItems: 0,
+          itemsPerPage: 20,
+          hasNextPage: false,
+          hasPreviousPage: false
+        }
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Failed to retrieve favorite characters',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
+/**
+ * GET /api/v1/characters/:id/suggestions
+ * Get workflow suggestions for a character (collections, scenes, similar characters)
+ */
+router.get('/:id/suggestions', async (req: ApiRequest, res: express.Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
+          message: 'Character ID is required',
+          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.requestId,
+          version: '1.0.0',
+          path: req.path
+        }
+      };
+
+      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
+    }
+
+    // TODO: Implement suggestions when database integration is complete
+    const mockSuggestions = {
+      suggestedCollections: [],
+      suggestedScenes: [],
+      similarCharacters: []
+    };
+
+    const response: ApiResponse = {
+      success: true,
+      data: mockSuggestions,
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Failed to retrieve character suggestions',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.requestId,
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
 export default router;

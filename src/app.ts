@@ -9,12 +9,12 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { ENV_CONFIG, isDevelopment, isProduction } from './config/env';
 import { getCorsConfig } from './config/cors';
-import { getHelmetConfig, standardRateLimit } from './config/security';
+// import { getHelmetConfig, standardRateLimit } from './config/security';
 
 // Import our new v1 routes and middleware
 import v1Routes from './routes/v1/index';
-import { requestLogger } from './middleware/logging';
-import { versionDetection, versionRedirect } from './middleware/apiVersion';
+// import { requestLogger } from './middleware/logging';
+// import { versionDetection, versionRedirect } from './middleware/apiVersion';
 
 /**
  * Create Express application with full configuration
@@ -22,27 +22,24 @@ import { versionDetection, versionRedirect } from './middleware/apiVersion';
 export const createApp = (): express.Application => {
   const app = express();
 
-  // Trust proxy settings (important for rate limiting and IP detection)
-  if (isProduction()) {
-    app.set('trust proxy', 1); // Trust first proxy
-  } else {
-    app.set('trust proxy', true); // Trust all proxies in development
-  }
-
-  // Security middleware
-  app.use(helmet(getHelmetConfig()));
+  // Security middleware (temporarily simplified)
+  app.use(helmet());
   
-  // Rate limiting
-  app.use(rateLimit({
-    windowMs: standardRateLimit.windowMs,
-    max: standardRateLimit.max,
-    message: standardRateLimit.message,
-    standardHeaders: true,
-    legacyHeaders: false
-  }));
+  // Rate limiting (temporarily disabled for development)
+  if (isProduction()) {
+    app.use(rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // limit each IP to 100 requests per windowMs
+      standardHeaders: true,
+      legacyHeaders: false
+    }));
+  }
 
   // CORS configuration
   app.use(cors(getCorsConfig()));
+
+  // Static file serving
+  app.use(express.static('public'));
 
   // Body parsing middleware
   app.use(express.json({ 
@@ -72,7 +69,11 @@ export const createApp = (): express.Application => {
     
     const cleanup = () => {
       const responseTime = Date.now() - startTime;
-      res.setHeader('X-Response-Time', `${responseTime}ms`);
+      
+      // Only set header if headers haven't been sent yet
+      if (!res.headersSent) {
+        res.setHeader('X-Response-Time', `${responseTime}ms`);
+      }
       
       // Log slow requests
       if (responseTime > 5000) { // 5 seconds
@@ -86,19 +87,25 @@ export const createApp = (): express.Application => {
     next();
   });
 
-  // Enhanced request logging middleware
-  if (ENV_CONFIG.ENABLE_REQUEST_LOGGING) {
-    app.use(requestLogger({
-      enableStructuredLogging: ENV_CONFIG.ENABLE_STRUCTURED_LOGGING,
-      enableSlowRequestLogging: true,
-      slowRequestThreshold: 5000,
-      logLevel: isDevelopment() ? 'debug' : 'info'
-    }));
-  }
+  // Enhanced request logging middleware (temporarily disabled)
+  // if (ENV_CONFIG.ENABLE_REQUEST_LOGGING) {
+  //   app.use(requestLogger({
+  //     enableRequestLogging: true,
+  //     enableResponseLogging: true,
+  //     enableStructuredLogging: ENV_CONFIG.ENABLE_STRUCTURED_LOGGING,
+  //     enableSlowRequestLogging: true,
+  //     slowRequestThreshold: 5000,
+  //     logLevel: isDevelopment() ? 'debug' : 'info',
+  //     excludePaths: ['/health', '/favicon.ico', '/robots.txt'],
+  //     includeRequestBody: false,
+  //     includeResponseBody: false,
+  //     maxBodySize: 10240
+  //   }));
+  // }
 
-  // API versioning middleware
-  app.use('/api', versionDetection());
-  app.use(versionRedirect());
+  // API versioning middleware (temporarily disabled)
+  // app.use(versionDetection());
+  // app.use(versionRedirect());
 
   // Health check endpoint
   app.get('/health', async (_req, res) => {
