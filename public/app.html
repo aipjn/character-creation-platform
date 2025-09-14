@@ -986,7 +986,10 @@
             gallery.innerHTML = characters.map(character => `
                 <div class="character-card">
                     <div class="character-image">
-                        <i class="fas fa-user" style="font-size: 3rem; opacity: 0.7;"></i><br>AI生成图像
+                        ${character.thumbnailUrl || character.imageUrl ? 
+                            `<img src="${character.thumbnailUrl || character.imageUrl}" alt="${character.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
+                            `<i class="fas fa-user" style="font-size: 3rem; opacity: 0.7;"></i><br>AI Generated`
+                        }
                     </div>
                     <div class="character-info">
                         <h4>${character.name}</h4>
@@ -1093,32 +1096,51 @@
         `;
         document.head.appendChild(notificationStyles);
         
+        // Load characters from API
+        async function loadCharacters() {
+            try {
+                const response = await fetch('/api/v1/characters');
+                const data = await response.json();
+                
+                if (data.success) {
+                    characters = data.data.items.map(char => ({
+                        id: char.id,
+                        name: char.name,
+                        style: char.tags?.[0] || 'generated',
+                        description: char.description,
+                        imageUrl: char.imageUrl,
+                        thumbnailUrl: char.thumbnailUrl,
+                        createdAt: char.createdAt,
+                        tags: char.tags || []
+                    }));
+                    renderGallery();
+                } else {
+                    console.error('Failed to load characters:', data.error);
+                    showNotification('Failed to load characters', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading characters:', error);
+                showNotification('Error loading characters', 'error');
+                // Fallback to demo data if API fails
+                characters = [
+                    {
+                        id: 'demo1',
+                        name: "Demo Character",
+                        style: "fantasy",
+                        description: "A demo character (API connection failed)",
+                        imageUrl: null,
+                        createdAt: new Date().toISOString(),
+                        tags: ["demo"]
+                    }
+                ];
+                renderGallery();
+            }
+        }
+
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             if (checkAuth()) {
-                // Add some demo characters
-                characters = [
-                    {
-                        id: 1,
-                        name: "Shadow Assassin Aria",
-                        style: "fantasy",
-                        description: "An elven assassin with silver hair and piercing blue eyes, skilled at moving through shadows.",
-                        imageUrl: null,
-                        createdAt: new Date(Date.now() - 86400000).toISOString(),
-                        tags: ["fantasy", "assassin", "mysterious"]
-                    },
-                    {
-                        id: 2,
-                        name: "Mechanical Inventor Tesla",
-                        style: "realistic",
-                        description: "A brilliant inventor in a steampunk world, renowned for mechanical innovations.",
-                        imageUrl: null,
-                        createdAt: new Date(Date.now() - 172800000).toISOString(),
-                        tags: ["realistic", "scholar", "steampunk"]
-                    }
-                ];
-                
-                updateCharacterGallery();
+                loadCharacters();
                 updateUserUI();
             }
         });

@@ -4,6 +4,8 @@
  */
 
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
 import { 
   ApiResponse, 
   Character,
@@ -31,31 +33,57 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       // sortOrder = 'desc'
     } = req.query;
 
-    // TODO: Implement actual character fetching logic
-    const mockCharacters: Character[] = [
-      {
-        id: '1',
-        name: 'Test Character',
-        description: 'A test character for API testing',
-        imageUrl: 'https://example.com/image.jpg',
-        userId: 'user1',
-        tags: ['fantasy', 'hero'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+    // Read characters from uploads directory
+    const uploadsPath = path.join(process.cwd(), 'uploads', 'characters');
+    let characters: Character[] = [];
+
+    try {
+      if (fs.existsSync(uploadsPath)) {
+        const files = fs.readdirSync(uploadsPath);
+        const jsonFiles = files.filter(file => file.endsWith('.json'));
+        
+        characters = jsonFiles.map(file => {
+          const filePath = path.join(uploadsPath, file);
+          const fileData = fs.readFileSync(filePath, 'utf8');
+          const characterData = JSON.parse(fileData);
+          
+          return {
+            id: characterData.id || file.replace('.json', ''),
+            name: characterData.name || 'Unnamed Character',
+            description: characterData.prompt || 'No description available',
+            imageUrl: characterData.s3Url || characterData.imageUrl || '',
+            thumbnailUrl: characterData.thumbnailUrl || '',
+            userId: 'demo-user',
+            tags: characterData.styleType ? [characterData.styleType.toLowerCase()] : ['generated'],
+            createdAt: characterData.createdAt || new Date().toISOString(),
+            updatedAt: characterData.completedAt || characterData.createdAt || new Date().toISOString(),
+            metadata: characterData.metadata
+          };
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
-    ];
+    } catch (error) {
+      console.error('Error reading character files:', error);
+      // Fall back to empty array if there's an error
+    }
+
+    // Apply pagination
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    const paginatedCharacters = characters.slice(startIndex, endIndex);
 
     const response: ApiResponse<PaginatedResponse<Character>> = {
       success: true,
       data: {
-        items: mockCharacters,
+        items: paginatedCharacters,
         pagination: {
-          currentPage: Number(page),
-          itemsPerPage: Number(limit),
-          totalItems: mockCharacters.length,
-          totalPages: Math.ceil(mockCharacters.length / Number(limit)),
-          hasNextPage: false,
-          hasPreviousPage: false
+          currentPage: pageNum,
+          itemsPerPage: limitNum,
+          totalItems: characters.length,
+          totalPages: Math.ceil(characters.length / limitNum),
+          hasNextPage: endIndex < characters.length,
+          hasPreviousPage: pageNum > 1
         }
       },
       meta: {
