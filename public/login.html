@@ -407,33 +407,28 @@
         const loginText = document.getElementById('login-text');
         const loginLoading = document.getElementById('login-loading');
 
-        // Form validation
+        // Form validation (simplified for demo)
         function validateForm() {
             const email = document.getElementById('email');
             const password = document.getElementById('password');
-            let isValid = true;
 
             // Clear previous errors
             document.querySelectorAll('.form-group').forEach(group => {
                 group.classList.remove('error');
             });
 
-            // Validate email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email.value || !emailRegex.test(email.value)) {
+            // Only check if fields have any value
+            if (!email.value.trim()) {
                 email.parentElement.classList.add('error');
-                isValid = false;
+                return false;
             }
 
-            // Validate password
-            if (!password.value || password.value.length < 6) {
+            if (!password.value.trim()) {
                 password.parentElement.classList.add('error');
-                const errorMsg = password.parentElement.querySelector('.error-message');
-                errorMsg.textContent = password.value ? 'Password must be at least 6 characters' : 'Password cannot be empty';
-                isValid = false;
+                return false;
             }
 
-            return isValid;
+            return true;
         }
 
         // Handle form submission
