@@ -22,10 +22,10 @@ import v1Routes from './routes/v1/index';
 export const createApp = (): express.Application => {
   const app = express();
 
-  // Security middleware (configured for development)
-  app.use(helmet({
-    contentSecurityPolicy: false  // Disable CSP for development to allow inline scripts
-  }));
+  // Security middleware (disabled in development for inline scripts)
+  if (isProduction()) {
+    app.use(helmet());
+  }
   
   // Rate limiting (temporarily disabled for development)
   if (isProduction()) {
