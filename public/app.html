@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Character Generator - App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --surface-hover: #f1f5f9;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--surface);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 15px;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInFromLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--background);
+            border-right: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 1000;
+            transition: var(--transition);
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-section-title {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            position: relative;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary);
+        }
+
+        .nav-item i {
+            font-size: 18px;
+        }
+
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .user-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: var(--surface-hover);
+            color: var(--text-secondary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Header */
+        .header {
+            background: var(--background);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+        }
+
+        .menu-toggle:hover {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .credits-display {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .page-content {
+            display: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* Character Gallery Styles (reused from original) */
+        .character-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .character-card {
+            background: var(--gradient-card);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .character-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .character-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .character-image {
+            width: 100%;
+            height: 200px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-info h4 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .character-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .character-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .character-tag {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .character-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--background);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--border);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* Profile Section */
+        .profile-section {
+            background: var(--background);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .profile-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-info p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--surface);
+            border-radius: var(--radius);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .character-gallery {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/app.html" class="logo">
+                    <i class="fas fa-magic"></i>
+                    Character Creator
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Main Features</div>
+                    <a href="#" class="nav-item active" data-page="library">
+                        <i class="fas fa-images"></i>
+                        Character Gallery
+                    </a>
+                    <a href="#" class="nav-item" data-page="create">
+                        <i class="fas fa-palette"></i>
+                        Character Creation
+                    </a>
+                    <a href="#" class="nav-item" data-page="edit">
+                        <i class="fas fa-edit"></i>
+                        Character Editing
+                    </a>
+                    <a href="#" class="nav-item" data-page="scenes">
+                        <i class="fas fa-film"></i>
+                        Scene Builder
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="#" class="nav-item" data-page="profile">
+                        <i class="fas fa-user-circle"></i>
+                        Profile
+                    </a>
+                    <a href="#" class="nav-item" data-page="settings">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">
+                        <span id="user-initial">U</span>
+                    </div>
+                    <div class="user-info">
+                        <h4 id="user-name">User</h4>
+                        <p id="user-email">user@example.com</p>
+                    </div>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title" id="page-title">Character Gallery</h1>
+                </div>
+                <div class="header-right">
+                    <div class="credits-display">
+                        <i class="fas fa-coins"></i>
+                        <span id="credits-count">10</span> Credits
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Character Library Page -->
+                <div id="library-page" class="page-content active">
+                    <div id="character-gallery" class="character-gallery">
+                        <div class="empty-state">
+                            <i class="fas fa-images"></i>
+                            <h3>No Characters Yet</h3>
+                            <p>Start creating your first character</p>
+                            <button class="btn btn-primary" onclick="switchPage('create')">
+                                <i class="fas fa-plus"></i>
+                                Create Character
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Character Creation Page -->
+                <div id="create-page" class="page-content">
+                    <div style="background: var(--background); border-radius: var(--radius-lg); padding: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow);">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <h2 style="font-size: 2rem; margin-bottom: 1rem; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                Create New Character
+                            </h2>
+                            <p style="color: var(--text-secondary);">Generate unique character designs with AI technology</p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Character Name</label>
+                                <input type="text" id="character-name" placeholder="Enter character name" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Art Style</label>
+                                <select id="character-style" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                                    <option value="">Choose style...</option>
+                                    <option value="realistic">Realistic</option>
+                                    <option value="anime">Anime</option>
+                                    <option value="cartoon">Cartoon</option>
+                                    <option value="fantasy">Fantasy</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Character Description</label>
+                            <textarea id="character-description" placeholder="Describe your desired character in detail..." style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px; min-height: 120px; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <button class="btn btn-primary" onclick="generateCharacter()" style="padding: 14px 28px; font-size: 16px;">
+                                <i class="fas fa-magic"></i>
+                                Generate Character
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Character Edit Page -->
+                <div id="edit-page" class="page-content">
+                    <div class="empty-state">
+                        <i class="fas fa-edit"></i>
+                        <h3>Character Editor</h3>
+                        <p>Select a character from the gallery to edit</p>
+                    </div>
+                </div>
+
+                <!-- Scenes Page -->
+                <div id="scenes-page" class="page-content">
+                    <div class="empty-state">
+                        <i class="fas fa-film"></i>
+                        <h3>Scene Builder</h3>
+                        <p>Select characters to create dynamic scenes</p>
+                    </div>
+                </div>
+
+                <!-- Profile Page -->
+                <div id="profile-page" class="page-content">
+                    <div class="profile-section">
+                        <div class="profile-header">
+                            <div class="profile-avatar">
+                                <span id="profile-initial">U</span>
+                            </div>
+                            <div class="profile-info">
+                                <h2 id="profile-name">Username</h2>
+                                <p id="profile-email">user@example.com</p>
+                                <button class="btn btn-secondary">
+                                    <i class="fas fa-edit"></i>
+                                    Edit Profile
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-characters">0</div>
+                                <div class="stat-label">Characters Created</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-credits">10</div>
+                                <div class="stat-label">Credits Remaining</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="join-days">1</div>
+                                <div class="stat-label">Days Joined</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="total-scenes">0</div>
+                                <div class="stat-label">Scenes Created</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settings-page" class="page-content">
+                    <div class="profile-section">
+                        <h2 style="margin-bottom: 2rem;">Account Settings</h2>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="margin-bottom: 1rem;">Personal Information</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                                <div>
+                                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Username</label>
+                                    <input type="text" value="User" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius);">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Email Address</label>
+                                    <input type="email" value="user@example.com" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius);">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="margin-bottom: 1rem;">Preferences</h3>
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" checked>
+                                    Receive product update notifications
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox">
+                                    Receive marketing emails
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem;">
+                            <button class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Settings
+                            </button>
+                            <button class="btn btn-secondary">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+        <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); display: flex; align-items: center; gap: 1rem; box-shadow: var(--shadow-xl);">
+            <div style="width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s ease-in-out infinite;"></div>
+            <span>正在生成角色...</span>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let characters = [];
+        let currentUser = null;
+        
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            
+            // TODO: Verify token with server
+            // For now, assume valid and set demo user
+            currentUser = {
+                id: 'demo_user',
+                name: 'Demo User',
+                email: 'demo@example.com',
+                credits: 10
+            };
+            
+            updateUserUI();
+            return true;
+        }
+        
+        // Update user interface
+        function updateUserUI() {
+            if (!currentUser) return;
+            
+            const userInitial = currentUser.name.charAt(0).toUpperCase();
+            document.getElementById('user-initial').textContent = userInitial;
+            document.getElementById('profile-initial').textContent = userInitial;
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('profile-name').textContent = currentUser.name;
+            document.getElementById('user-email').textContent = currentUser.email;
+            document.getElementById('profile-email').textContent = currentUser.email;
+            document.getElementById('credits-count').textContent = currentUser.credits;
+            document.getElementById('total-credits').textContent = currentUser.credits;
+            document.getElementById('total-characters').textContent = characters.length;
+        }
+        
+        // Navigation
+        function switchPage(pageId) {
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.page === pageId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update page content
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId + '-page').classList.add('active');
+            
+            // Update page title
+            const titles = {
+                library: 'Character Gallery',
+                create: 'Character Creation',
+                edit: 'Character Editing',
+                scenes: 'Scene Builder',
+                profile: 'Profile',
+                settings: 'Settings'
+            };
+            document.getElementById('page-title').textContent = titles[pageId] || 'App';
+        }
+        
+        // Navigation event listeners
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchPage(this.dataset.page);
+            });
+        });
+        
+        // Mobile menu toggle
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        });
+        
+        // Character generation
+        async function generateCharacter() {
+            const name = document.getElementById('character-name').value.trim();
+            const style = document.getElementById('character-style').value;
+            const description = document.getElementById('character-description').value.trim();
+            
+            if (!name) {
+                showNotification('Please enter character name', 'error');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            // Simulate API call
+            setTimeout(() => {
+                const character = {
+                    id: Date.now(),
+                    name: name,
+                    style: style || 'realistic',
+                    description: description || 'A mysterious character',
+                    imageUrl: null,
+                    createdAt: new Date().toISOString(),
+                    tags: [style || 'realistic', 'ai-generated']
+                };
+                
+                characters.push(character);
+                updateCharacterGallery();
+                clearCreateForm();
+                updateUserUI();
+                
+                // Hide loading
+                document.getElementById('loading-overlay').style.display = 'none';
+                
+                // Switch to library
+                switchPage('library');
+                showNotification('Character created successfully!', 'success');
+            }, 2500);
+        }
+        
+        // Update character gallery
+        function updateCharacterGallery() {
+            const gallery = document.getElementById('character-gallery');
+            
+            if (characters.length === 0) {
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-images"></i>
+                        <h3>No Characters Yet</h3>
+                        <p>Start creating your first character</p>
+                        <button class="btn btn-primary" onclick="switchPage('create')">
+                            <i class="fas fa-plus"></i>
+                            Create Character
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            gallery.innerHTML = characters.map(character => `
+                <div class="character-card">
+                    <div class="character-image">
+                        <i class="fas fa-user" style="font-size: 3rem; opacity: 0.7;"></i><br>AI生成图像
+                    </div>
+                    <div class="character-info">
+                        <h4>${character.name}</h4>
+                        <div class="character-meta">
+                            ${character.tags.map(tag => `<span class="character-tag">${tag}</span>`).join('')}
+                        </div>
+                        <p>${character.description.length > 100 ? character.description.substring(0, 100) + '...' : character.description}</p>
+                        <div class="character-actions">
+                            <button class="btn btn-primary btn-sm" onclick="editCharacter(${character.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="deleteCharacter(${character.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Character actions
+        function editCharacter(id) {
+            const character = characters.find(c => c.id === id);
+            if (character) {
+                // Populate edit form (implementation would go here)
+                switchPage('edit');
+                showNotification('Edit functionality coming soon', 'info');
+            }
+        }
+        
+        function deleteCharacter(id) {
+            if (confirm('Are you sure you want to delete this character?')) {
+                characters = characters.filter(c => c.id !== id);
+                updateCharacterGallery();
+                updateUserUI();
+                showNotification('Character deleted successfully', 'success');
+            }
+        }
+        
+        // Clear create form
+        function clearCreateForm() {
+            document.getElementById('character-name').value = '';
+            document.getElementById('character-style').selectedIndex = 0;
+            document.getElementById('character-description').value = '';
+        }
+        
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('auth_token');
+                sessionStorage.removeItem('auth_token');
+                window.location.href = '/login.html';
+            }
+        }
+        
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                ${message}
+            `;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--primary)'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: var(--radius);
+                box-shadow: var(--shadow-lg);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 500;
+                animation: slideInFromRight 0.3s ease-out;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutToRight 0.3s ease-out';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Add notification animations
+        const notificationStyles = document.createElement('style');
+        notificationStyles.textContent = `
+            @keyframes slideInFromRight {
+                from { opacity: 0; transform: translateX(100%); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes slideOutToRight {
+                from { opacity: 1; transform: translateX(0); }
+                to { opacity: 0; transform: translateX(100%); }
+            }
+        `;
+        document.head.appendChild(notificationStyles);
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            if (checkAuth()) {
+                // Add some demo characters
+                characters = [
+                    {
+                        id: 1,
+                        name: "Shadow Assassin Aria",
+                        style: "fantasy",
+                        description: "An elven assassin with silver hair and piercing blue eyes, skilled at moving through shadows.",
+                        imageUrl: null,
+                        createdAt: new Date(Date.now() - 86400000).toISOString(),
+                        tags: ["fantasy", "assassin", "mysterious"]
+                    },
+                    {
+                        id: 2,
+                        name: "Mechanical Inventor Tesla",
+                        style: "realistic",
+                        description: "A brilliant inventor in a steampunk world, renowned for mechanical innovations.",
+                        imageUrl: null,
+                        createdAt: new Date(Date.now() - 172800000).toISOString(),
+                        tags: ["realistic", "scholar", "steampunk"]
+                    }
+                ];
+                
+                updateCharacterGallery();
+                updateUserUI();
+            }
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menu-toggle');
+            
+            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>

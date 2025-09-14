@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Character Generator</title>
+    <title>AI Character Generator - Create Amazing Characters with AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -52,7 +52,6 @@
             overflow-x: hidden;
         }
 
-        /* Animations */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -75,18 +74,12 @@
             }
         }
 
-        @keyframes pulse {
+        @keyframes float {
             0%, 100% {
-                opacity: 1;
+                transform: translateY(0px);
             }
             50% {
-                opacity: 0.5;
-            }
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
+                transform: translateY(-10px);
             }
         }
 
@@ -123,6 +116,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: slideInFromLeft 0.6s ease-out;
+            text-decoration: none;
         }
 
         .logo i {
@@ -130,27 +124,45 @@
             color: var(--primary);
         }
 
-        .header-actions {
+        .auth-buttons {
             display: flex;
-            align-items: center;
             gap: 1rem;
+            align-items: center;
         }
 
-        .credits {
-            background: var(--gradient-primary);
-            color: white;
+        .btn {
             padding: 10px 20px;
+            border: none;
             border-radius: var(--radius);
             font-weight: 600;
             font-size: 14px;
-            box-shadow: var(--shadow);
-            display: flex;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: var(--transition);
         }
 
-        .credits:hover {
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
         }
@@ -158,10 +170,13 @@
         /* Hero Section */
         .hero {
             background: var(--gradient-hero);
-            padding: 4rem 0;
+            padding: 6rem 0;
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
         }
 
         .hero::before {
@@ -178,26 +193,27 @@
         .hero-content {
             position: relative;
             z-index: 2;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 0 2rem;
             animation: fadeInUp 0.8s ease-out;
         }
 
         .hero h1 {
-            font-size: 3.5rem;
+            font-size: 4rem;
             font-weight: 800;
             color: white;
             margin-bottom: 1.5rem;
-            line-height: 1.2;
+            line-height: 1.1;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .hero p {
-            font-size: 1.25rem;
+        .hero .subtitle {
+            font-size: 1.4rem;
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 3rem;
             font-weight: 400;
+            line-height: 1.5;
         }
 
         .hero-cta {
@@ -205,7 +221,30 @@
             backdrop-filter: blur(20px);
             color: white;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            padding: 16px 32px;
+            padding: 18px 36px;
+            border-radius: var(--radius);
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-right: 1rem;
+        }
+
+        .hero-cta:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .hero-secondary {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 18px 36px;
             border-radius: var(--radius);
             font-size: 18px;
             font-weight: 600;
@@ -217,123 +256,30 @@
             text-decoration: none;
         }
 
-        .hero-cta:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-xl);
-        }
-
-        /* Container */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        /* Navigation */
-        .nav-section {
-            margin-bottom: 3rem;
-        }
-
-        .nav-tabs {
-            display: flex;
-            gap: 4px;
-            background: var(--background);
-            padding: 6px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            max-width: fit-content;
-            margin: 0 auto;
-        }
-
-        .nav-tab {
-            padding: 14px 28px;
-            background: none;
-            border: none;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-weight: 600;
-            color: var(--text-secondary);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-tab::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: var(--gradient-primary);
-            transition: var(--transition);
-            z-index: -1;
-        }
-
-        .nav-tab.active::before {
-            left: 0;
-        }
-
-        .nav-tab.active {
-            background: var(--gradient-primary);
+        .hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            box-shadow: var(--shadow);
         }
 
-        .nav-tab:hover:not(.active) {
-            background: var(--surface-hover);
-            color: var(--text-primary);
-            transform: translateY(-1px);
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background: var(--background);
         }
 
-        /* Content Sections */
-        .tab-content {
-            display: none;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Character Creator */
-        .character-creator {
-            background: var(--gradient-card);
-            border-radius: var(--radius-lg);
-            padding: 3rem;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .character-creator::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 200px;
-            height: 200px;
-            background: var(--gradient-primary);
-            border-radius: 50%;
-            opacity: 0.05;
-            transform: translate(50%, -50%);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 3rem;
-            position: relative;
-            z-index: 2;
+            margin-bottom: 4rem;
         }
 
         .section-header h2 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 1rem;
             background: var(--gradient-primary);
@@ -343,260 +289,31 @@
         }
 
         .section-header p {
+            font-size: 1.2rem;
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .form-section {
-            margin-bottom: 2.5rem;
-            position: relative;
-            z-index: 2;
-        }
-
-        .form-section h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .form-section h3 i {
-            color: var(--primary);
-        }
-
-        .form-grid {
+        .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .form-group label i {
-            color: var(--primary);
-            font-size: 14px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 14px 16px;
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 15px;
-            transition: var(--transition);
-            background: var(--background);
-            font-family: inherit;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        /* Advanced Options */
-        .advanced-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            background: var(--surface-hover);
-            border-radius: var(--radius);
-            border: 2px solid transparent;
-            transition: var(--transition);
-        }
-
-        .advanced-toggle:hover {
-            border-color: var(--primary-light);
-            background: var(--background);
-        }
-
-        .advanced-toggle h3 {
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toggle-icon {
-            font-size: 18px;
-            color: var(--primary);
-            transition: var(--transition);
-        }
-
-        .toggle-icon.expanded {
-            transform: rotate(180deg);
-        }
-
-        .advanced-options {
-            display: none;
-            animation: fadeInUp 0.3s ease-out;
-        }
-
-        .advanced-options.expanded {
-            display: block;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 14px 28px;
-            border: none;
-            border-radius: var(--radius);
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: var(--transition);
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn-primary {
-            background: var(--gradient-primary);
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-secondary {
-            background: var(--background);
-            color: var(--text-primary);
-            border: 2px solid var(--border);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .btn-secondary:hover {
-            background: var(--surface-hover);
-            border-color: var(--border-hover);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow);
-        }
-
-        .btn-accent {
-            background: var(--secondary);
-            color: white;
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-accent:hover {
-            background: #db2777;
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 3rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        /* Gallery */
-        .gallery-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .gallery-controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .search-box {
-            position: relative;
-        }
-
-        .search-box input {
-            padding: 12px 16px 12px 44px;
-            border: 2px solid var(--border);
-            border-radius: var(--radius);
-            width: 250px;
-            transition: var(--transition);
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .character-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-
-        .character-card {
+        .feature-card {
             background: var(--gradient-card);
+            padding: 3rem;
             border-radius: var(--radius-lg);
-            padding: 1.5rem;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
             transition: var(--transition);
+            text-align: center;
             position: relative;
             overflow: hidden;
         }
 
-        .character-card::before {
+        .feature-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -608,142 +325,183 @@
             transition: var(--transition);
         }
 
-        .character-card:hover {
+        .feature-card:hover {
             transform: translateY(-8px);
             box-shadow: var(--shadow-xl);
         }
 
-        .character-card:hover::before {
+        .feature-card:hover::before {
             transform: scaleX(1);
         }
 
-        .character-image {
-            width: 100%;
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 2rem;
+            color: white;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Showcase Section */
+        .showcase {
+            padding: 6rem 0;
+            background: var(--surface);
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .showcase-card {
+            background: var(--background);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .showcase-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .showcase-image {
             height: 200px;
             background: var(--gradient-primary);
-            border-radius: var(--radius);
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
+            font-size: 1.2rem;
             font-weight: 600;
-            font-size: 16px;
-            position: relative;
-            overflow: hidden;
         }
 
-        .character-image::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="30" cy="30" r="20" fill="rgba(255,255,255,0.1)"/><circle cx="70" cy="70" r="30" fill="rgba(255,255,255,0.05)"/></svg>');
-            opacity: 0.3;
+        .showcase-content {
+            padding: 1.5rem;
         }
 
-        .character-info h4 {
+        .showcase-content h4 {
             font-weight: 700;
             margin-bottom: 0.5rem;
-            font-size: 1.2rem;
         }
 
-        .character-info p {
+        .showcase-content p {
             color: var(--text-secondary);
             font-size: 14px;
-            margin-bottom: 1rem;
-            line-height: 1.5;
         }
 
-        .character-meta {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
+        /* How it Works */
+        .how-it-works {
+            padding: 6rem 0;
+            background: var(--background);
         }
 
-        .character-tag {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
         }
 
-        .character-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        /* Empty State */
-        .empty-state {
+        .step {
             text-align: center;
-            padding: 4rem 2rem;
-            color: var(--text-muted);
+            position: relative;
         }
 
-        .empty-state i {
-            font-size: 4rem;
-            color: var(--border);
-            margin-bottom: 1rem;
-        }
-
-        .empty-state h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-        }
-
-        /* Loading State */
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid var(--border);
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-primary);
+            color: white;
             border-radius: 50%;
-            border-top-color: currentColor;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
-            backdrop-filter: blur(4px);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 2rem;
         }
 
-        .loading-spinner {
-            background: white;
-            padding: 2rem;
-            border-radius: var(--radius-lg);
+        .step h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .step p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .footer-logo {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            box-shadow: var(--shadow-xl);
+            justify-content: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 2rem;
         }
 
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s ease-in-out infinite;
+        .footer-logo i {
+            font-size: 28px;
+        }
+
+        .footer p {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: white;
         }
 
         /* Responsive */
@@ -752,67 +510,31 @@
                 font-size: 2.5rem;
             }
 
-            .hero p {
+            .hero .subtitle {
                 font-size: 1.1rem;
             }
 
-            .container {
-                padding: 2rem 1rem;
+            .hero-cta, .hero-secondary {
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin: 0.5rem 0;
             }
 
-            .character-creator {
-                padding: 2rem;
-            }
-
-            .form-grid {
+            .features-grid,
+            .showcase-grid,
+            .steps {
                 grid-template-columns: 1fr;
             }
 
-            .action-buttons {
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .auth-buttons {
                 flex-direction: column;
+                gap: 0.5rem;
             }
-
-            .character-gallery {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-tabs {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .gallery-header {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: stretch;
-            }
-
-            .gallery-controls {
-                flex-direction: column;
-            }
-
-            .search-box input {
-                width: 100%;
-            }
-        }
-
-        /* Utility Classes */
-        .fade-in {
-            animation: fadeInUp 0.6s ease-out;
-        }
-
-        .slide-in {
-            animation: slideInFromLeft 0.6s ease-out;
-        }
-
-        .pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
         }
     </style>
 </head>
@@ -820,15 +542,19 @@
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <div class="logo">
+            <a href="/" class="logo">
                 <i class="fas fa-magic"></i>
                 AI Character Generator
-            </div>
-            <div class="header-actions">
-                <div class="credits">
-                    <i class="fas fa-coins"></i>
-                    3 Credits
-                </div>
+            </a>
+            <div class="auth-buttons">
+                <a href="/login.html" class="btn btn-outline">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </a>
+                <a href="/register.html" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Sign Up
+                </a>
             </div>
         </div>
     </header>
@@ -836,754 +562,193 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <h1>Create Amazing Characters</h1>
-            <p>Generate unique AI-powered characters with advanced customization options</p>
-            <a href="#main" class="hero-cta">
-                <i class="fas fa-rocket"></i>
-                Start Creating
-            </a>
+            <h1>Create Amazing Characters with AI</h1>
+            <p class="subtitle">Generate unique character designs effortlessly with advanced AI technology. From concept to creation in just minutes.</p>
+            <div style="margin-top: 2rem;">
+                <a href="/register.html" class="hero-cta">
+                    <i class="fas fa-rocket"></i>
+                    Start Creating
+                </a>
+                <a href="#features" class="hero-secondary">
+                    <i class="fas fa-play"></i>
+                    Learn More
+                </a>
+            </div>
         </div>
     </section>
 
-    <!-- Main Content -->
-    <div id="main" class="container">
-        <div class="nav-section">
-            <nav class="nav-tabs">
-                <button class="nav-tab active" data-tab="create">
-                    <i class="fas fa-palette"></i>
-                    Create Character
-                </button>
-                <button class="nav-tab" data-tab="library">
-                    <i class="fas fa-images"></i>
-                    Character Library
-                </button>
-                <button class="nav-tab" data-tab="scenes">
-                    <i class="fas fa-film"></i>
-                    Scene Builder
-                </button>
-            </nav>
-        </div>
-
-        <!-- Create Character Tab -->
-        <div id="create" class="tab-content active">
-            <div class="character-creator">
-                <div class="section-header">
-                    <h2>Create New Character</h2>
-                    <p>Customize every aspect of your character with our advanced AI generator</p>
-                </div>
-                
-                <div class="form-section">
-                    <h3>
-                        <i class="fas fa-user"></i>
-                        Basic Information
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="character-name">
-                                <i class="fas fa-tag"></i>
-                                Character Name
-                            </label>
-                            <input type="text" id="character-name" placeholder="Enter character name">
-                        </div>
-                        <div class="form-group">
-                            <label for="character-style">
-                                <i class="fas fa-brush"></i>
-                                Art Style
-                            </label>
-                            <select id="character-style">
-                                <option value="">Choose style...</option>
-                                <option value="realistic">Realistic</option>
-                                <option value="anime">Anime</option>
-                                <option value="cartoon">Cartoon</option>
-                                <option value="fantasy">Fantasy</option>
-                                <option value="sci-fi">Sci-Fi</option>
-                                <option value="watercolor">Watercolor</option>
-                                <option value="digital-art">Digital Art</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="character-gender">
-                                <i class="fas fa-venus-mars"></i>
-                                Gender
-                            </label>
-                            <select id="character-gender">
-                                <option value="">Any Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="non-binary">Non-Binary</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="character-age">
-                                <i class="fas fa-calendar"></i>
-                                Age Range
-                            </label>
-                            <select id="character-age">
-                                <option value="">Any Age</option>
-                                <option value="child">Child (5-12)</option>
-                                <option value="teen">Teen (13-19)</option>
-                                <option value="young-adult">Young Adult (20-30)</option>
-                                <option value="adult">Adult (31-50)</option>
-                                <option value="elder">Elder (50+)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <div class="advanced-toggle" onclick="toggleAdvanced()">
-                        <h3>
-                            <i class="fas fa-sliders-h"></i>
-                            Advanced Options
-                        </h3>
-                        <i class="fas fa-chevron-down toggle-icon"></i>
-                    </div>
-                    <div id="advanced-options" class="advanced-options">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="character-occupation">
-                                    <i class="fas fa-briefcase"></i>
-                                    Occupation
-                                </label>
-                                <select id="character-occupation">
-                                    <option value="">Any Occupation</option>
-                                    <option value="warrior">Warrior</option>
-                                    <option value="mage">Mage</option>
-                                    <option value="scholar">Scholar</option>
-                                    <option value="merchant">Merchant</option>
-                                    <option value="artist">Artist</option>
-                                    <option value="noble">Noble</option>
-                                    <option value="commoner">Commoner</option>
-                                    <option value="assassin">Assassin</option>
-                                    <option value="healer">Healer</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="character-personality">
-                                    <i class="fas fa-heart"></i>
-                                    Personality
-                                </label>
-                                <select id="character-personality">
-                                    <option value="">Any Personality</option>
-                                    <option value="confident">Confident</option>
-                                    <option value="shy">Shy</option>
-                                    <option value="cheerful">Cheerful</option>
-                                    <option value="serious">Serious</option>
-                                    <option value="mysterious">Mysterious</option>
-                                    <option value="adventurous">Adventurous</option>
-                                    <option value="calm">Calm</option>
-                                    <option value="energetic">Energetic</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="character-clothing">
-                                    <i class="fas fa-tshirt"></i>
-                                    Clothing Style
-                                </label>
-                                <select id="character-clothing">
-                                    <option value="">Any Clothing</option>
-                                    <option value="casual">Casual</option>
-                                    <option value="formal">Formal</option>
-                                    <option value="armor">Armor</option>
-                                    <option value="robes">Robes</option>
-                                    <option value="traditional">Traditional</option>
-                                    <option value="modern">Modern</option>
-                                    <option value="medieval">Medieval</option>
-                                    <option value="futuristic">Futuristic</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="character-setting">
-                                    <i class="fas fa-globe"></i>
-                                    Setting
-                                </label>
-                                <select id="character-setting">
-                                    <option value="">Any Setting</option>
-                                    <option value="fantasy">Fantasy</option>
-                                    <option value="modern">Modern</option>
-                                    <option value="sci-fi">Sci-Fi</option>
-                                    <option value="historical">Historical</option>
-                                    <option value="post-apocalyptic">Post-Apocalyptic</option>
-                                    <option value="steampunk">Steampunk</option>
-                                    <option value="cyberpunk">Cyberpunk</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h3>
-                        <i class="fas fa-pen-fancy"></i>
-                        Description
-                    </h3>
-                    <div class="form-group">
-                        <textarea id="character-description" placeholder="Describe your character in detail... Include physical appearance, backstory, special abilities, or any specific traits you want to include."></textarea>
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="generateCharacter()">
-                        <i class="fas fa-magic"></i>
-                        <span id="generate-text">Generate Character</span>
-                        <span id="generate-loading" class="loading" style="display: none;"></span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="uploadImage()">
-                        <i class="fas fa-upload"></i>
-                        Upload Image
-                    </button>
-                    <button class="btn btn-accent" onclick="randomizeCharacter()">
-                        <i class="fas fa-dice"></i>
-                        Random Character
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Character Library Tab -->
-        <div id="library" class="tab-content">
-            <div class="gallery-header">
-                <h2>Character Library</h2>
-                <div class="gallery-controls">
-                    <div class="search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search characters..." id="character-search" onkeyup="filterCharacters()">
-                    </div>
-                    <select id="filter-style" onchange="filterCharacters()">
-                        <option value="">All Styles</option>
-                        <option value="realistic">Realistic</option>
-                        <option value="anime">Anime</option>
-                        <option value="fantasy">Fantasy</option>
-                    </select>
-                </div>
-            </div>
-            <div id="character-gallery" class="character-gallery">
-                <div class="empty-state">
-                    <i class="fas fa-images"></i>
-                    <h3>No characters yet</h3>
-                    <p>Create your first character to see it here</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Scene Builder Tab -->
-        <div id="scenes" class="tab-content">
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
             <div class="section-header">
-                <h2>Scene Builder</h2>
-                <p>Create dynamic scenes and actions with your characters</p>
+                <h2>Powerful Features</h2>
+                <p>Integrated with cutting-edge AI technology to provide professional-grade character creation experience</p>
             </div>
-            <div class="empty-state">
-                <i class="fas fa-film"></i>
-                <h3>Scene Builder</h3>
-                <p>Select a character from your library to create scenes and actions</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h3>AI-Powered Generation</h3>
+                    <p>Advanced AI algorithms automatically generate high-quality character images based on your descriptions. Supporting various art styles from realistic to anime.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Detailed Customization</h3>
+                    <p>Rich customization options including age, gender, occupation, clothing style, and more. Every detail can be adjusted to meet your specific needs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h3>Character Library</h3>
+                    <p>Easily manage your character portfolio. Support for search, tag categorization, copy and edit functions to make your creation more efficient.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-film"></i>
+                    </div>
+                    <h3>Scene Builder</h3>
+                    <p>Not only create characters, but also place them in different scenes to create dynamic storylines and interactive scenarios.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>Multiple Art Styles</h3>
+                    <p>Support realistic, anime, cartoon, fantasy, sci-fi, watercolor and other art styles to meet different creative needs.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Fast Generation</h3>
+                    <p>Optimized AI engine ensures rapid response, from idea to finished product in just minutes, so creative inspiration never has to wait.</p>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay" style="display: none;">
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-            <span>Generating your character...</span>
+    <!-- Showcase Section -->
+    <section class="showcase">
+        <div class="container">
+            <div class="section-header">
+                <h2>Showcase Gallery</h2>
+                <p>See amazing characters created by other users with our AI technology</p>
+            </div>
+            <div class="showcase-grid">
+                <div class="showcase-card">
+                    <div class="showcase-image">
+                        <i class="fas fa-user-ninja" style="font-size: 3rem;"></i>
+                    </div>
+                    <div class="showcase-content">
+                        <h4>Shadow Assassin - Aria</h4>
+                        <p>An elven assassin with silver hair and piercing blue eyes, moving through shadows with deadly grace.</p>
+                    </div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-image">
+                        <i class="fas fa-user-astronaut" style="font-size: 3rem;"></i>
+                    </div>
+                    <div class="showcase-content">
+                        <h4>Mechanical Inventor - Dr. Tesla</h4>
+                        <p>A brilliant inventor in a steampunk world, renowned for mechanical innovations and copper goggles.</p>
+                    </div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-image">
+                        <i class="fas fa-dragon" style="font-size: 3rem;"></i>
+                    </div>
+                    <div class="showcase-content">
+                        <h4>Dragon Mage - Zephyr</h4>
+                        <p>An ancient dragon mage who masters the mysteries of elemental magic, a symbol of wisdom and power.</p>
+                    </div>
+                </div>
+                <div class="showcase-card">
+                    <div class="showcase-image">
+                        <i class="fas fa-user-shield" style="font-size: 3rem;"></i>
+                    </div>
+                    <div class="showcase-content">
+                        <h4>Temple Knight - Avalon</h4>
+                        <p>Guardian of light, clad in silver armor and wielding a holy sword, protecting justice and peace.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Create your unique character in just three simple steps</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Describe Character</h3>
+                    <p>Fill in basic character information such as name, style, personality, and other traits, or enter detailed description text.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>AI Generation</h3>
+                    <p>Our AI will intelligently generate character images that match your requirements based on your description, usually taking just a few minutes.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Save & Manage</h3>
+                    <p>Save generated characters to your personal library, where you can edit, duplicate, or use them for scene creation anytime.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-magic"></i>
+                AI Character Generator
+            </div>
+            <p>Creating infinite possibilities in the world of AI-generated characters</p>
+            <div class="footer-links">
+                <a href="/about.html">About Us</a>
+                <a href="/privacy.html">Privacy Policy</a>
+                <a href="/terms.html">Terms of Service</a>
+                <a href="/contact.html">Contact Us</a>
+            </div>
+        </div>
+    </footer>
 
     <script>
-        // Global variables
-        let characters = [];
-        let currentFilter = '';
-
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add smooth scrolling
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-
-            // Add some demo characters for testing
-            characters = [
-                {
-                    id: 1,
-                    name: "Aria Shadowblade",
-                    style: "fantasy",
-                    gender: "female",
-                    age: "young-adult",
-                    occupation: "assassin",
-                    personality: "mysterious",
-                    clothing: "armor",
-                    setting: "fantasy",
-                    description: "A skilled elven assassin with silver hair and piercing blue eyes. She moves through shadows with deadly grace.",
-                    imageUrl: null,
-                    createdAt: new Date(Date.now() - 86400000).toISOString(),
-                    tags: ["fantasy", "assassin", "mysterious"]
-                },
-                {
-                    id: 2,
-                    name: "Dr. Marcus Tesla",
-                    style: "realistic",
-                    gender: "male",
-                    age: "adult",
-                    occupation: "scholar",
-                    personality: "serious",
-                    clothing: "formal",
-                    setting: "steampunk",
-                    description: "A brilliant inventor in a steampunk world, known for his mechanical innovations and copper goggles.",
-                    imageUrl: null,
-                    createdAt: new Date(Date.now() - 172800000).toISOString(),
-                    tags: ["realistic", "scholar", "serious"]
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
                 }
-            ];
-
-            // Initialize character gallery
-            updateCharacterGallery();
-        });
-
-        // Tab functionality
-        function switchTab(tabName) {
-            // Hide all tabs with animation
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.nav-tab').forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Show selected tab with delay for animation
-            setTimeout(() => {
-                document.getElementById(tabName).classList.add('active');
-                document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-            }, 100);
-        }
-
-        // Add click listeners to nav tabs
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                switchTab(tab.dataset.tab);
             });
         });
 
-        // Advanced options toggle
-        function toggleAdvanced() {
-            const options = document.getElementById('advanced-options');
-            const icon = document.querySelector('.toggle-icon');
-            
-            if (options.classList.contains('expanded')) {
-                options.classList.remove('expanded');
-                icon.classList.remove('expanded');
+        // Header background on scroll
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('.header');
+            if (window.scrollY > 50) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = 'var(--shadow-md)';
             } else {
-                options.classList.add('expanded');
-                icon.classList.add('expanded');
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = 'var(--shadow-sm)';
             }
-        }
-
-        // Generate character function
-        function generateCharacter() {
-            const name = document.getElementById('character-name').value;
-            if (!name.trim()) {
-                showNotification('Please enter a character name', 'error');
-                document.getElementById('character-name').focus();
-                return;
-            }
-
-            const isEditing = window.editingCharacterId;
-            const loadingText = isEditing ? 'Updating your character...' : 'Generating your character...';
-            
-            // Update loading text
-            document.querySelector('.loading-spinner span').textContent = loadingText;
-            
-            // Show loading overlay
-            document.getElementById('loading-overlay').style.display = 'flex';
-
-            // Simulate API call
-            setTimeout(() => {
-                // Create character object
-                const character = {
-                    id: isEditing ? window.editingCharacterId : Date.now(),
-                    name: name.trim(),
-                    style: document.getElementById('character-style').value || 'realistic',
-                    gender: document.getElementById('character-gender').value || 'any',
-                    age: document.getElementById('character-age').value || 'adult',
-                    occupation: document.getElementById('character-occupation').value || 'adventurer',
-                    personality: document.getElementById('character-personality').value || 'friendly',
-                    clothing: document.getElementById('character-clothing').value || 'casual',
-                    setting: document.getElementById('character-setting').value || 'fantasy',
-                    description: document.getElementById('character-description').value || 'A mysterious character',
-                    imageUrl: null,
-                    createdAt: isEditing ? characters.find(c => c.id === window.editingCharacterId)?.createdAt : new Date().toISOString(),
-                    updatedAt: isEditing ? new Date().toISOString() : undefined,
-                    tags: generateTags()
-                };
-                
-                if (isEditing) {
-                    // Update existing character
-                    const index = characters.findIndex(c => c.id === window.editingCharacterId);
-                    if (index !== -1) {
-                        characters[index] = character;
-                    }
-                    
-                    // Reset editing state
-                    delete window.editingCharacterId;
-                    document.getElementById('generate-text').textContent = 'Generate Character';
-                } else {
-                    // Add new character
-                    characters.push(character);
-                }
-                
-                updateCharacterGallery();
-                
-                // Clear form
-                clearForm();
-                
-                // Hide loading overlay
-                document.getElementById('loading-overlay').style.display = 'none';
-                
-                // Switch to library tab with success message
-                switchTab('library');
-                
-                // Show success notification
-                const message = isEditing ? 'Character updated successfully!' : 'Character created successfully!';
-                showNotification(message, 'success');
-            }, 2500);
-        }
-
-        // Generate tags based on character properties
-        function generateTags() {
-            const tags = [];
-            const style = document.getElementById('character-style').value;
-            const occupation = document.getElementById('character-occupation').value;
-            const personality = document.getElementById('character-personality').value;
-            
-            if (style) tags.push(style);
-            if (occupation) tags.push(occupation);
-            if (personality) tags.push(personality);
-            
-            return tags;
-        }
-
-        // Clear form
-        function clearForm() {
-            document.getElementById('character-name').value = '';
-            document.getElementById('character-style').selectedIndex = 0;
-            document.getElementById('character-gender').selectedIndex = 0;
-            document.getElementById('character-age').selectedIndex = 0;
-            document.getElementById('character-occupation').selectedIndex = 0;
-            document.getElementById('character-personality').selectedIndex = 0;
-            document.getElementById('character-clothing').selectedIndex = 0;
-            document.getElementById('character-setting').selectedIndex = 0;
-            document.getElementById('character-description').value = '';
-            
-            // Close advanced options after form clear
-            const options = document.getElementById('advanced-options');
-            const icon = document.querySelector('.toggle-icon');
-            if (options.classList.contains('expanded')) {
-                options.classList.remove('expanded');
-                icon.classList.remove('expanded');
-            }
-            
-            // Reset editing state
-            if (window.editingCharacterId) {
-                delete window.editingCharacterId;
-                document.getElementById('generate-text').textContent = 'Generate Character';
-            }
-        }
-
-        // Update character gallery
-        function updateCharacterGallery() {
-            const gallery = document.getElementById('character-gallery');
-            
-            if (characters.length === 0) {
-                gallery.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-images"></i>
-                        <h3>No characters yet</h3>
-                        <p>Create your first character to see it here</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const filteredCharacters = characters.filter(character => {
-                const searchTerm = currentFilter.toLowerCase();
-                return character.name.toLowerCase().includes(searchTerm) ||
-                       character.description.toLowerCase().includes(searchTerm) ||
-                       character.tags.some(tag => tag.toLowerCase().includes(searchTerm));
-            });
-            
-            gallery.innerHTML = filteredCharacters.map(character => `
-                <div class="character-card fade-in">
-                    <div class="character-image">
-                        ${character.imageUrl ? 
-                            `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">` : 
-                            `<i class="fas fa-user" style="font-size: 3rem; opacity: 0.7;"></i><br>AI Generated Image`
-                        }
-                    </div>
-                    <div class="character-info">
-                        <h4>${character.name}</h4>
-                        <div class="character-meta">
-                            ${character.tags.map(tag => `<span class="character-tag">${tag}</span>`).join('')}
-                        </div>
-                        <p>${character.description.length > 100 ? character.description.substring(0, 100) + '...' : character.description}</p>
-                        <div class="character-actions">
-                            <button class="btn btn-primary btn-sm" onclick="editCharacter(${character.id})">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="duplicateCharacter(${character.id})">
-                                <i class="fas fa-copy"></i> Duplicate
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="deleteCharacter(${character.id})">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Filter characters
-        function filterCharacters() {
-            const searchTerm = document.getElementById('character-search').value.toLowerCase();
-            const styleFilter = document.getElementById('filter-style').value;
-            
-            const gallery = document.getElementById('character-gallery');
-            
-            if (characters.length === 0) {
-                gallery.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-images"></i>
-                        <h3>No characters yet</h3>
-                        <p>Create your first character to see it here</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            const filteredCharacters = characters.filter(character => {
-                const matchesSearch = !searchTerm || 
-                    character.name.toLowerCase().includes(searchTerm) ||
-                    character.description.toLowerCase().includes(searchTerm) ||
-                    character.tags.some(tag => tag.toLowerCase().includes(searchTerm));
-                
-                const matchesStyle = !styleFilter || character.style === styleFilter;
-                
-                return matchesSearch && matchesStyle;
-            });
-            
-            if (filteredCharacters.length === 0) {
-                gallery.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-search"></i>
-                        <h3>No characters found</h3>
-                        <p>Try adjusting your search or filters</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            gallery.innerHTML = filteredCharacters.map(character => `
-                <div class="character-card fade-in">
-                    <div class="character-image">
-                        ${character.imageUrl ? 
-                            `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">` : 
-                            `<i class="fas fa-user" style="font-size: 3rem; opacity: 0.7;"></i><br>AI Generated Image`
-                        }
-                    </div>
-                    <div class="character-info">
-                        <h4>${character.name}</h4>
-                        <div class="character-meta">
-                            ${character.tags.map(tag => `<span class="character-tag">${tag}</span>`).join('')}
-                        </div>
-                        <p>${character.description.length > 100 ? character.description.substring(0, 100) + '...' : character.description}</p>
-                        <div class="character-actions">
-                            <button class="btn btn-primary btn-sm" onclick="editCharacter(${character.id})">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="duplicateCharacter(${character.id})">
-                                <i class="fas fa-copy"></i> Duplicate
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="deleteCharacter(${character.id})">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Character actions
-        function editCharacter(id) {
-            const character = characters.find(c => c.id === id);
-            if (character) {
-                // Populate form with character data
-                document.getElementById('character-name').value = character.name;
-                document.getElementById('character-style').value = character.style || '';
-                document.getElementById('character-gender').value = character.gender || '';
-                document.getElementById('character-age').value = character.age || '';
-                document.getElementById('character-occupation').value = character.occupation || '';
-                document.getElementById('character-personality').value = character.personality || '';
-                document.getElementById('character-clothing').value = character.clothing || '';
-                document.getElementById('character-setting').value = character.setting || '';
-                document.getElementById('character-description').value = character.description;
-                
-                // Expand advanced options if any advanced fields are filled
-                const hasAdvancedOptions = character.occupation || character.personality || character.clothing || character.setting;
-                if (hasAdvancedOptions) {
-                    const options = document.getElementById('advanced-options');
-                    const icon = document.querySelector('.toggle-icon');
-                    options.classList.add('expanded');
-                    icon.classList.add('expanded');
-                }
-                
-                // Switch to create tab
-                switchTab('create');
-                
-                // Store editing character ID for update instead of create
-                window.editingCharacterId = id;
-                
-                // Update button text
-                const generateBtn = document.querySelector('.btn-primary');
-                const generateText = document.getElementById('generate-text');
-                generateText.textContent = 'Update Character';
-                
-                // Scroll to form
-                setTimeout(() => {
-                    document.querySelector('.character-creator').scrollIntoView({ behavior: 'smooth' });
-                }, 300);
-                
-                showNotification('Character loaded for editing', 'info');
-            }
-        }
-
-        function duplicateCharacter(id) {
-            const original = characters.find(c => c.id === id);
-            if (original) {
-                const duplicate = {
-                    ...original,
-                    id: Date.now(),
-                    name: original.name + ' (Copy)',
-                    createdAt: new Date().toISOString()
-                };
-                characters.push(duplicate);
-                updateCharacterGallery();
-                showNotification('Character duplicated successfully!', 'success');
-            }
-        }
-
-        function deleteCharacter(id) {
-            if (confirm('Are you sure you want to delete this character?')) {
-                characters = characters.filter(c => c.id !== id);
-                updateCharacterGallery();
-                showNotification('Character deleted successfully!', 'success');
-            }
-        }
-
-        // Other functions
-        function uploadImage() {
-            // Create file input
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    // Handle file upload here
-                    showNotification('Image upload functionality coming soon!', 'info');
-                }
-            };
-            input.click();
-        }
-
-        function randomizeCharacter() {
-            const styles = ['realistic', 'anime', 'cartoon', 'fantasy', 'sci-fi', 'watercolor'];
-            const genders = ['male', 'female', 'non-binary'];
-            const ages = ['teen', 'young-adult', 'adult'];
-            const occupations = ['warrior', 'mage', 'scholar', 'merchant', 'artist', 'noble'];
-            const personalities = ['confident', 'shy', 'cheerful', 'serious', 'mysterious', 'adventurous'];
-            const clothing = ['casual', 'formal', 'armor', 'robes', 'traditional', 'modern'];
-            const settings = ['fantasy', 'modern', 'sci-fi', 'historical', 'steampunk'];
-            
-            document.getElementById('character-style').value = styles[Math.floor(Math.random() * styles.length)];
-            document.getElementById('character-gender').value = genders[Math.floor(Math.random() * genders.length)];
-            document.getElementById('character-age').value = ages[Math.floor(Math.random() * ages.length)];
-            document.getElementById('character-occupation').value = occupations[Math.floor(Math.random() * occupations.length)];
-            document.getElementById('character-personality').value = personalities[Math.floor(Math.random() * personalities.length)];
-            document.getElementById('character-clothing').value = clothing[Math.floor(Math.random() * clothing.length)];
-            document.getElementById('character-setting').value = settings[Math.floor(Math.random() * settings.length)];
-            
-            showNotification('Character randomized!', 'info');
-        }
-
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                ${message}
-            `;
-            
-            // Add notification styles
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--primary)'};
-                color: white;
-                padding: 1rem 1.5rem;
-                border-radius: var(--radius);
-                box-shadow: var(--shadow-lg);
-                z-index: 10000;
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                font-weight: 500;
-                animation: slideInFromRight 0.3s ease-out;
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'slideOutToRight 0.3s ease-out';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        // Add CSS for notification animations
-        const notificationStyles = document.createElement('style');
-        notificationStyles.textContent = `
-            @keyframes slideInFromRight {
-                from {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-            
-            @keyframes slideOutToRight {
-                from {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-                to {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-            }
-        `;
-        document.head.appendChild(notificationStyles);
+        });
     </script>
 </body>
 </html>
