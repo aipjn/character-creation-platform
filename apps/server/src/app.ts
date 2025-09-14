@@ -12,7 +12,7 @@ import { getCorsConfig } from './config/cors';
 // import { getHelmetConfig, standardRateLimit } from './config/security';
 
 // Import our new v1 routes and middleware
-import v1Routes from '../../../src/routes/v1/index';
+import v1Routes from './routes/v1/index';
 // import { requestLogger } from './middleware/logging';
 // import { versionDetection, versionRedirect } from './middleware/apiVersion';
 
