@@ -6,14 +6,12 @@
 import express from 'express';
 import { 
   ApiResponse, 
-  ApiRequest, 
-  ApiResponseHandler, 
   User,
   PaginationParams,
   PaginatedResponse,
   API_CONSTANTS 
 } from '../../types/api';
-import { CreateUserInput, UpdateUserInput, UserSchema } from '../../schemas/userSchema';
+// import { CreateUserInput, UpdateUserInput, UserSchema } from '../../schemas/userSchema';
 
 const router = express.Router();
 
@@ -21,7 +19,7 @@ const router = express.Router();
  * GET /api/v1/users
  * List users with pagination and filtering
  */
-router.get('/', async (req: ApiRequest<any>, res: express.Response) => {
+router.get('/', async (req: express.Request, res: express.Response) => {
   try {
     const {
       page = API_CONSTANTS.DEFAULT_PAGINATION.PAGE,
@@ -89,7 +87,7 @@ router.get('/', async (req: ApiRequest<any>, res: express.Response) => {
  * GET /api/v1/users/:id
  * Get user by ID
  */
-router.get('/:id', async (req: ApiRequest, res: express.Response) => {
+router.get('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
@@ -154,7 +152,7 @@ router.get('/:id', async (req: ApiRequest, res: express.Response) => {
  * POST /api/v1/users
  * Create new user
  */
-router.post('/', async (req: ApiRequest<CreateUserInput>, res: express.Response) => {
+router.post('/', async (req: express.Request, res: express.Response) => {
   try {
     // Sanitize input
     const sanitizedInput = UserSchema.sanitizeCreateInput(req.body);
@@ -228,7 +226,7 @@ router.post('/', async (req: ApiRequest<CreateUserInput>, res: express.Response)
  * PUT /api/v1/users/:id
  * Update user by ID
  */
-router.put('/:id', async (req: ApiRequest<UpdateUserInput>, res: express.Response) => {
+router.put('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
@@ -319,7 +317,7 @@ router.put('/:id', async (req: ApiRequest<UpdateUserInput>, res: express.Respons
  * DELETE /api/v1/users/:id
  * Delete user by ID
  */
-router.delete('/:id', async (req: ApiRequest, res: express.Response) => {
+router.delete('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
@@ -384,7 +382,7 @@ router.delete('/:id', async (req: ApiRequest, res: express.Response) => {
  * GET /api/v1/users/:id/characters
  * Get characters belonging to a user
  */
-router.get('/:id/characters', async (req: ApiRequest, res: express.Response) => {
+router.get('/:id/characters', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     const {
