@@ -6,12 +6,12 @@
 import express from 'express';
 import { ApiResponse } from '../../types/api';
 
-// Route imports - Temporarily disabled due to TypeScript errors
-// import usersRouter from './users';
-// import charactersRouter from './characters';
-// import collectionsRouter from './collections';
-// import scenesRouter from './scenes';
-// import creditsRouter from './credits';
+// Route imports
+import usersRouter from './users';
+import charactersRouter from './characters';
+import collectionsRouter from './collections';
+import scenesRouter from './scenes';
+import creditsRouter from './credits';
 
 const router = express.Router();
 
@@ -53,13 +53,13 @@ router.get('/', (req: express.Request, res: express.Response) => {
 });
 
 /**
- * Mount sub-routers - Temporarily disabled due to TypeScript errors
+ * Mount sub-routers
  */
-// router.use('/users', usersRouter);
-// router.use('/characters', charactersRouter);
-// router.use('/collections', collectionsRouter);
-// router.use('/scenes', scenesRouter);
-// router.use('/credits', creditsRouter);
+router.use('/users', usersRouter);
+router.use('/characters', charactersRouter);
+router.use('/collections', collectionsRouter);
+router.use('/scenes', scenesRouter);
+router.use('/credits', creditsRouter);
 
 /**
  * API v1 catch-all route for undefined endpoints

@@ -347,6 +347,5 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export type ContentType = 'application/json' | 'multipart/form-data' | 'application/x-www-form-urlencoded';
 
 // Export all types for Stream B coordination
-export * from './character';
-export * from './generation'; // These files already exist
-export * from './index';
+// export * from './character';
+// export * from './generation'; // These files already exist - temporarily disabled due to Prisma dependencies

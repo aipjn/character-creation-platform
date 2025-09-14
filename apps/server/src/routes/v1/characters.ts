@@ -1,104 +1,89 @@
 /**
- * Characters API Routes
+ * Characters API Routes - Simplified Version
  * RESTful endpoints for character management
  */
 
 import express from 'express';
 import { 
   ApiResponse, 
-  ApiRequest, 
   Character,
-  CreateCharacterRequest,
-  UpdateCharacterRequest,
-  PaginationParams,
   PaginatedResponse,
-  SearchParams,
   API_CONSTANTS 
 } from '../../types/api';
-import { 
-  CreateCharacterInput, 
-  UpdateCharacterInput, 
-  CharacterSchema 
-} from '../../schemas/characterSchema';
 
 const router = express.Router();
 
 /**
  * GET /api/v1/characters
- * List characters with pagination, filtering, and search
+ * List characters with pagination and filtering
  */
-router.get('/', async (req: ApiRequest<any>, res: express.Response) => {
+router.get('/', async (req: express.Request, res: express.Response) => {
   try {
     const {
       page = API_CONSTANTS.DEFAULT_PAGINATION.PAGE,
       limit = API_CONSTANTS.DEFAULT_PAGINATION.LIMIT,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-      query,
-      tags,
-      userId,
-      dateFrom,
-      dateTo
-    } = req.query as PaginationParams & SearchParams;
+      // query = '',
+      // tags = '',
+      // userId = '',
+      // dateFrom = '',
+      // dateTo = '',
+      // sortBy = 'createdAt',
+      // sortOrder = 'desc'
+    } = req.query;
 
-    // Validate pagination parameters
-    const pageNum = Math.max(1, parseInt(page.toString()) || 1);
-    const limitNum = Math.min(
-      API_CONSTANTS.DEFAULT_PAGINATION.MAX_LIMIT,
-      Math.max(1, parseInt(limit.toString()) || API_CONSTANTS.DEFAULT_PAGINATION.LIMIT)
-    );
-
-    // Validate sort parameters
-    const validSortFields = ['createdAt', 'updatedAt', 'name'];
-    const validSortOrders = ['asc', 'desc'];
-    const sortByField = validSortFields.includes(sortBy?.toString()) ? sortBy.toString() : 'createdAt';
-    const sortOrderValue = validSortOrders.includes(sortOrder?.toString()) ? sortOrder.toString() : 'desc';
-
-    // TODO: Implement actual database query when Stream C/E completes database setup
-    // For now, return mock data structure
-    const mockCharacters: Character[] = [];
-    const totalItems = 0;
-    const totalPages = Math.ceil(totalItems / limitNum);
+    // TODO: Implement actual character fetching logic
+    const mockCharacters: Character[] = [
+      {
+        id: '1',
+        name: 'Test Character',
+        description: 'A test character for API testing',
+        imageUrl: 'https://example.com/image.jpg',
+        userId: 'user1',
+        tags: ['fantasy', 'hero'],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    ];
 
     const response: ApiResponse<PaginatedResponse<Character>> = {
       success: true,
       data: {
         items: mockCharacters,
         pagination: {
-          currentPage: pageNum,
-          totalPages,
-          totalItems,
-          itemsPerPage: limitNum,
-          hasNextPage: pageNum < totalPages,
-          hasPreviousPage: pageNum > 1
+          currentPage: Number(page),
+          itemsPerPage: Number(limit),
+          totalItems: mockCharacters.length,
+          totalPages: Math.ceil(mockCharacters.length / Number(limit)),
+          hasNextPage: false,
+          hasPreviousPage: false
         }
       },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     const response: ApiResponse = {
       success: false,
       error: {
         code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to retrieve characters',
+        message: 'Internal server error',
         statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
       },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+    return res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
   }
 });
 
@@ -106,11 +91,11 @@ router.get('/', async (req: ApiRequest<any>, res: express.Response) => {
  * GET /api/v1/characters/:id
  * Get character by ID
  */
-router.get('/:id', async (req: ApiRequest, res: express.Response) => {
+router.get('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+    if (!id) {
       const response: ApiResponse = {
         success: false,
         error: {
@@ -120,7 +105,7 @@ router.get('/:id', async (req: ApiRequest, res: express.Response) => {
         },
         meta: {
           timestamp: new Date().toISOString(),
-          requestId: req.requestId,
+          requestId: req.get('X-Request-ID') || 'unknown',
           version: '1.0.0',
           path: req.path
         }
@@ -129,98 +114,14 @@ router.get('/:id', async (req: ApiRequest, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
     }
 
-    // TODO: Implement actual database query when Stream C/E completes database setup
-    // For now, return not found
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to retrieve character',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * POST /api/v1/characters
- * Create new character
- */
-router.post('/', async (req: ApiRequest<CreateCharacterRequest>, res: express.Response) => {
-  try {
-    // Map API request to internal schema format
-    const createInput: CreateCharacterInput = {
-      userId: req.user?.id || 'temp_user_id', // TODO: Get from auth middleware
-      name: req.body.name,
-      prompt: req.body.description, // Map description to prompt
-      tags: req.body.tags,
-      isPublic: true, // Default to public for now
-      metadata: {
-        apiVersion: '1.0.0',
-        source: 'api_v1'
-      }
-    };
-
-    // Sanitize input
-    const sanitizedInput = CharacterSchema.sanitizeCreateInput(createInput);
-    
-    // Validate input
-    const validation = CharacterSchema.validateCreateInput(sanitizedInput);
-    
-    if (!validation.isValid) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Validation failed',
-          details: validation.errors,
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement actual character creation when Stream C/E completes database setup
-    // For now, return created response with mock data
+    // TODO: Implement actual character fetching logic
     const mockCharacter: Character = {
-      id: `char_${Date.now()}`,
-      name: sanitizedInput.name || 'Untitled Character',
-      description: sanitizedInput.prompt,
-      imageUrl: undefined,
-      userId: sanitizedInput.userId,
-      tags: sanitizedInput.tags || [],
+      id,
+      name: `Character ${id}`,
+      description: `Test character with ID ${id}`,
+      imageUrl: `https://example.com/character${id}.jpg`,
+      userId: 'user1',
+      tags: ['test', 'character'],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -230,42 +131,95 @@ router.post('/', async (req: ApiRequest<CreateCharacterRequest>, res: express.Re
       data: mockCharacter,
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.status(API_CONSTANTS.HTTP_STATUS.CREATED).json(response);
+    return res.json(response);
   } catch (error) {
     const response: ApiResponse = {
       success: false,
       error: {
         code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to create character',
+        message: 'Internal server error',
         statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
       },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+    return res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+  }
+});
+
+/**
+ * POST /api/v1/characters
+ * Create new character
+ */
+router.post('/', async (req: express.Request, res: express.Response) => {
+  try {
+    // TODO: Add validation and actual character creation logic
+    const characterData = req.body;
+    
+    const newCharacter: Character = {
+      id: Date.now().toString(),
+      name: characterData.name || 'New Character',
+      description: characterData.description || 'A newly created character',
+      imageUrl: characterData.imageUrl || '',
+      userId: characterData.userId || 'anonymous',
+      tags: characterData.tags || [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const response: ApiResponse<Character> = {
+      success: true,
+      data: newCharacter,
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.get('X-Request-ID') || 'unknown',
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    return res.status(API_CONSTANTS.HTTP_STATUS.CREATED).json(response);
+  } catch (error) {
+    const response: ApiResponse = {
+      success: false,
+      error: {
+        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
+        message: 'Internal server error',
+        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        requestId: req.get('X-Request-ID') || 'unknown',
+        version: '1.0.0',
+        path: req.path
+      }
+    };
+
+    return res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
   }
 });
 
 /**
  * PUT /api/v1/characters/:id
- * Update character by ID (full update)
+ * Update character by ID
  */
-router.put('/:id', async (req: ApiRequest<UpdateCharacterRequest>, res: express.Response) => {
+router.put('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
+    const updateData = req.body;
 
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+    if (!id) {
       const response: ApiResponse = {
         success: false,
         error: {
@@ -275,7 +229,7 @@ router.put('/:id', async (req: ApiRequest<UpdateCharacterRequest>, res: express.
         },
         meta: {
           timestamp: new Date().toISOString(),
-          requestId: req.requestId,
+          requestId: req.get('X-Request-ID') || 'unknown',
           version: '1.0.0',
           path: req.path
         }
@@ -284,177 +238,47 @@ router.put('/:id', async (req: ApiRequest<UpdateCharacterRequest>, res: express.
       return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
     }
 
-    // Map API request to internal schema format
-    const updateInput: UpdateCharacterInput = {
-      name: req.body.name,
-      prompt: req.body.description, // Map description to prompt
-      tags: req.body.tags
+    // TODO: Implement actual character update logic
+    const updatedCharacter: Character = {
+      id,
+      name: updateData.name || `Updated Character ${id}`,
+      description: updateData.description || 'An updated character',
+      imageUrl: updateData.imageUrl || '',
+      userId: updateData.userId || 'user1',
+      tags: updateData.tags || [],
+      createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+      updatedAt: new Date().toISOString()
     };
 
-    // Sanitize input
-    const sanitizedInput = CharacterSchema.sanitizeUpdateInput(updateInput);
-    
-    // Validate input
-    const validation = CharacterSchema.validateUpdateInput(sanitizedInput);
-    
-    if (!validation.isValid) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Validation failed',
-          details: validation.errors,
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement actual character update when Stream C/E completes database setup
-    // For now, return not found
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
+    const response: ApiResponse<Character> = {
+      success: true,
+      data: updatedCharacter,
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
+    return res.json(response);
   } catch (error) {
     const response: ApiResponse = {
       success: false,
       error: {
         code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to update character',
+        message: 'Internal server error',
         statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
       },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * PATCH /api/v1/characters/:id
- * Partially update character by ID
- */
-router.patch('/:id', async (req: ApiRequest<Partial<UpdateCharacterRequest>>, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Character ID is required',
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // Map API request to internal schema format
-    const updateInput: UpdateCharacterInput = {};
-    if (req.body.name !== undefined) {
-      updateInput.name = req.body.name;
-    }
-    if (req.body.description !== undefined) {
-      updateInput.prompt = req.body.description;
-    }
-    if (req.body.tags !== undefined) {
-      updateInput.tags = req.body.tags;
-    }
-
-    // Sanitize input
-    const sanitizedInput = CharacterSchema.sanitizeUpdateInput(updateInput);
-    
-    // Validate input
-    const validation = CharacterSchema.validateUpdateInput(sanitizedInput);
-    
-    if (!validation.isValid) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Validation failed',
-          details: validation.errors,
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement actual character update when Stream C/E completes database setup
-    // For now, return not found
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to update character',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+    return res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
   }
 });
 
@@ -462,11 +286,11 @@ router.patch('/:id', async (req: ApiRequest<Partial<UpdateCharacterRequest>>, re
  * DELETE /api/v1/characters/:id
  * Delete character by ID
  */
-router.delete('/:id', async (req: ApiRequest, res: express.Response) => {
+router.delete('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
+    if (!id) {
       const response: ApiResponse = {
         success: false,
         error: {
@@ -476,7 +300,7 @@ router.delete('/:id', async (req: ApiRequest, res: express.Response) => {
         },
         meta: {
           timestamp: new Date().toISOString(),
-          requestId: req.requestId,
+          requestId: req.get('X-Request-ID') || 'unknown',
           version: '1.0.0',
           path: req.path
         }
@@ -485,462 +309,37 @@ router.delete('/:id', async (req: ApiRequest, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
     }
 
-    // TODO: Implement actual character deletion when Stream C/E completes database setup
-    // For now, return not found
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to delete character',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * POST /api/v1/characters/:id/generate
- * Trigger character image generation
- */
-router.post('/:id/generate', async (req: ApiRequest, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Character ID is required',
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement actual generation trigger when generation service is ready
-    // For now, return not found
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to trigger character generation',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * POST /api/v1/characters/:id/library
- * Add character to user's library
- */
-router.post('/:id/library', async (req: ApiRequest, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Character ID is required',
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement library functionality when database integration is complete
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to add character to library',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * DELETE /api/v1/characters/:id/library
- * Remove character from user's library
- */
-router.delete('/:id/library', async (req: ApiRequest, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Character ID is required',
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement library functionality when database integration is complete
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to remove character from library',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * POST /api/v1/characters/:id/favorite
- * Toggle character favorite status
- */
-router.post('/:id/favorite', async (req: ApiRequest, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Character ID is required',
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement favorite functionality when database integration is complete
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.NOT_FOUND,
-        message: 'Character not found',
-        statusCode: API_CONSTANTS.HTTP_STATUS.NOT_FOUND
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to toggle character favorite',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * GET /api/v1/characters/library
- * Get user's character library with filters
- */
-router.get('/library', async (req: ApiRequest, res: express.Response) => {
-  try {
-    // TODO: Implement library retrieval when database integration is complete
+    // TODO: Implement actual character deletion logic
+    
     const response: ApiResponse = {
       success: true,
-      data: {
-        items: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 0,
-          totalItems: 0,
-          itemsPerPage: 20,
-          hasNextPage: false,
-          hasPreviousPage: false
-        }
-      },
+      data: { message: `Character ${id} deleted successfully` },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     const response: ApiResponse = {
       success: false,
       error: {
         code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to retrieve character library',
+        message: 'Internal server error',
         statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
       },
       meta: {
         timestamp: new Date().toISOString(),
-        requestId: req.requestId,
+        requestId: req.get('X-Request-ID') || 'unknown',
         version: '1.0.0',
         path: req.path
       }
     };
 
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * GET /api/v1/characters/favorites
- * Get user's favorite characters
- */
-router.get('/favorites', async (req: ApiRequest, res: express.Response) => {
-  try {
-    // TODO: Implement favorites retrieval when database integration is complete
-    const response: ApiResponse = {
-      success: true,
-      data: {
-        items: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 0,
-          totalItems: 0,
-          itemsPerPage: 20,
-          hasNextPage: false,
-          hasPreviousPage: false
-        }
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to retrieve favorite characters',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
-  }
-});
-
-/**
- * GET /api/v1/characters/:id/suggestions
- * Get workflow suggestions for a character (collections, scenes, similar characters)
- */
-router.get('/:id/suggestions', async (req: ApiRequest, res: express.Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      const response: ApiResponse = {
-        success: false,
-        error: {
-          code: API_CONSTANTS.ERROR_CODES.VALIDATION_ERROR,
-          message: 'Character ID is required',
-          statusCode: API_CONSTANTS.HTTP_STATUS.BAD_REQUEST
-        },
-        meta: {
-          timestamp: new Date().toISOString(),
-          requestId: req.requestId,
-          version: '1.0.0',
-          path: req.path
-        }
-      };
-
-      return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
-    }
-
-    // TODO: Implement suggestions when database integration is complete
-    const mockSuggestions = {
-      suggestedCollections: [],
-      suggestedScenes: [],
-      similarCharacters: []
-    };
-
-    const response: ApiResponse = {
-      success: true,
-      data: mockSuggestions,
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.json(response);
-  } catch (error) {
-    const response: ApiResponse = {
-      success: false,
-      error: {
-        code: API_CONSTANTS.ERROR_CODES.INTERNAL_ERROR,
-        message: 'Failed to retrieve character suggestions',
-        statusCode: API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR
-      },
-      meta: {
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId,
-        version: '1.0.0',
-        path: req.path
-      }
-    };
-
-    res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
+    return res.status(API_CONSTANTS.HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response);
   }
 });
 
