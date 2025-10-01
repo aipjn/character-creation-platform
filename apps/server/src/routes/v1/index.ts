@@ -7,6 +7,7 @@ import express from 'express';
 import { ApiResponse } from '../../types/api';
 
 // Route imports
+import authRouter from './auth';
 import usersRouter from './users';
 import charactersRouter from './characters';
 import collectionsRouter from './collections';
@@ -27,6 +28,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
       version: '1.0.0',
       documentation: '/api/v1/docs',
       endpoints: {
+        auth: '/api/v1/auth',
         users: '/api/v1/users',
         characters: '/api/v1/characters',
         collections: '/api/v1/collections',
@@ -55,6 +57,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
 /**
  * Mount sub-routers
  */
+router.use('/auth', authRouter);
 router.use('/users', usersRouter);
 router.use('/characters', charactersRouter);
 router.use('/collections', collectionsRouter);

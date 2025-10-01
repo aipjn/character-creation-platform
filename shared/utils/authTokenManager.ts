@@ -3,8 +3,27 @@
  * Handles API key management, token validation, and refresh logic
  */
 
-import { AuthToken, AuthConfig, ApiError } from '../types/nanoBanana';
-import { nanoBananaConfig } from '../config/nanoBanana';
+export interface AuthToken {
+  value: string;
+  type: 'api-key' | 'bearer';
+  expiresAt?: Date;
+  scope?: string[];
+}
+
+export interface AuthConfig {
+  apiKey?: string;
+  autoRefresh?: boolean;
+  refreshThresholdMs?: number;
+  tokenRefreshUrl?: string;
+  tokenValidationUrl?: string;
+}
+
+export interface ApiError {
+  code: string;
+  message: string;
+  statusCode?: number;
+  retryable: boolean;
+}
 
 export class AuthTokenManager {
   private currentToken: AuthToken | null = null;
@@ -14,7 +33,7 @@ export class AuthTokenManager {
 
   constructor(config: Partial<AuthConfig> = {}) {
     this.config = {
-      apiKey: nanoBananaConfig.apiKey,
+      apiKey: config.apiKey || process.env.NANOBANANA_API_KEY || '',
       autoRefresh: false, // nanoBanana uses static API keys
       refreshThresholdMs: 300000, // 5 minutes before expiration
       ...config

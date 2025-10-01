@@ -7,6 +7,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import { config, isDevelopment, isProduction } from '../../../config/core';
 import { getCorsConfig } from './config/cors';
 // import { getHelmetConfig, standardRateLimit } from './config/security';
@@ -42,6 +43,10 @@ export const createApp = (): express.Application => {
 
   // Static file serving
   app.use(express.static('public'));
+  
+  // Serve uploaded images (use absolute path to ensure it works regardless of working directory)
+  const uploadsPath = path.resolve(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(uploadsPath));
 
   // Body parsing middleware
   app.use(express.json({ 

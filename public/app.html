@@ -465,23 +465,75 @@
             box-shadow: var(--shadow);
         }
 
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-outline:hover {
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
             padding: 4rem 2rem;
             color: var(--text-muted);
+            background: var(--background);
+            border-radius: var(--radius-lg);
+            border: 2px dashed var(--border);
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .empty-state::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(var(--primary-rgb), 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .empty-state > * {
+            position: relative;
+            z-index: 1;
         }
 
         .empty-state i {
             font-size: 4rem;
-            color: var(--border);
-            margin-bottom: 1rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            opacity: 0.7;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .empty-state h3 {
             font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
             color: var(--text-secondary);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Profile Section */
@@ -664,7 +716,7 @@
                 <div class="header-right">
                     <div class="credits-display">
                         <i class="fas fa-coins"></i>
-                        <span id="credits-count">10</span> Credits
+                        <span id="credits-count">0</span> Credits
                     </div>
                 </div>
             </header>
@@ -690,7 +742,9 @@
                             left: 0;
                             right: 0;
                             bottom: 0;
-                            background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><defs><pattern id=\"grid\" width=\"10\" height=\"10\" patternUnits=\"userSpaceOnUse\"><path d=\"M 10 0 L 0 0 0 10\" fill=\"none\" stroke=\"rgba(255,255,255,0.1)\" stroke-width=\"0.5\"/></pattern></defs><rect width=\"100\" height=\"100\" fill=\"url(%23grid)\" /></svg>');
+                            background: linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.05) 75%);
+                            background-size: 20px 20px;
+                            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
                             opacity: 0.3;
                         "></div>
                         <div style="position: relative; z-index: 1;">
@@ -730,13 +784,26 @@
                     
                     <div id="character-gallery" class="character-gallery">
                         <div class="empty-state">
-                            <i class="fas fa-images"></i>
-                            <h3>No Characters Yet</h3>
-                            <p>Start creating your first character</p>
-                            <button class="btn btn-primary" onclick="switchPage('create')">
-                                <i class="fas fa-plus"></i>
-                                Create Character
-                            </button>
+                            <i class="fas fa-magic"></i>
+                            <h3>Ready to Create Your First Character?</h3>
+                            <p>Bring your imagination to life with AI-powered character generation. Start by describing your character idea and watch it come to life!</p>
+                            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="switchPage('create')" style="padding: 1rem 2rem; font-size: 16px;">
+                                    <i class="fas fa-plus"></i>
+                                    Create Your First Character
+                                </button>
+                            </div>
+                            <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(var(--primary-rgb), 0.1); border-radius: var(--radius); border-left: 4px solid var(--primary);">
+                                <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 16px;">
+                                    <i class="fas fa-lightbulb"></i> Quick Start Tips
+                                </h4>
+                                <ul style="text-align: left; margin: 0; padding-left: 1.5rem; color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                    <li>Describe your character's appearance, personality, or setting</li>
+                                    <li>Choose from various art styles like realistic, anime, or cartoon</li>
+                                    <li>Use our AI-powered prompt optimization for better results</li>
+                                    <li>Create variants of your characters with different poses or expressions</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -747,7 +814,7 @@
                     <div class="creation-banner" style="
                         background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
                         border-radius: var(--radius-lg);
-                        padding: 2.5rem 2rem;
+                        padding: 2rem;
                         text-align: center;
                         color: white;
                         margin-bottom: 2rem;
@@ -773,99 +840,349 @@
                             ">
                                 <i class="fas fa-palette" style="font-size: 1.8rem;"></i>
                             </div>
-                            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                            <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                                 Create New Character
                             </h2>
-                            <p style="opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-size: 1.1rem;">
-                                Design unique characters with advanced AI technology
+                            <p style="opacity: 0.9; text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-size: 1rem;">
+                                Bring your characters to life with natural language descriptions
                             </p>
                         </div>
                     </div>
                     
-                    <div style="background: var(--background); border-radius: var(--radius-lg); padding: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow);">
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Character Name</label>
-                                <input type="text" id="character-name" placeholder="Enter character name" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
+                    <!-- Split Layout Container -->
+                    <div class="character-creator-layout" style="
+                        display: grid;
+                        grid-template-columns: minmax(400px, 600px) 1fr;
+                        gap: 2rem;
+                        min-height: 600px;
+                        max-width: 1400px;
+                        margin: 0 auto;
+                    ">
+                        <!-- Left Panel - Input Area -->
+                        <div class="input-panel" style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 2rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                            display: flex;
+                            flex-direction: column;
+                        ">
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                                    <i class="fas fa-user-edit" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                                    Character Details
+                                </h3>
+                                <p style="color: var(--text-secondary); font-size: 14px;">
+                                    Tell us about your character in your own words
+                                </p>
                             </div>
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Art Style</label>
-                                <select id="character-style" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
-                                    <option value="">Choose style...</option>
-                                    <option value="realistic">Realistic</option>
-                                    <option value="anime">Anime</option>
-                                    <option value="cartoon">Cartoon</option>
-                                    <option value="fantasy">Fantasy</option>
-                                </select>
+
+                            <!-- Character Name -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">Character Name</label>
+                                <input type="text" id="character-name" placeholder="Enter your character's name" style="
+                                    width: 100%; 
+                                    padding: 14px; 
+                                    border: 2px solid var(--border); 
+                                    border-radius: var(--radius); 
+                                    font-size: 15px;
+                                    transition: var(--transition);
+                                ">
                             </div>
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Gender</label>
-                                <select id="character-gender" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
-                                    <option value="">Choose gender...</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="non-binary">Non-binary</option>
-                                </select>
+
+                            <!-- Main Description -->
+                            <div style="margin-bottom: 1.5rem; flex: 1;">
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">Character Description</label>
+                                <div style="position: relative;">
+                                    <textarea id="character-description" placeholder="Describe your character in detail...
+
+Examples:
+• A brave female knight with long blonde hair and blue eyes, wearing silver armor
+• A mysterious wizard in dark robes with a staff, elderly with a long white beard
+• A young adventurer with brown hair, carrying a backpack and wearing leather armor" 
+                                    style="
+                                        width: 100%; 
+                                        padding: 16px; 
+                                        border: 2px solid var(--border); 
+                                        border-radius: var(--radius); 
+                                        font-size: 15px; 
+                                        min-height: 180px; 
+                                        resize: vertical;
+                                        line-height: 1.5;
+                                        font-family: inherit;
+                                        transition: var(--transition);
+                                    "></textarea>
+                                    <div style="
+                                        position: absolute;
+                                        bottom: 12px;
+                                        right: 12px;
+                                        background: var(--surface);
+                                        padding: 4px 8px;
+                                        border-radius: 4px;
+                                        font-size: 12px;
+                                        color: var(--text-muted);
+                                    " id="char-count">0 characters</div>
+                                </div>
                             </div>
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Profession</label>
-                                <select id="character-profession" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
-                                    <option value="">Choose profession...</option>
-                                    <option value="warrior">Warrior</option>
-                                    <option value="mage">Mage</option>
-                                    <option value="archer">Archer</option>
-                                    <option value="knight">Knight</option>
-                                    <option value="assassin">Assassin</option>
-                                    <option value="healer">Healer</option>
-                                    <option value="scholar">Scholar</option>
-                                    <option value="merchant">Merchant</option>
-                                    <option value="noble">Noble</option>
-                                    <option value="peasant">Peasant</option>
-                                </select>
+
+                            <!-- Quick Options -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">Quick Options</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div>
+                                        <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 14px;">Art Style</label>
+                                        <select id="character-style" style="
+                                            width: 100%; 
+                                            padding: 10px; 
+                                            border: 2px solid var(--border); 
+                                            border-radius: var(--radius); 
+                                            font-size: 14px;
+                                            background: var(--background);
+                                        ">
+                                            <option value="">Any Style</option>
+                                            <option value="realistic">Realistic</option>
+                                            <option value="anime">Anime</option>
+                                            <option value="cartoon">Cartoon</option>
+                                            <option value="fantasy">Fantasy</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; font-size: 14px;">Gender</label>
+                                        <select id="character-gender" style="
+                                            width: 100%; 
+                                            padding: 10px; 
+                                            border: 2px solid var(--border); 
+                                            border-radius: var(--radius); 
+                                            font-size: 14px;
+                                            background: var(--background);
+                                        ">
+                                            <option value="">Any Gender</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="non-binary">Non-binary</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Age Range</label>
-                                <select id="character-age" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
-                                    <option value="">Choose age...</option>
-                                    <option value="child">Child (8-12)</option>
-                                    <option value="teen">Teen (13-17)</option>
-                                    <option value="young-adult">Young Adult (18-25)</option>
-                                    <option value="adult">Adult (26-40)</option>
-                                    <option value="middle-aged">Middle-aged (41-60)</option>
-                                    <option value="elderly">Elderly (60+)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Hair Color</label>
-                                <select id="character-hair" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px;">
-                                    <option value="">Choose hair color...</option>
-                                    <option value="black">Black</option>
-                                    <option value="brown">Brown</option>
-                                    <option value="blonde">Blonde</option>
-                                    <option value="red">Red</option>
-                                    <option value="white">White</option>
-                                    <option value="gray">Gray</option>
-                                    <option value="blue">Blue</option>
-                                    <option value="green">Green</option>
-                                    <option value="purple">Purple</option>
-                                    <option value="pink">Pink</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 2rem;">
-                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Character Description</label>
-                            <textarea id="character-description" placeholder="Describe your desired character in detail..." style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 14px; min-height: 120px; resize: vertical;"></textarea>
-                        </div>
-                        
-                        <div style="text-align: center;">
-                            <button class="btn btn-primary" onclick="generateCharacter()" style="padding: 14px 28px; font-size: 16px;">
+
+                            <!-- Generate Button -->
+                            <button class="btn btn-primary" onclick="generateCharacter()" style="
+                                padding: 16px 24px; 
+                                font-size: 16px; 
+                                font-weight: 600;
+                                width: 100%;
+                                margin-top: auto;
+                            ">
                                 <i class="fas fa-magic"></i>
-                                Generate Character
+                                Optimize Prompt
                             </button>
                         </div>
+
+                        <!-- Right Panel - Preview Area -->
+                        <div class="preview-panel" style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 2rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                            display: flex;
+                            flex-direction: column;
+                        ">
+                            <div style="margin-bottom: 1.5rem;">
+                                <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">
+                                    <i class="fas fa-eye" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                                    Character Preview
+                                </h3>
+                                <p style="color: var(--text-secondary); font-size: 14px;">
+                                    Your generated character will appear here
+                                </p>
+                            </div>
+
+                            <!-- Preview Content -->
+                            <div id="character-preview" style="
+                                flex: 1;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                min-height: 400px;
+                                background: var(--surface);
+                                border-radius: var(--radius);
+                                border: 2px dashed var(--border);
+                                position: relative;
+                            ">
+                                <!-- Empty State -->
+                                <div id="preview-empty" style="text-align: center; color: var(--text-muted);">
+                                    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <h4 style="margin-bottom: 0.5rem; color: var(--text-secondary);">No Character Yet</h4>
+                                    <p style="font-size: 14px;">Fill in the details and generate your character</p>
+                                </div>
+
+                                <!-- Prompt Optimization Display -->
+                                <div id="prompt-optimization" style="display: none; width: 100%;">
+                                    <div style="
+                                        background: var(--surface);
+                                        border: 1px solid var(--border);
+                                        border-radius: var(--radius);
+                                        padding: 1rem;
+                                        margin-bottom: 1rem;
+                                    ">
+                                        <h5 style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.9rem;">
+                                            <i class="fas fa-lightbulb" style="color: var(--warning); margin-right: 0.5rem;"></i>
+                                            Optimized Prompt (Click to Edit)
+                                        </h5>
+                                        <textarea id="optimized-prompt" style="
+                                            width: 100%;
+                                            background: var(--background);
+                                            padding: 0.75rem;
+                                            border-radius: 6px;
+                                            font-size: 13px;
+                                            line-height: 1.4;
+                                            color: var(--text-secondary);
+                                            border: 2px solid var(--border);
+                                            margin-bottom: 0.75rem;
+                                            min-height: 120px;
+                                            resize: vertical;
+                                            font-family: inherit;
+                                        "></textarea>
+                                        <div id="prompt-reasoning" style="
+                                            font-size: 12px;
+                                            color: var(--text-muted);
+                                            font-style: italic;
+                                            margin-bottom: 0.75rem;
+                                        "></div>
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                        <button class="btn btn-primary btn-sm" onclick="generateWithOptimizedPrompt()">
+                                            <i class="fas fa-magic"></i> Generate Image
+                                        </button>
+                                        <button id="back-to-preview-btn" class="btn btn-secondary btn-sm" onclick="backToCharacterPreview()" style="display: none;">
+                                            <i class="fas fa-arrow-left"></i> Back to Preview
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Direct Prompt Editing -->
+                                <div id="direct-prompt-editing" style="display: none; width: 100%;">
+                                    <div style="
+                                        background: var(--surface);
+                                        border: 1px solid var(--border);
+                                        border-radius: var(--radius);
+                                        padding: 1rem;
+                                        margin-bottom: 1rem;
+                                    ">
+                                        <h5 style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.9rem;">
+                                            <i class="fas fa-edit" style="color: var(--primary); margin-right: 0.5rem;"></i>
+                                            Edit Prompt
+                                        </h5>
+                                        <textarea id="direct-prompt-editor" 
+                                        style="
+                                            width: 100%;
+                                            padding: 12px;
+                                            border: 2px solid var(--border);
+                                            border-radius: var(--radius);
+                                            font-size: 14px;
+                                            min-height: 120px;
+                                            resize: vertical;
+                                            font-family: inherit;
+                                        "></textarea>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                        <button class="btn btn-primary btn-sm" onclick="generateWithEditedPrompt()">
+                                            <i class="fas fa-magic"></i> Generate Image
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm" onclick="cancelDirectEditing()">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Generated Character Display -->
+                                <div id="preview-character" style="display: none; width: 100%;">
+                                    <div id="character-image-container" style="
+                                        width: 100%;
+                                        min-height: 300px;
+                                        max-height: 600px;
+                                        background: var(--gradient-primary);
+                                        border-radius: var(--radius);
+                                        margin-bottom: 1rem;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        overflow: hidden;
+                                    ">
+                                        <div style="color: white; font-size: 1.1rem; font-weight: 600; text-align: center;">
+                                            <i class="fas fa-user" style="font-size: 1.8rem; display: block; margin-bottom: 0.5rem;"></i>
+                                            Generated Character
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="text-align: left;">
+                                        <div style="
+                                            background: var(--surface);
+                                            padding: 1rem;
+                                            border-radius: var(--radius);
+                                            border: 1px solid var(--border);
+                                            margin-bottom: 1rem;
+                                        ">
+                                            <h4 id="preview-name" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem;"></h4>
+                                            <p id="preview-description" style="color: var(--text-secondary); font-size: 14px; line-height: 1.4; margin-bottom: 0.75rem;"></p>
+                                            
+                                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                                <span id="preview-style" class="character-tag" style="display: none;"></span>
+                                                <span id="preview-gender" class="character-tag" style="display: none;"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                            <button class="btn btn-secondary btn-sm" onclick="modifyCharacter()">
+                                                <i class="fas fa-edit"></i> Modify
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm" onclick="regenerateCharacter()">
+                                                <i class="fas fa-redo"></i> Regenerate
+                                            </button>
+                                            <button class="btn btn-primary btn-sm" onclick="saveCharacter()">
+                                                <i class="fas fa-save"></i> Save
+                                            </button>
+                                            <button class="btn btn-outline btn-sm" onclick="abandonCharacter()">
+                                                <i class="fas fa-trash"></i> Abandon
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Mobile Layout Styles -->
+                    <style>
+                        @media (max-width: 768px) {
+                            .character-creator-layout {
+                                grid-template-columns: 1fr !important;
+                                gap: 1rem !important;
+                                max-width: 100% !important;
+                                margin: 0 !important;
+                            }
+                        }
+
+                        @media (max-width: 1024px) {
+                            .character-creator-layout {
+                                grid-template-columns: minmax(350px, 500px) 1fr !important;
+                            }
+                        }
+                        
+                        #character-description:focus,
+                        #character-name:focus,
+                        #character-style:focus,
+                        #character-gender:focus {
+                            border-color: var(--primary);
+                            outline: none;
+                            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+                        }
+                    </style>
                 </div>
 
                 <!-- Character Edit Page -->
@@ -909,7 +1226,7 @@
                                 <div class="stat-label">Characters Created</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value" id="total-credits">10</div>
+                                <div class="stat-value" id="total-credits">0</div>
                                 <div class="stat-label">Credits Remaining</div>
                             </div>
                             <div class="stat-card">
@@ -977,7 +1294,7 @@
     <div id="loading-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
         <div style="background: white; padding: 2rem; border-radius: var(--radius-lg); display: flex; align-items: center; gap: 1rem; box-shadow: var(--shadow-xl);">
             <div style="width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s ease-in-out infinite;"></div>
-            <span>正在生成角色...</span>
+            <span id="loading-text">Processing...</span>
         </div>
     </div>
 
@@ -985,26 +1302,67 @@
         // Global state
         let characters = [];
         let currentUser = null;
+        const API_BASE = '/api/v1';
+        
+        // Get authentication token from storage
+        function getAuthToken() {
+            return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        }
         
         // Check authentication
-        function checkAuth() {
-            const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+        async function checkAuth() {
+            const token = getAuthToken();
             if (!token) {
                 window.location.href = '/login.html';
                 return false;
             }
             
-            // TODO: Verify token with server
-            // For now, assume valid and set demo user
-            currentUser = {
-                id: 'demo_user',
-                name: 'Demo User',
-                email: 'demo@example.com',
-                credits: 10
-            };
+            // Verify token with server
+            try {
+                const response = await fetch('/api/v1/auth/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        currentUser = result.data.user;
+                        updateUserUI();
+                        return true;
+                    }
+                } else {
+                    console.warn('Auth verification failed, continuing without auth');
+                    // Create a demo user for testing
+                    currentUser = {
+                        id: 'demo-user',
+                        name: 'Demo User',
+                        email: 'demo@example.com',
+                        credits: 10
+                    };
+                    updateUserUI();
+                    return true;
+                }
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                // Create a demo user for testing
+                currentUser = {
+                    id: 'demo-user',
+                    name: 'Demo User',
+                    email: 'demo@example.com', 
+                    credits: 10
+                };
+                updateUserUI();
+                return true;
+            }
             
-            updateUserUI();
-            return true;
+            // Token invalid, clear it
+            localStorage.removeItem('auth_token');
+            sessionStorage.removeItem('auth_token');
+            return false;
         }
         
         // Update user interface
@@ -1065,76 +1423,507 @@
             sidebar.classList.toggle('open');
         });
         
-        // Character generation
+        // Character generation with multi-step workflow
+        let currentGeneratedCharacter = null;
+        let currentOptimizedPrompt = null;
+        let currentConversationId = null;
+        let characterCounter = 1;
+        
         async function generateCharacter() {
             const name = document.getElementById('character-name').value.trim();
             const style = document.getElementById('character-style').value;
             const gender = document.getElementById('character-gender').value;
-            const profession = document.getElementById('character-profession').value;
-            const age = document.getElementById('character-age').value;
-            const hair = document.getElementById('character-hair').value;
             const description = document.getElementById('character-description').value.trim();
             
             if (!name) {
-                showNotification('Please enter character name', 'error');
+                showNotification('Please enter a character name', 'error');
                 return;
             }
             
-            // Build enhanced description from all fields
-            let enhancedDescription = description || '';
-            const traits = [];
-            
-            if (gender) traits.push(`${gender} character`);
-            if (profession) traits.push(`works as a ${profession}`);
-            if (age) traits.push(`${age.replace('-', ' ')}`);
-            if (hair) traits.push(`with ${hair} hair`);
-            if (style) traits.push(`in ${style} art style`);
-            
-            if (traits.length > 0) {
-                enhancedDescription = enhancedDescription 
-                    ? `${enhancedDescription}. ${traits.join(', ')}.`
-                    : `A ${traits.join(', ')}.`;
+            if (!description) {
+                showNotification('Please provide a character description', 'error');
+                return;
             }
             
             // Show loading
             document.getElementById('loading-overlay').style.display = 'flex';
             
-            // Simulate API call
-            setTimeout(() => {
+            try {
+                // Step 1: Optimize prompt with Gemini
+                const response = await fetch('/api/v1/characters/optimize-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userDescription: description,
+                        style: style,
+                        gender: gender
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentOptimizedPrompt = result.data;
+                    currentConversationId = result.data.conversationId;
+                    showPromptOptimization(result.data);
+                } else {
+                    throw new Error(result.error?.message || 'Failed to optimize prompt');
+                }
+                
+            } catch (error) {
+                console.error('Error optimizing prompt:', error);
+                showNotification('Failed to optimize prompt. Generating with original description.', 'warning');
+                
+                // Fallback to direct generation
+                generateCharacterDirect(name, style, gender, description);
+            } finally {
+                // Hide loading
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+        
+        function generateCharacterDirect(name, style, gender, description) {
+            // Build enhanced description from all fields
+            let enhancedDescription = description;
+            const traits = [];
+            
+            if (gender) traits.push(`${gender}`);
+            if (style) traits.push(`${style} art style`);
+            
+            if (traits.length > 0) {
+                enhancedDescription = `${description} (${traits.join(', ')})`;
+            }
+            
+            const character = {
+                id: Date.now(),
+                name: name,
+                style: style || 'realistic',
+                description: description,
+                enhancedDescription: enhancedDescription,
+                imageUrl: null,
+                createdAt: new Date().toISOString(),
+                tags: [
+                    style || 'generated',
+                    gender,
+                    'ai-generated'
+                ].filter(tag => tag && tag.trim() !== ''),
+                metadata: {
+                    gender: gender,
+                    artStyle: style
+                }
+            };
+            
+            currentGeneratedCharacter = character;
+            showCharacterPreview(character);
+            showNotification('Character generated successfully!', 'success');
+        }
+        
+        // Show prompt optimization results
+        function showPromptOptimization(optimizationData) {
+            // Hide empty state and other sections
+            document.getElementById('preview-empty').style.display = 'none';
+            document.getElementById('preview-character').style.display = 'none';
+
+            // Show prompt optimization
+            document.getElementById('prompt-optimization').style.display = 'block';
+
+            // Update content - now it's a textarea
+            document.getElementById('optimized-prompt').value = optimizationData.optimizedPrompt;
+            document.getElementById('prompt-reasoning').textContent = optimizationData.reasoning;
+
+            // Note: Back button visibility is controlled by caller (regenerateCharacter shows it, first generation doesn't)
+
+            showNotification('Prompt optimized successfully! Edit if needed.', 'success');
+        }
+        
+        // Generate character with optimized prompt
+        async function generateWithOptimizedPrompt() {
+            // Get the current prompt value from textarea (user may have edited it)
+            const promptTextarea = document.getElementById('optimized-prompt');
+            const editedPrompt = promptTextarea.value.trim();
+
+            if (!editedPrompt) {
+                showNotification('Prompt cannot be empty', 'error');
+                return;
+            }
+
+            const name = document.getElementById('character-name').value.trim() || `Character ${characterCounter}`;
+            const style = document.getElementById('character-style').value;
+            const gender = document.getElementById('character-gender').value;
+
+            try {
+                // Show loading
+                document.getElementById('loading-overlay').style.display = 'flex';
+
+                // Call real image generation API with the edited prompt
+                const imageResponse = await fetch('/api/v1/characters/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        prompt: editedPrompt,
+                        style: style
+                    })
+                });
+
+                console.log('Image generation response status:', imageResponse.status);
+                console.log('Image generation response headers:', Object.fromEntries(imageResponse.headers.entries()));
+                
+                if (!imageResponse.ok) {
+                    const errorText = await imageResponse.text();
+                    console.error('Image generation HTTP error:', errorText);
+                    throw new Error(`HTTP ${imageResponse.status}: ${imageResponse.statusText} - ${errorText}`);
+                }
+
+                const imageResult = await imageResponse.json();
+                console.log('Image generation result:', imageResult);
+                
                 const character = {
                     id: Date.now(),
                     name: name,
                     style: style || 'realistic',
-                    description: enhancedDescription || 'A mysterious character',
-                    imageUrl: null,
+                    description: currentOptimizedPrompt?.originalInput || editedPrompt,
+                    enhancedDescription: editedPrompt,
+                    imageUrl: imageResult.data?.imageUrl || null,
+                    thumbnailUrl: imageResult.data?.thumbnailUrl || null,
                     createdAt: new Date().toISOString(),
                     tags: [
-                        style || 'realistic',
+                        style || 'generated',
                         gender,
-                        profession,
                         'ai-generated'
                     ].filter(tag => tag && tag.trim() !== ''),
                     metadata: {
                         gender: gender,
-                        profession: profession,
-                        ageRange: age,
-                        hairColor: hair,
-                        artStyle: style
+                        artStyle: style,
+                        optimizedPrompt: editedPrompt,
+                        conversationId: currentConversationId
                     }
                 };
                 
-                characters.push(character);
-                updateCharacterGallery();
-                clearCreateForm();
-                updateUserUI();
+                currentGeneratedCharacter = character;
+                showCharacterPreview(character);
                 
+                showNotification('Character generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating character:', error);
+                console.error('Error name:', error.name);
+                console.error('Error message:', error.message);
+                console.error('Error stack:', error.stack);
+                showNotification(`Failed to generate character image: ${error.message}`, 'error');
+            } finally {
                 // Hide loading
                 document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+        
+        // Show modification options
+        function showModificationOptions() {
+            document.getElementById('prompt-optimization').style.display = 'none';
+            document.getElementById('direct-prompt-editing').style.display = 'block';
+            
+            // Pre-fill the editor with current optimized prompt
+            if (currentOptimizedPrompt && currentOptimizedPrompt.optimizedPrompt) {
+                document.getElementById('direct-prompt-editor').value = currentOptimizedPrompt.optimizedPrompt;
+            }
+        }
+        
+        // Generate with edited prompt
+        async function generateWithEditedPrompt() {
+            const editedPrompt = document.getElementById('direct-prompt-editor').value.trim();
+            
+            if (!editedPrompt) {
+                showNotification('Please provide a prompt', 'error');
+                return;
+            }
+            
+            // Hide direct editing section
+            document.getElementById('direct-prompt-editing').style.display = 'none';
+            document.getElementById('prompt-optimization').style.display = 'block';
+            
+            // Update the optimized prompt display with edited content
+            document.getElementById('optimized-prompt-text').textContent = editedPrompt;
+            
+            // Generate image with the edited prompt
+            generateCharacterWithPrompt(editedPrompt);
+        }
+        
+        // Helper function to generate character with specific prompt
+        async function generateCharacterWithPrompt(prompt) {
+            if (!prompt) {
+                showNotification('No prompt provided', 'error');
+                return;
+            }
+            
+            const name = document.getElementById('character-name').value.trim() || `Character ${characterCounter}`;
+            const style = document.getElementById('character-style').value;
+            
+            try {
+                // Show loading
+                document.getElementById('loading-overlay').style.display = 'flex';
                 
-                // Switch to library
-                switchPage('library');
-                showNotification('Character created successfully!', 'success');
-            }, 2500);
+                // Call real image generation API
+                const imageResponse = await fetch('/api/v1/characters/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        style: style
+                    })
+                });
+
+                if (!imageResponse.ok) {
+                    throw new Error(`Image generation failed: ${imageResponse.status}`);
+                }
+
+                const imageResult = await imageResponse.json();
+                
+                if (!imageResult.success) {
+                    throw new Error(imageResult.error?.message || 'Image generation failed');
+                }
+
+                // Create character data with generated image
+                const character = {
+                    id: Date.now(),
+                    name: name,
+                    style: style,
+                    description: document.getElementById('character-description').value.trim(),
+                    enhancedDescription: prompt,
+                    imageUrl: imageResult.data.result.imageUrl,
+                    createdAt: new Date().toISOString(),
+                    tags: ['ai-generated'],
+                    metadata: {
+                        artStyle: style,
+                        optimizedPrompt: prompt
+                    }
+                };
+
+                // Show character preview
+                showCharacterPreview(character);
+                showNotification('Character generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating character image:', error);
+                showNotification(`Failed to generate character image: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+        
+        // Cancel direct editing
+        function cancelDirectEditing() {
+            document.getElementById('direct-prompt-editing').style.display = 'none';
+            document.getElementById('prompt-optimization').style.display = 'block';
+        }
+        
+        // Show character in preview area
+        function showCharacterPreview(character) {
+            // Hide other sections
+            document.getElementById('preview-empty').style.display = 'none';
+            document.getElementById('prompt-optimization').style.display = 'none';
+
+            // Show character preview
+            document.getElementById('preview-character').style.display = 'block';
+            
+            // Update image container
+            const imageContainer = document.getElementById('character-image-container');
+            console.log('Updating image container with imageUrl:', character.imageUrl);
+            
+            if (character.imageUrl) {
+                // Clear existing styles and content
+                imageContainer.style.background = 'transparent';
+                imageContainer.innerHTML = `
+                    <img src="${character.imageUrl}" alt="${character.name}" style="
+                        width: 100%;
+                        height: auto;
+                        max-height: 600px;
+                        object-fit: contain;
+                        border-radius: 12px;
+                        display: block;
+                    " loading="lazy" onload="console.log('Image loaded successfully')" onerror="console.error('Image failed to load:', this.src)">
+                `;
+            } else {
+                // Restore gradient background for placeholder
+                imageContainer.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)';
+                imageContainer.innerHTML = `
+                    <div style="color: white; font-size: 1.1rem; font-weight: 600; text-align: center;">
+                        <i class="fas fa-user" style="font-size: 1.8rem; display: block; margin-bottom: 0.5rem;"></i>
+                        Generated Character
+                    </div>
+                `;
+            }
+            
+            // Update preview content
+            document.getElementById('preview-name').textContent = character.name;
+            document.getElementById('preview-description').textContent = character.description;
+            
+            // Update tags
+            const styleTag = document.getElementById('preview-style');
+            const genderTag = document.getElementById('preview-gender');
+            
+            if (character.style) {
+                styleTag.textContent = character.style;
+                styleTag.style.display = 'inline-block';
+            } else {
+                styleTag.style.display = 'none';
+            }
+            
+            if (character.metadata && character.metadata.gender) {
+                genderTag.textContent = character.metadata.gender;
+                genderTag.style.display = 'inline-block';
+            } else {
+                genderTag.style.display = 'none';
+            }
+        }
+        
+        // Modify character (return to prompt optimization)
+        function modifyCharacter() {
+            if (currentOptimizedPrompt) {
+                showModificationOptions();
+            } else {
+                showNotification('No prompt available for modification', 'error');
+            }
+        }
+        
+        // Abandon character creation
+        function abandonCharacter() {
+            if (confirm('Are you sure you want to abandon this character? All progress will be lost.')) {
+                resetCreationWorkflow();
+                showNotification('Character creation abandoned', 'info');
+            }
+        }
+        
+        // Reset the entire creation workflow
+        function resetCreationWorkflow() {
+            // Reset state
+            currentGeneratedCharacter = null;
+            currentOptimizedPrompt = null;
+            currentConversationId = null;
+            
+            // Hide all preview sections
+            document.getElementById('preview-character').style.display = 'none';
+            document.getElementById('prompt-optimization').style.display = 'none';
+            document.getElementById('modification-options').style.display = 'none';
+            
+            // Show empty state
+            document.getElementById('preview-empty').style.display = 'block';
+            
+            // Clear form
+            clearCreateForm();
+        }
+        
+        // Regenerate current character
+        function regenerateCharacter() {
+            if (!currentGeneratedCharacter || !currentOptimizedPrompt) return;
+
+            // Go back to prompt optimization view
+            // Hide character preview
+            document.getElementById('preview-character').style.display = 'none';
+            document.getElementById('preview-empty').style.display = 'none';
+
+            // Show prompt optimization
+            showPromptOptimization(currentOptimizedPrompt);
+
+            // Show the back button since user might want to return to preview
+            document.getElementById('back-to-preview-btn').style.display = 'inline-block';
+
+            showNotification('Edit the prompt and generate a new image', 'info');
+        }
+
+        // Back to character preview (cancel regeneration)
+        function backToCharacterPreview() {
+            if (!currentGeneratedCharacter) return;
+
+            // Hide prompt optimization
+            document.getElementById('prompt-optimization').style.display = 'none';
+            document.getElementById('preview-empty').style.display = 'none';
+
+            // Show character preview
+            showCharacterPreview(currentGeneratedCharacter);
+
+            // Hide the back button
+            document.getElementById('back-to-preview-btn').style.display = 'none';
+
+            showNotification('Returned to character preview', 'info');
+        }
+        
+        // Save character to gallery
+        async function saveCharacter() {
+            if (!currentGeneratedCharacter) {
+                showNotification('No character to save', 'error');
+                return;
+            }
+            
+            // Allow user to modify the name before saving
+            const currentName = currentGeneratedCharacter.name;
+            const newName = prompt('Enter character name:', currentName);
+            
+            if (newName === null) {
+                // User cancelled
+                return;
+            }
+            
+            // Update character name
+            if (newName.trim()) {
+                currentGeneratedCharacter.name = newName.trim();
+            } else {
+                // Generate default name if empty
+                currentGeneratedCharacter.name = `Character ${characterCounter}`;
+                characterCounter++;
+            }
+            
+            try {
+                // Show loading
+                document.getElementById('loading-overlay').style.display = 'flex';
+                
+                // Save to API
+                const response = await fetch(`${API_BASE}/characters`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: currentGeneratedCharacter.name,
+                        description: currentGeneratedCharacter.description,
+                        enhancedDescription: currentGeneratedCharacter.enhancedDescription,
+                        imageUrl: currentGeneratedCharacter.imageUrl,
+                        thumbnailUrl: currentGeneratedCharacter.thumbnailUrl,
+                        style: currentGeneratedCharacter.style,
+                        tags: currentGeneratedCharacter.tags,
+                        metadata: currentGeneratedCharacter.metadata
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Refresh gallery data
+                    await loadCharacters();
+                    
+                    // Reset workflow
+                    resetCreationWorkflow();
+                    
+                    // Switch to library
+                    switchPage('library');
+                    showNotification('Character saved to gallery!', 'success');
+                } else {
+                    throw new Error(result.error?.message || 'Failed to save character');
+                }
+                
+            } catch (error) {
+                console.error('Error saving character:', error);
+                showNotification('Failed to save character', 'error');
+            } finally {
+                // Hide loading
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
         }
         
         // Update character gallery
@@ -1144,37 +1933,59 @@
             if (characters.length === 0) {
                 gallery.innerHTML = `
                     <div class="empty-state">
-                        <i class="fas fa-images"></i>
-                        <h3>No Characters Yet</h3>
-                        <p>Start creating your first character</p>
-                        <button class="btn btn-primary" onclick="switchPage('create')">
-                            <i class="fas fa-plus"></i>
-                            Create Character
-                        </button>
+                        <i class="fas fa-magic"></i>
+                        <h3>Ready to Create Your First Character?</h3>
+                        <p>Bring your imagination to life with AI-powered character generation. Start by describing your character idea and watch it come to life!</p>
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="switchPage('create')" style="padding: 1rem 2rem; font-size: 16px;">
+                                <i class="fas fa-plus"></i>
+                                Create Your First Character
+                            </button>
+                        </div>
+                        <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(var(--primary-rgb), 0.1); border-radius: var(--radius); border-left: 4px solid var(--primary);">
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--primary); font-size: 16px;">
+                                <i class="fas fa-lightbulb"></i> Quick Start Tips
+                            </h4>
+                            <ul style="text-align: left; margin: 0; padding-left: 1.5rem; color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+                                <li>Describe your character's appearance, personality, or setting</li>
+                                <li>Choose from various art styles like realistic, anime, or cartoon</li>
+                                <li>Use our AI-powered prompt optimization for better results</li>
+                                <li>Create variants of your characters with different poses or expressions</li>
+                            </ul>
+                        </div>
                     </div>
                 `;
                 return;
             }
             
             gallery.innerHTML = characters.map(character => `
-                <div class="character-card">
+                <div class="character-card" onclick="viewCharacterDetail('${character.id}')" style="cursor: pointer;">
                     <div class="character-image">
                         ${character.thumbnailUrl || character.imageUrl ? 
                             `<img src="${character.thumbnailUrl || character.imageUrl}" alt="${character.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
-                            `<i class="fas fa-user" style="font-size: 3rem; opacity: 0.7;"></i><br>AI Generated`
+                            `<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: var(--surface); border-radius: 8px;">
+                                <i class="fas fa-user" style="font-size: 3rem; opacity: 0.5; color: var(--text-muted);"></i>
+                                <span style="font-size: 12px; color: var(--text-muted); margin-top: 0.5rem;">AI Generated</span>
+                            </div>`
                         }
                     </div>
                     <div class="character-info">
                         <h4>${character.name}</h4>
                         <div class="character-meta">
-                            ${character.tags.map(tag => `<span class="character-tag">${tag}</span>`).join('')}
+                            ${character.tags && character.tags.length > 0 ? 
+                                character.tags.map(tag => `<span class="character-tag">${tag}</span>`).join('') : 
+                                '<span class="character-tag">character</span>'
+                            }
                         </div>
-                        <p>${character.description.length > 100 ? character.description.substring(0, 100) + '...' : character.description}</p>
-                        <div class="character-actions">
-                            <button class="btn btn-primary btn-sm" onclick="editCharacter(${character.id})">
+                        <p>${character.description && character.description.length > 100 ? 
+                            character.description.substring(0, 100) + '...' : 
+                            character.description || 'No description available'
+                        }</p>
+                        <div class="character-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-primary btn-sm" onclick="editCharacter('${character.id}')">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button class="btn btn-secondary btn-sm" onclick="deleteCharacter(${character.id})">
+                            <button class="btn btn-secondary btn-sm" onclick="deleteCharacter('${character.id}')">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                         </div>
@@ -1183,22 +1994,474 @@
             `).join('');
         }
         
+        // View character detail
+        function viewCharacterDetail(id) {
+            const character = characters.find(c => c.id === id);
+            if (character) {
+                currentCharacterDetail = character;
+                showCharacterDetail(character);
+                switchPage('edit'); // Using edit page as detail view for now
+            }
+        }
+        
+        let currentCharacterDetail = null;
+        
+        // Show character detail
+        function showCharacterDetail(character) {
+            const editPage = document.getElementById('edit-page');
+            editPage.innerHTML = `
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <!-- Character Header -->
+                    <div style="
+                        background: var(--gradient-primary);
+                        color: white;
+                        padding: 2rem;
+                        border-radius: var(--radius-lg);
+                        margin-bottom: 2rem;
+                        text-align: center;
+                        position: relative;
+                        overflow: hidden;
+                    ">
+                        <div style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+                        "></div>
+                        <div style="position: relative; z-index: 1;">
+                            <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">${character.name}</h1>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem;">
+                                ${character.tags && character.tags.length > 0 ? 
+                                    character.tags.map(tag => `<span style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 14px;">${tag}</span>`).join('') : 
+                                    ''
+                                }
+                            </div>
+                            <p style="opacity: 0.9; font-size: 1.1rem;">${character.description || 'No description available'}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Character Image and Info -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                        <!-- Image -->
+                        <div style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 1.5rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                        ">
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Character Image</h3>
+                            <div style="
+                                width: 100%;
+                                height: 300px;
+                                border-radius: var(--radius);
+                                overflow: hidden;
+                                background: var(--surface);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">
+                                ${character.imageUrl ? 
+                                    `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                    `<div style="text-align: center; color: var(--text-muted);">
+                                        <i class="fas fa-user" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p>No image available</p>
+                                    </div>`
+                                }
+                            </div>
+                        </div>
+                        
+                        <!-- Character Info -->
+                        <div style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 1.5rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                        ">
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Character Details</h3>
+                            <div style="space-y: 1rem;">
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="font-weight: 600; color: var(--text-secondary); font-size: 14px;">ID</label>
+                                    <p style="margin: 0.25rem 0 0 0; padding: 0.5rem; background: var(--surface); border-radius: 6px; font-family: monospace; font-size: 12px;">${character.id}</p>
+                                </div>
+                                <div style="margin-bottom: 1rem;">
+                                    <label style="font-weight: 600; color: var(--text-secondary); font-size: 14px;">Created</label>
+                                    <p style="margin: 0.25rem 0 0 0;">${new Date(character.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                ${character.metadata ? `
+                                    <div style="margin-bottom: 1rem;">
+                                        <label style="font-weight: 600; color: var(--text-secondary); font-size: 14px;">Generated By</label>
+                                        <p style="margin: 0.25rem 0 0 0;">${character.metadata.generatedBy || 'Unknown'}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div style="
+                        background: var(--background);
+                        border-radius: var(--radius-lg);
+                        padding: 1.5rem;
+                        border: 1px solid var(--border);
+                        box-shadow: var(--shadow);
+                        text-align: center;
+                    ">
+                        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Character Variants & Editing</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 2rem;">Generate variations of this character with different poses, expressions, or settings.</p>
+                        
+                        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="editCharacter('${character.id}')">
+                                <i class="fas fa-edit"></i> Create Variants
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchPage('library')">
+                                <i class="fas fa-arrow-left"></i> Back to Gallery
+                            </button>
+                            <button class="btn btn-outline" onclick="deleteCharacter('${character.id}')">
+                                <i class="fas fa-trash"></i> Delete Character
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile responsive styles -->
+                <style>
+                    @media (max-width: 768px) {
+                        #edit-page > div > div[style*="grid-template-columns"] {
+                            grid-template-columns: 1fr !important;
+                            gap: 1rem !important;
+                        }
+                        #edit-page > div > div[style*="grid-template-columns"] > div:first-child img {
+                            height: 250px !important;
+                        }
+                    }
+                </style>
+            `;
+        }
+        
         // Character actions
         function editCharacter(id) {
             const character = characters.find(c => c.id === id);
             if (character) {
-                // Populate edit form (implementation would go here)
-                switchPage('edit');
-                showNotification('Edit functionality coming soon', 'info');
+                currentCharacterForVariant = character;
+                showCharacterVariantEditor(character);
             }
         }
+
+        let currentCharacterForVariant = null;
+        let currentVariantPrompt = null;
+        let currentVariantConversationId = null;
+
+        // Show character variant editing interface
+        function showCharacterVariantEditor(character) {
+            const editPage = document.getElementById('edit-page');
+            editPage.innerHTML = `
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <!-- Header -->
+                    <div style="
+                        background: var(--gradient-primary);
+                        color: white;
+                        padding: 2rem;
+                        border-radius: var(--radius-lg);
+                        margin-bottom: 2rem;
+                        text-align: center;
+                    ">
+                        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Create Character Variants</h1>
+                        <p style="opacity: 0.9; font-size: 1.1rem;">Generate different poses, expressions, or settings for: <strong>${character.name}</strong></p>
+                    </div>
+
+                    <!-- Main Layout -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <!-- Left Side: Original Character Reference -->
+                        <div style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 1.5rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                        ">
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                                <i class="fas fa-user-circle"></i> Original Character
+                            </h3>
+                            
+                            <!-- Original Character Image -->
+                            <div style="
+                                width: 100%;
+                                height: 300px;
+                                border-radius: var(--radius);
+                                overflow: hidden;
+                                background: var(--surface);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin-bottom: 1rem;
+                            ">
+                                ${character.imageUrl ? 
+                                    `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                    `<div style="text-align: center; color: var(--text-muted);">
+                                        <i class="fas fa-user" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p>Original Character</p>
+                                    </div>`
+                                }
+                            </div>
+
+                            <!-- Original Character Info -->
+                            <div style="padding: 1rem; background: var(--surface); border-radius: var(--radius); margin-bottom: 1rem;">
+                                <p style="margin: 0 0 0.5rem 0; font-weight: 600;">${character.name}</p>
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">${character.description || 'No description'}</p>
+                                ${character.tags && character.tags.length > 0 ? `
+                                    <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                        ${character.tags.map(tag => `<span style="background: var(--primary-light); color: var(--primary); padding: 0.125rem 0.5rem; border-radius: 12px; font-size: 12px;">${tag}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <!-- Variant Options -->
+                            <div style="margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 16px;">Quick Variant Options</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different pose')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-running"></i> Different Pose
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different expression')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-smile"></i> Different Expression
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different outfit')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-tshirt"></i> Different Outfit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different background')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-image"></i> Different Background
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side: Variant Creation -->
+                        <div style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 1.5rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                        ">
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                                <i class="fas fa-magic"></i> Create Variant
+                            </h3>
+
+                            <!-- Variant Description Input -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-secondary);">
+                                    Describe the changes you want to make:
+                                </label>
+                                <textarea 
+                                    id="variant-description" 
+                                    placeholder="E.g., 'Make the character sitting instead of standing with a happy expression' or 'Change to a fantasy medieval setting with armor'"
+                                    style="
+                                        width: 100%;
+                                        min-height: 100px;
+                                        padding: 1rem;
+                                        border: 1px solid var(--border);
+                                        border-radius: var(--radius);
+                                        background: var(--surface);
+                                        color: var(--text-primary);
+                                        font-family: inherit;
+                                        resize: vertical;
+                                    "
+                                ></textarea>
+                            </div>
+
+                            <!-- Generate Variant Button -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <button 
+                                    class="btn btn-primary" 
+                                    onclick="generateVariantPrompt()"
+                                    style="width: 100%; padding: 1rem; font-size: 16px;"
+                                >
+                                    <i class="fas fa-sparkles"></i> Generate Variant Prompt
+                                </button>
+                            </div>
+
+                            <!-- Variant Workflow Area -->
+                            <div id="variant-workflow-area">
+                                <!-- Empty state -->
+                                <div id="variant-empty" style="
+                                    text-align: center;
+                                    padding: 2rem;
+                                    color: var(--text-muted);
+                                ">
+                                    <i class="fas fa-wand-magic" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <p>Describe the changes you want to make to create a variant of this character.</p>
+                                </div>
+
+                                <!-- Prompt optimization results -->
+                                <div id="variant-prompt-optimization" style="display: none;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Optimized Variant Prompt</h4>
+                                    
+                                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: var(--radius);">
+                                        <h5 style="margin-bottom: 0.5rem; font-size: 14px; color: var(--text-secondary);">Enhanced Prompt:</h5>
+                                        <p id="variant-optimized-prompt" style="margin: 0; font-size: 14px; line-height: 1.5;"></p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: var(--radius);">
+                                        <h5 style="margin-bottom: 0.5rem; font-size: 14px; color: var(--text-secondary);">Reasoning:</h5>
+                                        <p id="variant-prompt-reasoning" style="margin: 0; font-size: 14px; line-height: 1.5;"></p>
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                                        <button class="btn btn-primary" onclick="generateCharacterVariant()" style="flex: 1;">
+                                            <i class="fas fa-play"></i> Generate Variant
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="showVariantModificationOptions()" style="flex: 1;">
+                                            <i class="fas fa-edit"></i> Modify Prompt
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Direct Variant Prompt Editing -->
+                                <div id="variant-direct-editing" style="display: none;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Edit Variant Prompt</h4>
+                                    
+                                    <div style="margin-bottom: 1rem;">
+                                        <textarea 
+                                            id="variant-direct-prompt-editor" 
+                                            style="
+                                                width: 100%;
+                                                min-height: 120px;
+                                                padding: 0.75rem;
+                                                border: 1px solid var(--border);
+                                                border-radius: var(--radius);
+                                                background: var(--surface);
+                                                color: var(--text-primary);
+                                                font-family: inherit;
+                                                resize: vertical;
+                                            "
+                                        ></textarea>
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <button class="btn btn-primary" onclick="generateVariantWithEditedPrompt()">
+                                            <i class="fas fa-magic"></i> Generate Variant
+                                        </button>
+                                        <button class="btn btn-outline" onclick="cancelVariantDirectEditing()">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Variant Preview -->
+                                <div id="variant-preview" style="display: none;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Generated Variant</h4>
+                                    
+                                    <div style="
+                                        width: 100%;
+                                        height: 300px;
+                                        border-radius: var(--radius);
+                                        overflow: hidden;
+                                        background: var(--surface);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        margin-bottom: 1rem;
+                                    ">
+                                        <div id="variant-image-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                            <div style="text-align: center; color: var(--text-muted);">
+                                                <i class="fas fa-user" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                <p>Generated Variant</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: var(--radius);">
+                                        <h5 style="margin-bottom: 0.5rem; font-size: 14px; color: var(--text-secondary);">Variant Name:</h5>
+                                        <input 
+                                            type="text" 
+                                            id="variant-name" 
+                                            placeholder="Enter variant name..."
+                                            style="
+                                                width: 100%;
+                                                padding: 0.5rem;
+                                                border: 1px solid var(--border);
+                                                border-radius: var(--radius);
+                                                background: var(--background);
+                                                color: var(--text-primary);
+                                                font-family: inherit;
+                                            "
+                                        />
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <button class="btn btn-primary" onclick="saveCharacterVariant()">
+                                            <i class="fas fa-save"></i> Save Variant
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="modifyVariant()">
+                                            <i class="fas fa-edit"></i> Modify
+                                        </button>
+                                        <button class="btn btn-outline" onclick="abandonVariant()">
+                                            <i class="fas fa-trash"></i> Abandon
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation -->
+                    <div style="
+                        margin-top: 2rem;
+                        padding: 1.5rem;
+                        background: var(--background);
+                        border-radius: var(--radius-lg);
+                        border: 1px solid var(--border);
+                        text-align: center;
+                    ">
+                        <button class="btn btn-secondary" onclick="showCharacterDetail(currentCharacterForVariant)">
+                            <i class="fas fa-arrow-left"></i> Back to Character Detail
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile responsive styles -->
+                <style>
+                    @media (max-width: 768px) {
+                        #edit-page > div > div[style*="grid-template-columns"] {
+                            grid-template-columns: 1fr !important;
+                            gap: 1rem !important;
+                        }
+                    }
+                </style>
+            `;
+        }
         
-        function deleteCharacter(id) {
+        async function deleteCharacter(id) {
             if (confirm('Are you sure you want to delete this character?')) {
-                characters = characters.filter(c => c.id !== id);
-                updateCharacterGallery();
-                updateUserUI();
-                showNotification('Character deleted successfully', 'success');
+                try {
+                    const response = await fetch(`/api/v1/characters/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${getAuthToken()}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Refresh from real API
+                        await loadCharacters();
+                        showNotification('Character deleted successfully', 'success');
+                        
+                        // If we're viewing this character, go back to gallery
+                        if (currentCharacterDetail && currentCharacterDetail.id === id) {
+                            switchPage('library');
+                        }
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.error?.message || 'Failed to delete character');
+                    }
+                } catch (error) {
+                    console.error('Error deleting character:', error);
+                    showNotification('Failed to delete character: ' + error.message, 'error');
+                }
             }
         }
         
@@ -1207,10 +2470,18 @@
             document.getElementById('character-name').value = '';
             document.getElementById('character-style').selectedIndex = 0;
             document.getElementById('character-gender').selectedIndex = 0;
-            document.getElementById('character-profession').selectedIndex = 0;
-            document.getElementById('character-age').selectedIndex = 0;
-            document.getElementById('character-hair').selectedIndex = 0;
             document.getElementById('character-description').value = '';
+            updateCharacterCount();
+        }
+        
+        // Character count functionality
+        function updateCharacterCount() {
+            const textarea = document.getElementById('character-description');
+            const counter = document.getElementById('char-count');
+            if (textarea && counter) {
+                const count = textarea.value.length;
+                counter.textContent = `${count} characters`;
+            }
         }
         
         // Logout
@@ -1291,34 +2562,38 @@
                         tags: char.tags || []
                     }));
                     updateCharacterGallery();
+                    updateUserUI(); // Update character count and other UI elements
                 } else {
                     console.error('Failed to load characters:', data.error);
                     showNotification('Failed to load characters', 'error');
                 }
             } catch (error) {
                 console.error('Error loading characters:', error);
-                showNotification('Error loading characters', 'error');
-                // Fallback to demo data if API fails
-                characters = [
-                    {
-                        id: 'demo1',
-                        name: "Demo Character",
-                        style: "fantasy",
-                        description: "A demo character (API connection failed)",
-                        imageUrl: null,
-                        createdAt: new Date().toISOString(),
-                        tags: ["demo"]
-                    }
-                ];
+                showNotification('Error loading characters: ' + error.message, 'error');
+                // Keep empty array if API fails
+                characters = [];
                 updateCharacterGallery();
+                updateUserUI(); // Update character count even when empty
             }
         }
 
         // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            if (checkAuth()) {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Set a default token for testing if none exists
+            if (!getAuthToken()) {
+                localStorage.setItem('auth_token', 'test-token-123');
+            }
+            
+            if (await checkAuth()) {
                 loadCharacters();
                 updateUserUI();
+            }
+            
+            // Add character counter event listener
+            const descriptionTextarea = document.getElementById('character-description');
+            if (descriptionTextarea) {
+                descriptionTextarea.addEventListener('input', updateCharacterCount);
+                updateCharacterCount(); // Initialize counter
             }
         });
         
@@ -1331,6 +2606,314 @@
                 sidebar.classList.remove('open');
             }
         });
+
+        // ===== CHARACTER VARIANT GENERATION FUNCTIONS =====
+
+        // Set variant description from quick options
+        function setVariantDescription(description) {
+            document.getElementById('variant-description').value = description;
+        }
+
+        // Generate variant prompt using Gemini
+        async function generateVariantPrompt() {
+            const description = document.getElementById('variant-description').value.trim();
+            
+            if (!description) {
+                showNotification('Please describe the changes you want to make', 'error');
+                return;
+            }
+
+            if (!currentCharacterForVariant) {
+                showNotification('No character selected for variant generation', 'error');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            try {
+                // Build the variant prompt that includes original character info
+                const variantPrompt = `Create a variant of the character "${currentCharacterForVariant.name}" with the following changes: ${description}
+
+Original character description: ${currentCharacterForVariant.description || 'No description'}
+Original character style: ${currentCharacterForVariant.style || 'Not specified'}
+Changes requested: ${description}
+
+Please optimize this into a detailed prompt for generating a character variant that maintains the character's core identity while incorporating the requested changes.`;
+
+                const response = await fetch('/api/v1/characters/optimize-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userDescription: variantPrompt,
+                        style: currentCharacterForVariant.style,
+                        gender: currentCharacterForVariant.metadata?.gender
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentVariantPrompt = result.data;
+                    currentVariantConversationId = result.data.conversationId;
+                    showVariantPromptOptimization(result.data);
+                } else {
+                    throw new Error(result.error?.message || 'Failed to optimize variant prompt');
+                }
+
+            } catch (error) {
+                console.error('Error generating variant prompt:', error);
+                showNotification('Failed to generate variant prompt', 'error');
+            } finally {
+                // Hide loading
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        // Show variant prompt optimization results
+        function showVariantPromptOptimization(optimizationData) {
+            // Hide empty state
+            document.getElementById('variant-empty').style.display = 'none';
+            document.getElementById('variant-modification-options').style.display = 'none';
+            document.getElementById('variant-preview').style.display = 'none';
+            
+            // Show prompt optimization
+            document.getElementById('variant-prompt-optimization').style.display = 'block';
+            
+            // Update content
+            document.getElementById('variant-optimized-prompt').textContent = optimizationData.optimizedPrompt;
+            document.getElementById('variant-prompt-reasoning').textContent = optimizationData.reasoning;
+            
+            showNotification('Variant prompt optimized successfully!', 'success');
+        }
+
+        // Show variant direct editing options
+        function showVariantModificationOptions() {
+            document.getElementById('variant-prompt-optimization').style.display = 'none';
+            document.getElementById('variant-direct-editing').style.display = 'block';
+            
+            // Pre-fill the editor with current variant prompt
+            if (currentVariantPrompt && currentVariantPrompt.optimizedPrompt) {
+                document.getElementById('variant-direct-prompt-editor').value = currentVariantPrompt.optimizedPrompt;
+            }
+        }
+
+        // Generate variant with edited prompt
+        async function generateVariantWithEditedPrompt() {
+            const editedPrompt = document.getElementById('variant-direct-prompt-editor').value.trim();
+            
+            if (!editedPrompt) {
+                showNotification('Please provide a prompt', 'error');
+                return;
+            }
+            
+            // Hide direct editing section
+            document.getElementById('variant-direct-editing').style.display = 'none';
+            document.getElementById('variant-prompt-optimization').style.display = 'block';
+            
+            // Update the variant prompt display with edited content
+            document.getElementById('variant-optimized-prompt').textContent = editedPrompt;
+            
+            // Update current variant prompt data
+            if (currentVariantPrompt) {
+                currentVariantPrompt.optimizedPrompt = editedPrompt;
+            }
+            
+            // Generate variant image with the edited prompt
+            generateCharacterVariant();
+        }
+
+        // Cancel variant direct editing
+        function cancelVariantDirectEditing() {
+            document.getElementById('variant-direct-editing').style.display = 'none';
+            document.getElementById('variant-prompt-optimization').style.display = 'block';
+        }
+
+        // Generate character variant with optimized prompt
+        async function generateCharacterVariant() {
+            if (!currentVariantPrompt) {
+                showNotification('No optimized prompt available', 'error');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            try {
+                // Create the variant character data
+                const variantCharacter = {
+                    id: Date.now(),
+                    name: `${currentCharacterForVariant.name} - Variant ${Date.now()}`,
+                    style: currentCharacterForVariant.style,
+                    description: currentVariantPrompt.originalInput,
+                    enhancedDescription: currentVariantPrompt.optimizedPrompt,
+                    imageUrl: null, // Would be set by image generation API
+                    createdAt: new Date().toISOString(),
+                    tags: [
+                        ...(currentCharacterForVariant.tags || []),
+                        'variant',
+                        'ai-generated'
+                    ].filter((tag, index, array) => array.indexOf(tag) === index), // Remove duplicates
+                    metadata: {
+                        gender: currentCharacterForVariant.metadata?.gender,
+                        artStyle: currentCharacterForVariant.style,
+                        optimizedPrompt: currentVariantPrompt.optimizedPrompt,
+                        conversationId: currentVariantConversationId,
+                        originalCharacterId: currentCharacterForVariant.id,
+                        isVariant: true
+                    }
+                };
+
+                // Call real image generation API
+                const imageResponse = await fetch('/api/v1/characters/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        prompt: currentVariantPrompt.optimizedPrompt,
+                        style: currentCharacterForVariant.style
+                    })
+                });
+
+                const imageResult = await imageResponse.json();
+                
+                if (imageResult.success && imageResult.data.imageUrl) {
+                    variantCharacter.imageUrl = imageResult.data.imageUrl;
+                    variantCharacter.thumbnailUrl = imageResult.data.thumbnailUrl;
+                }
+
+                currentGeneratedVariant = variantCharacter;
+                showVariantPreview(variantCharacter);
+
+            } catch (error) {
+                console.error('Error generating character variant:', error);
+                showNotification('Failed to generate character variant', 'error');
+            } finally {
+                // Hide loading
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        let currentGeneratedVariant = null;
+
+        // Show variant preview
+        function showVariantPreview(variant) {
+            // Hide other sections
+            document.getElementById('variant-empty').style.display = 'none';
+            document.getElementById('variant-prompt-optimization').style.display = 'none';
+            document.getElementById('variant-modification-options').style.display = 'none';
+            
+            // Show variant preview
+            document.getElementById('variant-preview').style.display = 'block';
+            
+            // Set default variant name
+            document.getElementById('variant-name').value = variant.name;
+            
+            // Update image container
+            const imageContainer = document.getElementById('variant-image-container');
+            if (variant.imageUrl) {
+                imageContainer.innerHTML = `<img src="${variant.imageUrl}" alt="${variant.name}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                imageContainer.innerHTML = `
+                    <div style="text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-user" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <p>Generated Variant</p>
+                        <p style="font-size: 12px; opacity: 0.7;">Image generation ready</p>
+                    </div>
+                `;
+            }
+            
+            showNotification('Character variant generated successfully!', 'success');
+        }
+
+        // Save character variant
+        async function saveCharacterVariant() {
+            if (!currentGeneratedVariant) {
+                showNotification('No variant to save', 'error');
+                return;
+            }
+
+            const variantName = document.getElementById('variant-name').value.trim();
+            if (!variantName) {
+                showNotification('Please enter a name for the variant', 'error');
+                return;
+            }
+
+            // Update variant name
+            currentGeneratedVariant.name = variantName;
+
+            try {
+                // Save to API
+                const response = await fetch('/api/v1/characters', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify(currentGeneratedVariant)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Reload characters from real API
+                    await loadCharacters();
+                    
+                    showNotification(`Character variant "${variantName}" saved successfully!`, 'success');
+                    
+                    // Reset and return to character detail
+                    resetVariantWorkflow();
+                    showCharacterDetail(currentCharacterForVariant);
+                } else {
+                    throw new Error(result.error?.message || 'Failed to save character variant');
+                }
+
+            } catch (error) {
+                console.error('Error saving character variant:', error);
+                showNotification('Failed to save character variant', 'error');
+            }
+        }
+
+        // Modify variant (return to prompt optimization)
+        function modifyVariant() {
+            if (currentVariantPrompt) {
+                showVariantModificationOptions();
+            } else {
+                showNotification('No prompt available for modification', 'error');
+            }
+        }
+
+        // Abandon variant creation
+        function abandonVariant() {
+            if (confirm('Are you sure you want to abandon this variant? All progress will be lost.')) {
+                resetVariantWorkflow();
+                showNotification('Variant creation abandoned', 'info');
+            }
+        }
+
+        // Reset variant workflow
+        function resetVariantWorkflow() {
+            currentVariantPrompt = null;
+            currentVariantConversationId = null;
+            currentGeneratedVariant = null;
+            
+            // Reset form
+            document.getElementById('variant-description').value = '';
+            
+            // Show empty state
+            document.getElementById('variant-empty').style.display = 'block';
+            document.getElementById('variant-prompt-optimization').style.display = 'none';
+            document.getElementById('variant-modification-options').style.display = 'none';
+            document.getElementById('variant-preview').style.display = 'none';
+        }
+
+        // ===== END CHARACTER VARIANT GENERATION FUNCTIONS =====
+
+
     </script>
 </body>
 </html>

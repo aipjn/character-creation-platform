@@ -67,11 +67,14 @@ export interface Character {
   id: string;
   name: string;
   description: string;
+  enhancedDescription?: string;
   imageUrl?: string;
+  thumbnailUrl?: string;
   userId: string;
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  metadata?: any;
 }
 
 export interface CreateCharacterRequest {
