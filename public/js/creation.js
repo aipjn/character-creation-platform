@@ -150,7 +150,12 @@
 
                 const imageResult = await imageResponse.json();
                 console.log('Image generation result:', imageResult);
-                
+
+                // Check if image generation actually succeeded
+                if (!imageResult.success) {
+                    throw new Error(imageResult.error?.message || 'Image generation failed');
+                }
+
                 const character = {
                     id: Date.now(),
                     name: name,
@@ -172,18 +177,22 @@
                         conversationId: currentConversationId
                     }
                 };
-                
+
                 currentGeneratedCharacter = character;
                 showCharacterPreview(character);
-                
+
                 showNotification('Character generated successfully!', 'success');
-                
+
             } catch (error) {
                 console.error('Error generating character:', error);
                 console.error('Error name:', error.name);
                 console.error('Error message:', error.message);
                 console.error('Error stack:', error.stack);
-                showNotification(`Failed to generate character image: ${error.message}`, 'error');
+
+                // Only show error if character wasn't successfully created
+                if (!currentGeneratedCharacter || !currentGeneratedCharacter.imageUrl) {
+                    showNotification(`Failed to generate character image: ${error.message}`, 'error');
+                }
             } finally {
                 // Hide loading
                 document.getElementById('loading-overlay').style.display = 'none';
@@ -471,21 +480,13 @@
                 });
                 
                 const result = await response.json();
-                
+
                 if (result.success) {
-                    // Refresh gallery data
-                    await loadCharacters();
-                    
-                    // Reset workflow
-                    resetCreationWorkflow();
-                    
-                    // Switch to library
-                    switchPage('library');
                     showNotification('Character saved to gallery!', 'success');
                 } else {
                     throw new Error(result.error?.message || 'Failed to save character');
                 }
-                
+
             } catch (error) {
                 console.error('Error saving character:', error);
                 showNotification('Failed to save character', 'error');

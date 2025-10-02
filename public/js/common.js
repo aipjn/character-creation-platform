@@ -106,9 +106,21 @@ function switchPage(pageId) {
     };
     
     document.getElementById('page-title').textContent = pageTitles[pageId] || 'Dashboard';
-    
-    if (pageId === 'edit') {
-        loadEditCharacters();
+
+    // Load page-specific data
+    if (pageId === 'library') {
+        // Reload characters when switching to gallery
+        loadCharacters().then(loadedCharacters => {
+            characters = loadedCharacters;
+            if (typeof updateCharacterGallery === 'function') {
+                updateCharacterGallery();
+            }
+        });
+    } else if (pageId === 'edit') {
+        // Initialize Edit page with Step 1
+        if (typeof showEditStep1_SelectCharacter === 'function') {
+            showEditStep1_SelectCharacter();
+        }
     }
 }
 
@@ -162,18 +174,26 @@ function showNotification(message, type = 'info') {
 // Load characters
 async function loadCharacters() {
     try {
+        console.log('[Common] Loading characters from API...');
         const response = await fetch(`${API_BASE}/characters`);
         const data = await response.json();
-        
+
+        console.log('[Common] API response:', data);
+
         if (data.success) {
-            characters = data.data || [];
-            document.getElementById('total-characters').textContent = characters.length;
-            return characters;
+            // API returns data.data.items (paginated response)
+            const loadedCharacters = data.data?.items || [];
+            console.log('[Common] Loaded characters:', loadedCharacters.length);
+            document.getElementById('total-characters').textContent = loadedCharacters.length;
+            return loadedCharacters;
+        } else {
+            console.warn('[Common] API returned success=false:', data);
+            return [];
         }
     } catch (error) {
-        console.error('Failed to load characters:', error);
+        console.error('[Common] Failed to load characters:', error);
+        return [];
     }
-    return [];
 }
 
 // Navigation setup

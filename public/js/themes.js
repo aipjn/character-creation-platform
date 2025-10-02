@@ -265,7 +265,7 @@ async function loadEditCharacters() {
                     </div>
                     <h4 style="margin: 0 0 0.5rem 0;">${char.name}</h4>
                     <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">
-                        Click to manage themes
+                        Click to edit character
                     </p>
                 </div>
             `).join('');
@@ -276,7 +276,7 @@ async function loadEditCharacters() {
 }
 
 /**
- * 选择角色进行编辑 → 进入步骤2
+ * 选择角色进行编辑 → 进入步骤2或3
  */
 async function selectCharacterForEdit(characterId) {
     try {
@@ -285,7 +285,24 @@ async function selectCharacterForEdit(characterId) {
 
         if (data.success) {
             window._themeEditor.currentCharacter = data.data;
-            await showEditStep2_SelectTheme(window._themeEditor.currentCharacter);
+
+            // Load themes for this character
+            const themes = await loadCharacterThemes(characterId);
+
+            // If no themes exist, auto-create default theme and go to Step 3
+            if (!themes || themes.length === 0) {
+                const defaultTheme = await createTheme(characterId, `Default Theme`);
+                if (defaultTheme) {
+                    window._themeEditor.currentTheme = defaultTheme;
+                    await showEditStep3_GenerateVariants(window._themeEditor.currentCharacter, defaultTheme);
+                    if (window.showNotification) {
+                        window.showNotification('Default theme created. Start generating variants!', 'success');
+                    }
+                }
+            } else {
+                // Show theme selection if themes exist
+                await showEditStep2_SelectTheme(window._themeEditor.currentCharacter, themes);
+            }
         }
     } catch (error) {
         console.error('Error loading character:', error);
@@ -298,11 +315,8 @@ async function selectCharacterForEdit(characterId) {
 /**
  * Edit页面 - 步骤2：选择或创建主题
  */
-async function showEditStep2_SelectTheme(character) {
+async function showEditStep2_SelectTheme(character, themes) {
     const editPage = document.getElementById('edit-page');
-
-    // Load themes
-    const themes = await loadCharacterThemes(character.id);
 
     editPage.innerHTML = `
         <div style="max-width: 1200px; margin: 0 auto;">
@@ -495,20 +509,25 @@ async function showEditStep3_GenerateVariants(character, theme) {
     const editPage = document.getElementById('edit-page');
 
     editPage.innerHTML = `
-        <div style="max-width: 1400px; margin: 0 auto;">
+        <div style="width: 100%; padding: 0 2rem;">
             <!-- Header -->
             <div style="margin-bottom: 2rem;">
-                <button class="btn btn-secondary" onclick="showEditStep2_SelectTheme(window._themeEditor.currentCharacter)" style="margin-bottom: 1rem;">
-                    <i class="fas fa-arrow-left"></i> Back to Themes
+                <button class="btn btn-secondary" onclick="showEditStep1_SelectCharacter()" style="margin-bottom: 1rem;">
+                    <i class="fas fa-arrow-left"></i> Back
                 </button>
-                <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">
-                    ${character.name} - ${theme.name}
-                </h2>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                    <h2 style="font-size: 1.8rem; font-weight: 700; margin: 0;">
+                        ${character.name} - ${theme.name}
+                    </h2>
+                    <button class="btn btn-sm btn-outline" onclick="renameTheme('${theme.id}', '${character.id}')" title="Rename theme">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
                 <p style="color: var(--text-muted);">${theme.description || 'Generate variations for this theme'}</p>
             </div>
 
             <!-- Main layout: Generate panel + Variants gallery -->
-            <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
+            <div style="display: grid; grid-template-columns: 400px 1fr; gap: 2rem;">
                 <!-- Left: Generate panel -->
                 <div style="
                     background: var(--surface);
@@ -606,18 +625,24 @@ async function showEditStep3_GenerateVariants(character, theme) {
                                     border-radius: var(--radius);
                                     overflow: hidden;
                                     position: relative;
-                                ">
-                                    <div style="width: 100%; height: 200px; background: var(--background);">
+                                    transition: transform 0.2s, box-shadow 0.2s;
+                                    cursor: pointer;
+                                " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                    <div style="width: 100%; height: 200px; background: var(--background); display: flex; align-items: center; justify-content: center;">
                                         ${variant.imageUrl ?
-                                            `<img src="${variant.imageUrl}" alt="Variant" style="width: 100%; height: 100%; object-fit: cover;">` :
-                                            `<div style="display: flex; align-items: center; justify-content: center; height: 100%;">
-                                                <i class="fas fa-image" style="font-size: 2rem; color: var(--text-muted);"></i>
+                                            `<img src="${variant.imageUrl}" alt="Variant" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.error('Failed to load variant image:', '${variant.imageUrl}')">` :
+                                            `<div style="text-align: center; color: var(--text-muted);">
+                                                <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                                <p style="margin: 0; font-size: 12px;">No image</p>
                                             </div>`
                                         }
                                     </div>
                                     <div style="padding: 0.75rem;">
-                                        <p style="margin: 0 0 0.5rem 0; font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
-                                            ${variant.prompt.length > 60 ? variant.prompt.substring(0, 60) + '...' : variant.prompt}
+                                        <p style="margin: 0; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${variant.prompt}">
+                                            ${variant.prompt}
+                                        </p>
+                                        <p style="font-size: 11px; color: var(--text-muted); margin: 0.25rem 0 0.5rem 0;">
+                                            ${new Date(variant.createdAt).toLocaleString()}
                                         </p>
                                         <div style="display: flex; gap: 0.5rem;">
                                             <button class="btn btn-sm btn-outline" onclick="deleteVariantWithConfirm('${variant.id}')" style="flex: 1;">
@@ -684,12 +709,14 @@ async function generateVariantImage() {
         }
 
         const variant = await generateVariant(window._themeEditor.currentTheme.id, prompt);
+        console.log('[Variant] Generated variant data:', variant);
 
         // Add to current theme variants
         if (!window._themeEditor.currentTheme.variants) {
             window._themeEditor.currentTheme.variants = [];
         }
         window._themeEditor.currentTheme.variants.unshift(variant);
+        console.log('[Variant] Current theme variants:', window._themeEditor.currentTheme.variants);
 
         // Refresh step 3
         await showEditStep3_GenerateVariants(window._themeEditor.currentCharacter, window._themeEditor.currentTheme);
@@ -705,6 +732,47 @@ async function generateVariantImage() {
         if (generateBtn) {
             generateBtn.disabled = false;
             generateBtn.innerHTML = '<i class="fas fa-sparkles"></i> Generate Variant';
+        }
+    }
+}
+
+/**
+ * 重命名主题
+ */
+async function renameTheme(themeId, characterId) {
+    const newName = prompt('Enter new theme name:');
+
+    if (!newName || !newName.trim()) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/themes/${themeId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: newName.trim()
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            window._themeEditor.currentTheme = data.data;
+            await showEditStep3_GenerateVariants(window._themeEditor.currentCharacter, window._themeEditor.currentTheme);
+
+            if (window.showNotification) {
+                window.showNotification('Theme renamed successfully!', 'success');
+            }
+        } else {
+            throw new Error(data.error?.message || 'Failed to rename theme');
+        }
+    } catch (error) {
+        console.error('Error renaming theme:', error);
+        if (window.showNotification) {
+            window.showNotification('Failed to rename theme', 'error');
         }
     }
 }
@@ -756,3 +824,4 @@ window.showEditStep3_GenerateVariants = showEditStep3_GenerateVariants;
 window.addToVariantPrompt = addToVariantPrompt;
 window.generateVariantImage = generateVariantImage;
 window.deleteVariantWithConfirm = deleteVariantWithConfirm;
+window.renameTheme = renameTheme;

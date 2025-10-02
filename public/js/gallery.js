@@ -1,8 +1,10 @@
         async function updateCharacterGallery() {
+            console.log('[Gallery] updateCharacterGallery called, characters:', characters);
             const gallery = document.getElementById('character-gallery');
 
             // Ensure characters is an array
             if (!Array.isArray(characters) || characters.length === 0) {
+                console.log('[Gallery] No characters to display');
                 gallery.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-magic"></i>
@@ -31,6 +33,7 @@
             }
             
             // Render character cards with themes
+            console.log('[Gallery] Rendering', characters.length, 'character cards');
             const renderCards = async () => {
                 const cardsHTML = await Promise.all(characters.map(async character => {
                     const themesHTML = await (window.renderCharacterThemes ? window.renderCharacterThemes(character.id) : Promise.resolve(''));
