@@ -39,7 +39,7 @@
                     const themesHTML = await (window.renderCharacterThemes ? window.renderCharacterThemes(character.id) : Promise.resolve(''));
 
                     return `
-                        <div class="character-card" style="cursor: auto;">
+                        <div class="character-card" style="cursor: pointer;" onclick="showCharacterModal('${character.id}')">
                             <div class="character-image">
                                 ${character.thumbnailUrl || character.imageUrl ?
                                     `<img src="${character.thumbnailUrl || character.imageUrl}" alt="${character.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">` :
@@ -258,4 +258,319 @@
             }
         }
         
+        /**
+         * Show character detail modal
+         */
+        async function showCharacterModal(characterId) {
+            const character = characters.find(c => c.id === characterId);
+            if (!character) return;
+
+            // Load themes for this character
+            const themes = await (window.loadCharacterThemes ? window.loadCharacterThemes(characterId) : Promise.resolve([]));
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 2rem;
+                animation: fadeIn 0.2s ease-out;
+            `;
+
+            modal.innerHTML = `
+                <div onclick="event.stopPropagation();" style="
+                    background: var(--background);
+                    border-radius: var(--radius-lg);
+                    max-width: 900px;
+                    width: 100%;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                    box-shadow: var(--shadow-xl);
+                    animation: slideInFromBottom 0.3s ease-out;
+                ">
+                    <!-- Header -->
+                    <div style="
+                        background: var(--gradient-primary);
+                        color: white;
+                        padding: 2rem;
+                        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+                        position: relative;
+                    ">
+                        <button onclick="this.closest('.modal-overlay').remove()" style="
+                            position: absolute;
+                            top: 1rem;
+                            right: 1rem;
+                            background: rgba(255, 255, 255, 0.2);
+                            border: none;
+                            color: white;
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            cursor: pointer;
+                            font-size: 20px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            transition: background 0.2s;
+                        " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.8rem; font-weight: 700;">${character.name}</h2>
+                        <p style="margin: 0; opacity: 0.9;">${character.description || 'No description'}</p>
+                    </div>
+
+                    <!-- Content -->
+                    <div style="padding: 2rem;">
+                        <!-- Character Image -->
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="margin: 0 0 1rem 0; font-size: 1.2rem; color: var(--text-primary);">
+                                <i class="fas fa-image"></i> Character Image
+                            </h3>
+                            <div style="
+                                width: 100%;
+                                height: 400px;
+                                border-radius: var(--radius);
+                                overflow: hidden;
+                                background: var(--surface);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">
+                                ${character.imageUrl ?
+                                    `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: contain;">` :
+                                    `<div style="text-align: center; color: var(--text-muted);">
+                                        <i class="fas fa-user" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                                        <p>No image available</p>
+                                    </div>`
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Themes -->
+                        <div>
+                            <h3 style="margin: 0 0 1rem 0; font-size: 1.2rem; color: var(--text-primary);">
+                                <i class="fas fa-folder"></i> Themes (${themes.length})
+                            </h3>
+                            ${themes.length > 0 ? `
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                                    ${themes.map(theme => `
+                                        <div onclick="showThemeModal('${characterId}', '${theme.id}')" style="
+                                            background: var(--surface);
+                                            border: 1px solid var(--border);
+                                            border-radius: var(--radius);
+                                            padding: 1rem;
+                                            cursor: pointer;
+                                            transition: all 0.2s;
+                                        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                            <div style="
+                                                width: 100%;
+                                                height: 150px;
+                                                background: var(--background);
+                                                border-radius: var(--radius);
+                                                overflow: hidden;
+                                                margin-bottom: 0.75rem;
+                                            ">
+                                                ${theme.variants && theme.variants.length > 0 ?
+                                                    `<img src="${theme.variants[0].imageUrl}" alt="${theme.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                                    `<div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                                                        <i class="fas fa-folder" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+                                                    </div>`
+                                                }
+                                            </div>
+                                            <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem;">${theme.name}</h4>
+                                            <p style="margin: 0; font-size: 14px; color: var(--text-muted);">
+                                                ${theme.variants?.length || 0} ${theme.variants?.length === 1 ? 'variant' : 'variants'}
+                                            </p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div style="
+                                    text-align: center;
+                                    padding: 3rem;
+                                    background: var(--surface);
+                                    border-radius: var(--radius);
+                                    color: var(--text-muted);
+                                ">
+                                    <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <p>No themes yet</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Close on overlay click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+            document.body.appendChild(modal);
+        }
+
+        /**
+         * Show theme variants modal
+         */
+        async function showThemeModal(characterId, themeId) {
+            try {
+                const response = await fetch(`${API_BASE}/themes/${themeId}`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error('Failed to load theme');
+                }
+
+                const theme = data.data;
+                const character = characters.find(c => c.id === characterId);
+
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.7);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10001;
+                    padding: 2rem;
+                    animation: fadeIn 0.2s ease-out;
+                `;
+
+                modal.innerHTML = `
+                    <div onclick="event.stopPropagation();" style="
+                        background: var(--background);
+                        border-radius: var(--radius-lg);
+                        max-width: 1200px;
+                        width: 100%;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        box-shadow: var(--shadow-xl);
+                        animation: slideInFromBottom 0.3s ease-out;
+                    ">
+                        <!-- Header -->
+                        <div style="
+                            background: var(--gradient-primary);
+                            color: white;
+                            padding: 2rem;
+                            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+                            position: relative;
+                        ">
+                            <button onclick="this.closest('.modal-overlay').remove()" style="
+                                position: absolute;
+                                top: 1rem;
+                                right: 1rem;
+                                background: rgba(255, 255, 255, 0.2);
+                                border: none;
+                                color: white;
+                                width: 36px;
+                                height: 36px;
+                                border-radius: 50%;
+                                cursor: pointer;
+                                font-size: 20px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                transition: background 0.2s;
+                            " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <h2 style="margin: 0 0 0.5rem 0; font-size: 1.8rem; font-weight: 700;">${theme.name}</h2>
+                            <p style="margin: 0; opacity: 0.9;">
+                                ${character ? character.name : 'Character'} - ${theme.variants?.length || 0} ${theme.variants?.length === 1 ? 'variant' : 'variants'}
+                            </p>
+                        </div>
+
+                        <!-- Content -->
+                        <div style="padding: 2rem;">
+                            <h3 style="margin: 0 0 1.5rem 0; font-size: 1.2rem; color: var(--text-primary);">
+                                <i class="fas fa-images"></i> Variants
+                            </h3>
+                            ${theme.variants && theme.variants.length > 0 ? `
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
+                                    ${theme.variants.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(variant => `
+                                        <div style="
+                                            background: var(--surface);
+                                            border: 1px solid var(--border);
+                                            border-radius: var(--radius);
+                                            overflow: hidden;
+                                            transition: all 0.2s;
+                                        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                            <div style="
+                                                width: 100%;
+                                                height: 250px;
+                                                background: var(--background);
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                            ">
+                                                ${variant.imageUrl ?
+                                                    `<img src="${variant.imageUrl}" alt="Variant" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                                    `<div style="text-align: center; color: var(--text-muted);">
+                                                        <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                                        <p style="margin: 0; font-size: 12px;">No image</p>
+                                                    </div>`
+                                                }
+                                            </div>
+                                            <div style="padding: 1rem;">
+                                                <p style="margin: 0 0 0.5rem 0; font-size: 14px; color: var(--text-secondary); line-height: 1.4;" title="${variant.prompt}">
+                                                    ${variant.prompt.length > 60 ? variant.prompt.substring(0, 60) + '...' : variant.prompt}
+                                                </p>
+                                                <p style="margin: 0; font-size: 12px; color: var(--text-muted);">
+                                                    ${new Date(variant.createdAt).toLocaleString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div style="
+                                    text-align: center;
+                                    padding: 3rem;
+                                    background: var(--surface);
+                                    border-radius: var(--radius);
+                                    color: var(--text-muted);
+                                ">
+                                    <i class="fas fa-images" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <p>No variants yet</p>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+
+                // Close on overlay click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                });
+
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading theme:', error);
+                if (window.showNotification) {
+                    window.showNotification('Failed to load theme details', 'error');
+                }
+            }
+        }
+
+        // Export functions
+        window.showCharacterModal = showCharacterModal;
+        window.showThemeModal = showThemeModal;
+
         // Clear create form

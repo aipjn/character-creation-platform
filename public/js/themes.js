@@ -276,7 +276,7 @@ async function loadEditCharacters() {
 }
 
 /**
- * 选择角色进行编辑 → 进入步骤2或3
+ * 选择角色进行编辑 → 直接进入生成页面
  */
 async function selectCharacterForEdit(characterId) {
     try {
@@ -289,20 +289,8 @@ async function selectCharacterForEdit(characterId) {
             // Load themes for this character
             const themes = await loadCharacterThemes(characterId);
 
-            // If no themes exist, auto-create default theme and go to Step 3
-            if (!themes || themes.length === 0) {
-                const defaultTheme = await createTheme(characterId, `Default Theme`);
-                if (defaultTheme) {
-                    window._themeEditor.currentTheme = defaultTheme;
-                    await showEditStep3_GenerateVariants(window._themeEditor.currentCharacter, defaultTheme);
-                    if (window.showNotification) {
-                        window.showNotification('Default theme created. Start generating variants!', 'success');
-                    }
-                }
-            } else {
-                // Show theme selection if themes exist
-                await showEditStep2_SelectTheme(window._themeEditor.currentCharacter, themes);
-            }
+            // Always go to generate page, theme will be selected via dropdown
+            await showGenerateVariantsPage(window._themeEditor.currentCharacter, themes);
         }
     } catch (error) {
         console.error('Error loading character:', error);
@@ -503,7 +491,326 @@ async function selectThemeForEdit(themeId) {
 }
 
 /**
- * Edit页面 - 步骤3：生成变体
+ * 显示生成变体页面（带theme下拉框）
+ */
+async function showGenerateVariantsPage(character, themes) {
+    const editPage = document.getElementById('edit-page');
+
+    window._themeEditor.availableThemes = themes || [];
+    window._themeEditor.pendingThemes = []; // Store pending themes created in UI
+
+    // Check if there's already a "Default Theme" in saved themes
+    const existingDefaultTheme = themes.find(t => t.name === 'Default Theme');
+
+    let initialTheme;
+    if (existingDefaultTheme) {
+        // Use existing Default Theme
+        initialTheme = existingDefaultTheme;
+        window._themeEditor.currentTheme = existingDefaultTheme;
+    } else {
+        // Create pending Default Theme
+        initialTheme = {
+            id: null,
+            name: 'Default Theme',
+            isPending: true,
+            characterId: character.id
+        };
+        window._themeEditor.currentTheme = initialTheme;
+    }
+
+    editPage.innerHTML = `
+        <div style="width: 100%; padding: 0 2rem;">
+            <!-- Header -->
+            <div style="margin-bottom: 2rem;">
+                <button class="btn btn-secondary" onclick="showEditStep1_SelectCharacter()" style="margin-bottom: 1rem;">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">
+                    ${character.name}
+                </h2>
+                <p style="color: var(--text-muted);">Generate variations for this character</p>
+            </div>
+
+            <!-- Main layout: Generate panel + Variants gallery -->
+            <div style="display: grid; grid-template-columns: 400px 1fr; gap: 2rem;">
+                <!-- Left: Generate panel -->
+                <div style="
+                    background: var(--surface);
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius-lg);
+                    padding: 1.5rem;
+                    height: fit-content;
+                    position: sticky;
+                    top: 2rem;
+                ">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem;">
+                        <i class="fas fa-wand-magic-sparkles"></i> Generate Variant
+                    </h3>
+
+                    <!-- Theme selector and New Theme button -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 0.5rem;">Theme:</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select id="theme-selector" onchange="onThemeChange()" style="
+                                flex: 1;
+                                padding: 0.5rem;
+                                border: 2px solid var(--border);
+                                border-radius: var(--radius);
+                                font-size: 14px;
+                                background: var(--background);
+                            ">
+                                ${existingDefaultTheme ?
+                                    `<option value="${existingDefaultTheme.id}" selected>Default Theme</option>
+                                     ${themes.filter(t => t.id !== existingDefaultTheme.id).map(t => `<option value="${t.id}">${t.name}</option>`).join('')}` :
+                                    `<option value="default" selected>Default Theme</option>
+                                     ${themes.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}`
+                                }
+                            </select>
+                            <button class="btn btn-sm btn-outline" onclick="createNewThemeInUI()" title="Create new theme" style="flex-shrink: 0;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Base character preview -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 0.5rem;">Base Character:</label>
+                        <div style="
+                            width: 100%;
+                            height: 150px;
+                            border-radius: var(--radius);
+                            overflow: hidden;
+                            background: var(--background);
+                        ">
+                            ${character.imageUrl ?
+                                `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                `<div style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                                    <i class="fas fa-user" style="font-size: 2rem; color: var(--text-muted);"></i>
+                                </div>`
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Prompt input -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 14px;">
+                            Describe the variant:
+                        </label>
+                        <textarea
+                            id="variant-prompt"
+                            placeholder="E.g., 'wearing a red dress', 'in a park setting', 'smiling happily'..."
+                            style="
+                                width: 100%;
+                                min-height: 100px;
+                                padding: 0.75rem;
+                                border: 2px solid var(--border);
+                                border-radius: var(--radius);
+                                font-size: 14px;
+                                font-family: inherit;
+                                resize: vertical;
+                            "
+                        ></textarea>
+                    </div>
+
+                    <!-- Quick options -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 0.5rem;">Quick Options:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline" onclick="addToVariantPrompt('different outfit')">
+                                <i class="fas fa-tshirt"></i> Outfit
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="addToVariantPrompt('different pose')">
+                                <i class="fas fa-running"></i> Pose
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="addToVariantPrompt('different expression')">
+                                <i class="fas fa-smile"></i> Expression
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="addToVariantPrompt('different scene')">
+                                <i class="fas fa-image"></i> Scene
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Generate button -->
+                    <button id="generate-variant-btn" class="btn btn-primary" onclick="generateVariantWithTheme()" style="width: 100%; padding: 0.75rem;">
+                        <i class="fas fa-sparkles"></i> Generate Variant
+                    </button>
+                </div>
+
+                <!-- Right: Variants gallery -->
+                <div>
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem;" id="variants-title">
+                        Generated Variants (0)
+                    </h3>
+                    <div id="variants-gallery" style="
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                        gap: 1rem;
+                    ">
+                        <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--surface); border-radius: var(--radius-lg);">
+                            <i class="fas fa-images" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                            <h3 style="color: var(--text-secondary);">No Variants Yet</h3>
+                            <p style="color: var(--text-muted);">Generate your first variant using the panel on the left</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Display initial variants if Default Theme exists
+    if (existingDefaultTheme && existingDefaultTheme.variants) {
+        updateVariantsDisplay(existingDefaultTheme.variants);
+    }
+}
+
+/**
+ * 在UI中创建新theme (不调用后台)
+ */
+function createNewThemeInUI() {
+    const themeName = prompt('Enter theme name:', '');
+    if (!themeName || !themeName.trim()) {
+        return;
+    }
+
+    const selector = document.getElementById('theme-selector');
+
+    // Create a temporary ID for the pending theme
+    const tempId = `pending_${Date.now()}`;
+
+    // Create pending theme object
+    const pendingTheme = {
+        id: tempId,
+        name: themeName.trim(),
+        isPending: true,
+        characterId: window._themeEditor.currentCharacter.id,
+        variants: []
+    };
+
+    // Add to pending themes
+    window._themeEditor.pendingThemes.push(pendingTheme);
+
+    // Add option to dropdown
+    const option = document.createElement('option');
+    option.value = tempId;
+    option.textContent = pendingTheme.name;
+    selector.appendChild(option);
+
+    // Select the new theme
+    selector.value = tempId;
+    window._themeEditor.currentTheme = pendingTheme;
+
+    // Clear variants display
+    updateVariantsDisplay([]);
+
+    if (window.showNotification) {
+        window.showNotification(`Theme "${themeName.trim()}" created. Generate a variant to save it.`, 'info');
+    }
+}
+
+/**
+ * Theme下拉框变化时
+ */
+async function onThemeChange() {
+    const selector = document.getElementById('theme-selector');
+    const themeId = selector.value;
+
+    if (themeId === 'default') {
+        // Default theme selected
+        window._themeEditor.currentTheme = {
+            id: null,
+            name: 'Default Theme',
+            isPending: true,
+            characterId: window._themeEditor.currentCharacter.id
+        };
+        // Clear variants display (default theme has no variants until generated)
+        updateVariantsDisplay([]);
+    } else if (themeId.startsWith('pending_')) {
+        // Pending theme (created in UI but not saved)
+        const pendingTheme = window._themeEditor.pendingThemes.find(t => t.id === themeId);
+        if (pendingTheme) {
+            window._themeEditor.currentTheme = pendingTheme;
+            updateVariantsDisplay(pendingTheme.variants || []);
+        }
+    } else {
+        // Existing theme selected, load its variants
+        try {
+            const response = await fetch(`${API_BASE}/themes/${themeId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                window._themeEditor.currentTheme = data.data;
+                updateVariantsDisplay(data.data.variants || []);
+            }
+        } catch (error) {
+            console.error('Error loading theme:', error);
+        }
+    }
+}
+
+/**
+ * 更新variants展示
+ */
+function updateVariantsDisplay(variants) {
+    const gallery = document.getElementById('variants-gallery');
+    const title = document.getElementById('variants-title');
+
+    title.textContent = `Generated Variants (${variants.length})`;
+
+    if (!variants || variants.length === 0) {
+        gallery.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--surface); border-radius: var(--radius-lg);">
+                <i class="fas fa-images" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                <h3 style="color: var(--text-secondary);">No Variants Yet</h3>
+                <p style="color: var(--text-muted);">Generate your first variant using the panel on the left</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Render variants (newest first)
+    const sortedVariants = [...variants].sort((a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    gallery.innerHTML = sortedVariants.map(variant => `
+        <div class="variant-card" style="
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <div style="width: 100%; height: 200px; background: var(--background); display: flex; align-items: center; justify-content: center;">
+                ${variant.imageUrl ?
+                    `<img src="${variant.imageUrl}" alt="Variant" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.error('Failed to load variant image:', '${variant.imageUrl}')">` :
+                    `<div style="text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <p style="margin: 0; font-size: 12px;">No image</p>
+                    </div>`
+                }
+            </div>
+            <div style="padding: 0.75rem;">
+                <p style="margin: 0; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${variant.prompt}">
+                    ${variant.prompt}
+                </p>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 0.25rem 0 0.5rem 0;">
+                    ${new Date(variant.createdAt).toLocaleString()}
+                </p>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-sm btn-outline" onclick="deleteVariantWithConfirm('${variant.id}')" style="flex: 1;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+/**
+ * Edit页面 - 步骤3：生成变体（旧版，保留向后兼容）
  */
 async function showEditStep3_GenerateVariants(character, theme) {
     const editPage = document.getElementById('edit-page');
@@ -792,21 +1099,148 @@ async function deleteVariantWithConfirm(variantId) {
 
         await deleteVariant(variantId);
 
-        // Reload theme data
-        const response = await fetch(`${API_BASE}/themes/${window._themeEditor.currentTheme.id}`);
-        const data = await response.json();
+        // If we're in the new combined page
+        const selector = document.getElementById('theme-selector');
+        if (selector) {
+            // Reload current theme's variants
+            await onThemeChange();
+        } else {
+            // Old page flow - reload theme data
+            const response = await fetch(`${API_BASE}/themes/${window._themeEditor.currentTheme.id}`);
+            const data = await response.json();
 
-        if (data.success) {
-            window._themeEditor.currentTheme = data.data;
-            await showEditStep3_GenerateVariants(window._themeEditor.currentCharacter, window._themeEditor.currentTheme);
-
-            if (window.showNotification) {
-                window.showNotification('Variant deleted successfully!', 'success');
+            if (data.success) {
+                window._themeEditor.currentTheme = data.data;
+                await showEditStep3_GenerateVariants(window._themeEditor.currentCharacter, window._themeEditor.currentTheme);
             }
+        }
+
+        if (window.showNotification) {
+            window.showNotification('Variant deleted successfully!', 'success');
         }
     } catch (error) {
         if (window.showNotification) {
             window.showNotification('Failed to delete variant', 'error');
+        }
+    }
+}
+
+/**
+ * 生成变体（带theme处理逻辑）
+ */
+async function generateVariantWithTheme() {
+    const promptTextarea = document.getElementById('variant-prompt');
+    const prompt = promptTextarea?.value.trim();
+
+    if (!prompt) {
+        if (window.showNotification) {
+            window.showNotification('Please describe the variant', 'error');
+        }
+        return;
+    }
+
+    if (!window._themeEditor.currentTheme) {
+        if (window.showNotification) {
+            window.showNotification('No theme selected', 'error');
+        }
+        return;
+    }
+
+    const generateBtn = document.getElementById('generate-variant-btn');
+    if (generateBtn) {
+        generateBtn.disabled = true;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    }
+
+    try {
+        let targetThemeId = window._themeEditor.currentTheme.id;
+        const currentTheme = window._themeEditor.currentTheme;
+
+        // If theme is pending (not saved to backend), create it first
+        if (currentTheme.isPending) {
+            if (window.showNotification) {
+                window.showNotification('Creating theme...', 'info');
+            }
+
+            const newTheme = await createTheme(
+                window._themeEditor.currentCharacter.id,
+                currentTheme.name,
+                ''
+            );
+            targetThemeId = newTheme.id;
+
+            // Update current theme to saved theme
+            window._themeEditor.currentTheme = newTheme;
+
+            // Update dropdown
+            const selector = document.getElementById('theme-selector');
+            const currentValue = selector.value;
+
+            // If it was a pending theme, remove the old option and add the real one
+            if (currentValue.startsWith('pending_')) {
+                const oldOption = selector.querySelector(`option[value="${currentValue}"]`);
+                if (oldOption) {
+                    oldOption.remove();
+                }
+                // Remove from pending themes
+                window._themeEditor.pendingThemes = window._themeEditor.pendingThemes.filter(t => t.id !== currentValue);
+
+                // Add new option with real theme ID
+                const newOption = document.createElement('option');
+                newOption.value = newTheme.id;
+                newOption.textContent = newTheme.name;
+                newOption.selected = true;
+                selector.appendChild(newOption);
+            } else if (currentValue === 'default') {
+                // Default theme becomes a real theme, update the option
+                const defaultOption = selector.querySelector('option[value="default"]');
+                if (defaultOption) {
+                    defaultOption.value = newTheme.id;
+                    defaultOption.textContent = newTheme.name;
+                }
+            }
+
+            // Add to available themes
+            window._themeEditor.availableThemes.push(newTheme);
+
+            // Update selector value
+            selector.value = newTheme.id;
+        }
+
+        // Generate variant under the theme
+        if (window.showNotification) {
+            window.showNotification('Generating variant...', 'info');
+        }
+
+        const variant = await generateVariant(targetThemeId, prompt);
+        console.log('[Variant] Generated variant data:', variant);
+
+        // Clear the prompt textarea
+        if (promptTextarea) {
+            promptTextarea.value = '';
+        }
+
+        // Reload the theme to get updated variants
+        const response = await fetch(`${API_BASE}/themes/${targetThemeId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            window._themeEditor.currentTheme = data.data;
+            updateVariantsDisplay(data.data.variants || []);
+        }
+
+        if (window.showNotification) {
+            window.showNotification('Variant generated successfully!', 'success');
+        }
+    } catch (error) {
+        console.error('Error generating variant:', error);
+        if (window.showNotification) {
+            window.showNotification('Failed to generate variant: ' + error.message, 'error');
+        }
+    } finally {
+        if (generateBtn) {
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '<i class="fas fa-sparkles"></i> Generate Variant';
         }
     }
 }
@@ -825,3 +1259,8 @@ window.addToVariantPrompt = addToVariantPrompt;
 window.generateVariantImage = generateVariantImage;
 window.deleteVariantWithConfirm = deleteVariantWithConfirm;
 window.renameTheme = renameTheme;
+window.showGenerateVariantsPage = showGenerateVariantsPage;
+window.onThemeChange = onThemeChange;
+window.updateVariantsDisplay = updateVariantsDisplay;
+window.generateVariantWithTheme = generateVariantWithTheme;
+window.createNewThemeInUI = createNewThemeInUI;

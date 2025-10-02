@@ -21,9 +21,9 @@ const router = Router();
 // Initialize Gemini client for image generation
 const geminiClient = getDefaultGeminiClient();
 
-// Storage paths
-const THEMES_DIR = path.join(process.cwd(), 'uploads', 'themes');
-const VARIANTS_DIR = path.join(process.cwd(), 'uploads', 'variants');
+// Storage paths - use absolute paths
+const THEMES_DIR = '/Users/h0270/Documents/code/character-creator/uploads/themes';
+const VARIANTS_DIR = '/Users/h0270/Documents/code/character-creator/uploads/variants';
 
 // Ensure directories exist
 async function ensureDirectories() {
@@ -41,9 +41,9 @@ router.get('/character/:characterId', async (req: Request, res: Response) => {
   try {
     const { characterId } = req.params;
 
-    // 读取该角色的所有主题
+    // 读取所有主题文件
     const files = await fs.readdir(THEMES_DIR);
-    const themeFiles = files.filter(f => f.endsWith('.json') && f.includes(characterId!));
+    const themeFiles = files.filter(f => f.endsWith('.json'));
 
     const themes: ThemeWithVariants[] = [];
 
@@ -51,13 +51,16 @@ router.get('/character/:characterId', async (req: Request, res: Response) => {
       const themePath = path.join(THEMES_DIR, file);
       const themeData = JSON.parse(await fs.readFile(themePath, 'utf-8'));
 
-      // 读取该主题的所有变体
-      const variants = await getVariantsByThemeId(themeData.id);
+      // 检查characterId是否匹配
+      if (themeData.characterId === characterId) {
+        // 读取该主题的所有变体
+        const variants = await getVariantsByThemeId(themeData.id);
 
-      themes.push({
-        ...themeData,
-        variants
-      });
+        themes.push({
+          ...themeData,
+          variants
+        });
+      }
     }
 
     res.json({
