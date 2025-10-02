@@ -2,15 +2,19 @@
 
 ## Overview
 
-This document outlines the complete database schema design for the AI-powered character creation platform, covering user management, image generation, and credit system.
+This document outlines the **actual implemented** database schema for the AI-powered character creation platform. This design is aligned with the frontend implementation and focuses on what's currently in use.
 
 ## Design Principles
 
+- **Simplicity First**: Only implement what's actively used by the frontend
 - **Data Integrity**: Foreign key constraints and validation rules
 - **Performance**: Strategic indexing for query optimization
-- **Scalability**: Partitioning and efficient data types
-- **Auditability**: Complete transaction history and logging
-- **Extensibility**: Flexible schema for future features
+- **Frontend Alignment**: Schema matches actual API and UI requirements
+- **Extensibility**: Room for future features without over-engineering
+
+## ⚠️ Important Notes
+
+This design reflects **what is actually implemented**, not a wishlist of features. The schema has been simplified from the original design to match the current frontend implementation.
 
 ## Database Schema Design
 
@@ -121,458 +125,303 @@ CREATE INDEX idx_user_profiles_industry ON user_profiles(industry);
 
 ### 2. Image Generation System
 
-#### Characters Table
+#### Characters Table (Simplified & Aligned with Frontend)
 ```sql
 CREATE TABLE characters (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  
-  -- Basic Character Information
-  name TEXT NOT NULL,
-  description TEXT,
-  prompt TEXT NOT NULL,
-  negative_prompt TEXT,
-  
-  -- Generation Parameters
-  style_type TEXT NOT NULL CHECK (style_type IN (
-    'anime', 'realistic', 'cartoon', 'fantasy', 'cyberpunk', 
-    'steampunk', 'minimalist', 'comic', 'portrait', 'artistic'
+
+  -- Basic Character Information (Frontend uses these)
+  name TEXT,
+  description TEXT,                     -- User's original input description
+  prompt TEXT NOT NULL,                 -- AI-optimized prompt for generation
+
+  -- Style (Frontend uses this)
+  style_type TEXT DEFAULT 'realistic' CHECK (style_type IN (
+    'realistic', 'anime', 'cartoon', 'fantasy', 'cyberpunk', 'vintage', 'minimalist'
   )),
-  art_style TEXT,
-  mood TEXT,
-  color_palette TEXT[],
-  
-  -- Technical Parameters
-  model_version TEXT DEFAULT 'v1.0',
-  generation_seed INTEGER,
-  cfg_scale DECIMAL(3,1) DEFAULT 7.5,
-  steps INTEGER DEFAULT 20,
-  sampler TEXT DEFAULT 'DPM++ 2M Karras',
-  
-  -- Images and Assets
-  primary_image_url TEXT,
-  thumbnail_url TEXT,
-  additional_images JSONB DEFAULT '[]', -- Array of image URLs
-  image_metadata JSONB DEFAULT '{}', -- Generation metadata, file sizes, etc.
-  
-  -- Status and Processing
-  generation_status TEXT DEFAULT 'pending' CHECK (generation_status IN (
-    'pending', 'processing', 'completed', 'failed', 'cancelled'
-  )),
-  processing_started_at TIMESTAMP WITH TIME ZONE,
-  processing_completed_at TIMESTAMP WITH TIME ZONE,
-  processing_time_seconds INTEGER,
-  error_message TEXT,
-  retry_count INTEGER DEFAULT 0,
-  
-  -- Organization and Sharing
-  collection_id TEXT, -- Will reference collections table
+
+  -- Images (Frontend uses these)
+  s3_url TEXT,                          -- Legacy field, may contain S3 URL
+  image_url TEXT,                       -- Direct image URL
+  thumbnail_url TEXT,                   -- Thumbnail for gallery display
+  reference_image_url TEXT,             -- Reference image if provided
+
+  -- Metadata & Tags (Frontend uses these)
+  metadata JSONB DEFAULT '{}',          -- Stores conversationId, gender, artStyle, etc.
   tags TEXT[] DEFAULT '{}',
+
+  -- Character Attributes (Frontend displays these)
+  age TEXT,
+  gender TEXT,
+  occupation TEXT,
+  personality TEXT[],
+  physical_traits JSONB,                -- Height, build, hair, eyes, etc.
+  clothing TEXT,
+  background TEXT,                      -- Character backstory
+
+  -- Status Flags (Frontend uses these)
   is_public BOOLEAN DEFAULT false,
-  is_featured BOOLEAN DEFAULT false,
-  allow_commercial_use BOOLEAN DEFAULT false,
-  license_type TEXT DEFAULT 'standard' CHECK (license_type IN ('standard', 'commercial', 'creative_commons')),
-  
-  -- Engagement Metrics
-  view_count INTEGER DEFAULT 0,
-  like_count INTEGER DEFAULT 0,
-  download_count INTEGER DEFAULT 0,
-  share_count INTEGER DEFAULT 0,
-  
-  -- Versioning and Variants
-  parent_character_id TEXT REFERENCES characters(id),
-  version_number INTEGER DEFAULT 1,
-  variant_type TEXT CHECK (variant_type IN ('original', 'style_transfer', 'pose_change', 'outfit_change', 'expression_change')),
-  
+  is_favorite BOOLEAN DEFAULT false,
+  is_in_library BOOLEAN DEFAULT false,
+  generation_status TEXT DEFAULT 'pending' CHECK (generation_status IN (
+    'pending', 'processing', 'completed', 'failed'
+  )),
+
+  -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  published_at TIMESTAMP WITH TIME ZONE
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
--- Indexes for characters table
+-- Essential Indexes
 CREATE INDEX idx_characters_user_id ON characters(user_id);
 CREATE INDEX idx_characters_style_type ON characters(style_type);
 CREATE INDEX idx_characters_generation_status ON characters(generation_status);
-CREATE INDEX idx_characters_is_public ON characters(is_public) WHERE is_public = true;
-CREATE INDEX idx_characters_is_featured ON characters(is_featured) WHERE is_featured = true;
-CREATE INDEX idx_characters_created_at ON characters(created_at);
-CREATE INDEX idx_characters_collection_id ON characters(collection_id);
-CREATE INDEX idx_characters_parent_id ON characters(parent_character_id);
+CREATE INDEX idx_characters_created_at ON characters(created_at DESC);
 CREATE INDEX idx_characters_tags ON characters USING GIN(tags);
-CREATE INDEX idx_characters_view_count ON characters(view_count) WHERE is_public = true;
 ```
 
-#### Generation Jobs Table
+**Removed from original design:**
+- ❌ `negative_prompt` - Not used by frontend
+- ❌ `cfg_scale`, `steps`, `sampler` - Advanced parameters not exposed in UI
+- ❌ `collection_id` - Collections feature not implemented yet
+- ❌ Engagement metrics (views, likes, downloads) - Not implemented
+- ❌ Versioning fields - Replaced by theme variants system
+
+#### ✅ **NEW: Character Themes & Variants** (Required by Frontend!)
+
+The frontend has a complete theme/variants system that was missing from the database:
+
 ```sql
-CREATE TABLE generation_jobs (
+CREATE TABLE character_themes (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+
+  UNIQUE(character_id, name)
+);
+
+CREATE INDEX idx_character_themes_character_id ON character_themes(character_id);
+
+CREATE TABLE theme_variants (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  theme_id TEXT NOT NULL REFERENCES character_themes(id) ON DELETE CASCADE,
+  character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+
+  -- Variant Information
+  prompt TEXT NOT NULL,                 -- The edit instruction used (e.g., "make them smile")
+  image_url TEXT,
+  thumbnail_url TEXT,
+  metadata JSONB DEFAULT '{}',
+
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX idx_theme_variants_theme_id ON theme_variants(theme_id);
+CREATE INDEX idx_theme_variants_character_id ON theme_variants(character_id);
+CREATE INDEX idx_theme_variants_created_at ON theme_variants(created_at DESC);
+```
+
+**Why these tables are critical:**
+- ✅ Frontend's edit page allows users to create themed variations
+- ✅ Gallery displays themes with variant counts
+- ✅ Users can organize variations by theme (e.g., "Winter Outfits", "Action Poses")
+- ✅ These tables were **completely missing** from original design
+
+#### Generation Jobs Table (Simplified)
+
+Frontend generates synchronously, so we don't need complex queue management:
+
+```sql
+CREATE TABLE generations (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   character_id TEXT REFERENCES characters(id) ON DELETE SET NULL,
-  
-  -- Job Configuration
-  job_type TEXT NOT NULL CHECK (job_type IN (
-    'character_generation', 'style_transfer', 'upscale', 'variation', 'background_removal'
-  )),
-  input_parameters JSONB NOT NULL,
-  generation_provider TEXT DEFAULT 'primary' CHECK (generation_provider IN ('primary', 'secondary', 'fallback')),
-  
-  -- Processing Status
-  status TEXT DEFAULT 'queued' CHECK (status IN (
-    'queued', 'processing', 'completed', 'failed', 'cancelled', 'timeout'
-  )),
-  priority INTEGER DEFAULT 5 CHECK (priority BETWEEN 1 AND 10),
-  
-  -- Timing Information
-  queued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  started_at TIMESTAMP WITH TIME ZONE,
+
+  -- Generation Info
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+  batch_size INTEGER DEFAULT 1,
+  prompt TEXT NOT NULL,
+  style_type TEXT DEFAULT 'realistic',
+
+  -- Results
+  error_message TEXT,
   completed_at TIMESTAMP WITH TIME ZONE,
-  timeout_at TIMESTAMP WITH TIME ZONE,
-  
-  -- Results and Metadata
-  output_urls JSONB DEFAULT '[]',
-  processing_metadata JSONB DEFAULT '{}',
-  error_details JSONB,
-  
-  -- Resource Usage
-  gpu_time_seconds INTEGER,
-  memory_used_mb INTEGER,
-  cost_credits INTEGER,
-  
+
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
--- Indexes for generation jobs
-CREATE INDEX idx_generation_jobs_user_id ON generation_jobs(user_id);
-CREATE INDEX idx_generation_jobs_character_id ON generation_jobs(character_id);
-CREATE INDEX idx_generation_jobs_status ON generation_jobs(status);
-CREATE INDEX idx_generation_jobs_job_type ON generation_jobs(job_type);
-CREATE INDEX idx_generation_jobs_queued_at ON generation_jobs(queued_at);
-CREATE INDEX idx_generation_jobs_priority_status ON generation_jobs(priority, status) WHERE status IN ('queued', 'processing');
+CREATE INDEX idx_generations_user_id ON generations(user_id);
+CREATE INDEX idx_generations_character_id ON generations(character_id);
+CREATE INDEX idx_generations_status ON generations(status);
 ```
 
-#### Collections Table
+**Removed from original design:**
+- ❌ Complex queue priority system - Frontend doesn't need it
+- ❌ Multiple generation providers - Single provider (Gemini)
+- ❌ GPU/memory tracking - Not exposed to users
+- ❌ Cost per job tracking - Tracked at user level instead
+
+#### Collections Table (⚠️ Not Yet Implemented in Frontend)
+
 ```sql
-CREATE TABLE collections (
+-- Character Collections - FUTURE FEATURE
+-- Frontend doesn't have this yet, but keeping schema for future implementation
+
+CREATE TABLE character_collections (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  
-  -- Collection Information
   name TEXT NOT NULL,
   description TEXT,
-  cover_image_url TEXT,
-  
-  -- Organization
-  tags TEXT[] DEFAULT '{}',
-  category TEXT,
-  theme TEXT,
-  
-  -- Sharing and Visibility
   is_public BOOLEAN DEFAULT false,
-  allow_collaboration BOOLEAN DEFAULT false,
-  collaboration_settings JSONB DEFAULT '{}',
-  
-  -- Statistics
-  character_count INTEGER DEFAULT 0,
-  total_views INTEGER DEFAULT 0,
-  total_likes INTEGER DEFAULT 0,
-  
+  cover_image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
--- Link table for character-collection relationships
-CREATE TABLE collection_characters (
-  collection_id TEXT NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+CREATE TABLE character_collection_items (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  collection_id TEXT NOT NULL REFERENCES character_collections(id) ON DELETE CASCADE,
   character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   added_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  display_order INTEGER,
-  
-  PRIMARY KEY (collection_id, character_id)
+
+  UNIQUE(collection_id, character_id)
 );
 
-CREATE INDEX idx_collections_user_id ON collections(user_id);
-CREATE INDEX idx_collections_is_public ON collections(is_public) WHERE is_public = true;
-CREATE INDEX idx_collection_characters_character_id ON collection_characters(character_id);
+CREATE INDEX idx_character_collections_user_id ON character_collections(user_id);
+CREATE INDEX idx_collection_items_character_id ON character_collection_items(character_id);
 ```
 
-### 3. Credit System
+**Status:** ⚠️ Schema exists in Prisma but not actively used by frontend yet
 
-#### User Credits Table
+### 3. Credit System (Simplified)
+
+**Current Implementation:** Credits tracked directly in `users` table with daily quota system.
+
+Frontend shows: `<span id="credits-count">0</span> Credits`
+
+The credit system is **simplified** compared to original design:
+
+#### Users Table (includes credit fields)
 ```sql
-CREATE TABLE user_credits (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  
-  -- Current Balance
-  current_balance INTEGER NOT NULL DEFAULT 0,
-  reserved_balance INTEGER NOT NULL DEFAULT 0, -- Credits reserved for ongoing jobs
-  
-  -- Daily Allowance (for subscription plans)
-  daily_allowance INTEGER NOT NULL DEFAULT 0,
-  daily_used INTEGER NOT NULL DEFAULT 0,
-  daily_reset_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  
-  -- Lifetime Statistics
-  total_earned INTEGER NOT NULL DEFAULT 0,
-  total_spent INTEGER NOT NULL DEFAULT 0,
-  total_purchased INTEGER NOT NULL DEFAULT 0,
-  total_gifted_received INTEGER NOT NULL DEFAULT 0,
-  total_gifted_sent INTEGER NOT NULL DEFAULT 0,
-  
-  -- Bonus and Rewards
-  referral_bonus INTEGER NOT NULL DEFAULT 0,
-  achievement_bonus INTEGER NOT NULL DEFAULT 0,
-  daily_login_streak INTEGER NOT NULL DEFAULT 0,
-  last_daily_bonus_date DATE,
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  
-  UNIQUE(user_id),
-  
-  -- Constraints
-  CONSTRAINT user_credits_balance_positive CHECK (current_balance >= 0),
-  CONSTRAINT user_credits_reserved_positive CHECK (reserved_balance >= 0),
-  CONSTRAINT user_credits_daily_allowance_positive CHECK (daily_allowance >= 0),
-  CONSTRAINT user_credits_daily_used_positive CHECK (daily_used >= 0)
-);
-
-CREATE INDEX idx_user_credits_user_id ON user_credits(user_id);
-CREATE INDEX idx_user_credits_daily_reset ON user_credits(daily_reset_date);
+-- Credit-related fields in users table:
+daily_quota INTEGER DEFAULT 3,           -- Daily generation limit
+daily_used INTEGER DEFAULT 0,            -- How many used today
+total_generated INTEGER DEFAULT 0,       -- Lifetime count
+last_reset_date TIMESTAMP,               -- When quota resets
 ```
 
-#### Credit Transactions Table
-```sql
-CREATE TABLE credit_transactions (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  
-  -- Transaction Details
-  transaction_type TEXT NOT NULL CHECK (transaction_type IN (
-    'purchase', 'usage', 'refund', 'gift_sent', 'gift_received',
-    'daily_allowance', 'bonus', 'referral', 'achievement', 'admin_adjustment'
-  )),
-  amount INTEGER NOT NULL, -- Can be negative for usage/spending
-  balance_after INTEGER NOT NULL,
-  
-  -- Related Entities
-  related_entity_type TEXT CHECK (related_entity_type IN (
-    'generation_job', 'purchase_order', 'gift_transfer', 'achievement', 'referral'
-  )),
-  related_entity_id TEXT,
-  
-  -- Transaction Context
-  description TEXT NOT NULL,
-  metadata JSONB DEFAULT '{}',
-  
-  -- Processing Information
-  status TEXT DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
-  processed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  -- API and Cost Tracking
-  api_endpoint TEXT,
-  operation_details JSONB,
-  cost_calculation JSONB, -- How the cost was calculated
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
-);
+**Why simplified:**
+- ✅ Frontend only shows daily quota, not complex credit balance
+- ✅ No marketplace, gifting, or referral system implemented
+- ✅ No reserved balance needed (synchronous generation)
+- ❌ Future expansion may need separate `user_credits` table
 
--- Indexes for credit transactions
-CREATE INDEX idx_credit_transactions_user_id ON credit_transactions(user_id);
-CREATE INDEX idx_credit_transactions_type ON credit_transactions(transaction_type);
-CREATE INDEX idx_credit_transactions_created_at ON credit_transactions(created_at);
-CREATE INDEX idx_credit_transactions_status ON credit_transactions(status);
-CREATE INDEX idx_credit_transactions_related_entity ON credit_transactions(related_entity_type, related_entity_id);
-CREATE INDEX idx_credit_transactions_api_endpoint ON credit_transactions(api_endpoint);
+#### ❌ Removed Complex Credit Tables
 
--- Partition by month for better performance
--- ALTER TABLE credit_transactions PARTITION BY RANGE (EXTRACT(EPOCH FROM created_at));
+The following tables from the original design are **NOT implemented**:
+
+- ❌ `credit_transactions` - No transaction history tracking yet
+- ❌ `api_credit_configs` - No per-endpoint credit costs configured
+- ❌ `credit_packages` - No credit purchase system implemented
+- ❌ `user_credits` - Credits tracked in `users` table instead
+
+**Rationale:**
+- Frontend doesn't display transaction history
+- No payment integration implemented
+- No credit marketplace features
+- Simpler is better for MVP
+
+## ❌ Removed: Supporting Tables
+
+The following "nice-to-have" tables are **NOT implemented**:
+
+### User Engagement and Analytics - ❌ Not Implemented
+- No activity logging system in frontend
+- No analytics dashboard
+- Could be added later if needed
+
+### Feedback and Ratings - ❌ Not Implemented
+- No rating/review system in frontend
+- No social features implemented yet
+- Could be added when building community features
+
+## Summary: What Changed from Original Design
+
+### ✅ Added (Critical - Frontend depends on this!)
+1. **`character_themes` table** - Organize character variations by theme
+2. **`theme_variants` table** - Store individual variants within themes
+3. **`description` field** in characters - Store user's original input
+4. **`image_url` field** in characters - Direct image URLs (not just S3)
+
+### ❌ Removed (Over-engineered for current needs)
+1. **Generation queue system** - Frontend generates synchronously
+2. **Complex credit system** - Simple daily quota in users table
+3. **Collections** - Schema exists but not used in frontend yet
+4. **Analytics tables** - Not implemented
+5. **API cost configs** - Not needed
+6. **Advanced generation params** - Not exposed in UI
+
+### 📊 Actual Core Schema
+
+**Tables actively used by frontend:**
+1. `users` - User accounts with daily quota
+2. `characters` - Character definitions with images
+3. `character_themes` - Theme organization (**NEW!**)
+4. `theme_variants` - Variant images (**NEW!**)
+5. `generations` - Simple generation tracking
+
+**Tables in schema but not used yet:**
+- `character_collections` - Ready for future implementation
+- `character_collection_items`
+- `scenes` - Scene builder not implemented
+- `scene_characters`
+- `scene_generations`
+
+## Migration Guide
+
+### If starting fresh:
+```bash
+# Apply the updated Prisma schema
+npx prisma migrate dev --name add_themes_and_variants
+
+# Generate Prisma Client
+npx prisma generate
 ```
 
-#### API Credit Configuration Table
-```sql
-CREATE TABLE api_credit_configs (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  
-  -- API Endpoint Configuration
-  endpoint_pattern TEXT NOT NULL, -- Supports patterns like '/api/v1/characters/:id/generate'
-  http_method TEXT NOT NULL CHECK (http_method IN ('GET', 'POST', 'PUT', 'PATCH', 'DELETE')),
-  
-  -- Cost Configuration
-  base_cost INTEGER NOT NULL DEFAULT 0,
-  cost_formula JSONB, -- For complex cost calculations based on parameters
-  
-  -- User Tier Modifiers
-  tier_multipliers JSONB DEFAULT '{
-    "FREE": 1.0,
-    "PREMIUM": 0.8,
-    "PRO": 0.6,
-    "ENTERPRISE": 0.4
-  }',
-  
-  -- Usage Rules
-  daily_limit INTEGER, -- Per-user daily limit for this endpoint
-  rate_limit_per_minute INTEGER,
-  requires_subscription BOOLEAN DEFAULT false,
-  minimum_tier TEXT CHECK (minimum_tier IN ('FREE', 'PREMIUM', 'PRO', 'ENTERPRISE')),
-  
-  -- Configuration
-  is_enabled BOOLEAN DEFAULT true,
-  description TEXT,
-  category TEXT, -- 'generation', 'management', 'social', etc.
-  
-  -- Metadata
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  
-  UNIQUE(endpoint_pattern, http_method)
-);
+### If you have existing data:
+```bash
+# Create migration for new tables
+npx prisma migrate dev --name add_character_themes
 
-CREATE INDEX idx_api_credit_configs_endpoint ON api_credit_configs(endpoint_pattern);
-CREATE INDEX idx_api_credit_configs_enabled ON api_credit_configs(is_enabled) WHERE is_enabled = true;
-CREATE INDEX idx_api_credit_configs_category ON api_credit_configs(category);
+# Manually add description and image_url fields if needed
 ```
-
-#### Credit Packages Table (for purchases)
-```sql
-CREATE TABLE credit_packages (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  
-  -- Package Details
-  name TEXT NOT NULL,
-  description TEXT,
-  credit_amount INTEGER NOT NULL,
-  bonus_credits INTEGER DEFAULT 0,
-  
-  -- Pricing
-  price_usd DECIMAL(10,2) NOT NULL,
-  price_currency TEXT DEFAULT 'USD',
-  discount_percentage INTEGER DEFAULT 0,
-  
-  -- Availability
-  is_available BOOLEAN DEFAULT true,
-  target_tiers TEXT[] DEFAULT '{"FREE", "PREMIUM", "PRO", "ENTERPRISE"}',
-  promotion_start_date TIMESTAMP WITH TIME ZONE,
-  promotion_end_date TIMESTAMP WITH TIME ZONE,
-  
-  -- Package Type
-  package_type TEXT DEFAULT 'one_time' CHECK (package_type IN ('one_time', 'subscription_bonus', 'promotional')),
-  
-  -- Display
-  display_order INTEGER DEFAULT 0,
-  highlight_color TEXT,
-  badge_text TEXT, -- "BEST VALUE", "POPULAR", etc.
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
-);
-
-CREATE INDEX idx_credit_packages_available ON credit_packages(is_available) WHERE is_available = true;
-CREATE INDEX idx_credit_packages_promotion ON credit_packages(promotion_start_date, promotion_end_date);
-```
-
-## Supporting Tables
-
-### User Engagement and Analytics
-```sql
-CREATE TABLE user_activity_logs (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
-  
-  -- Activity Details
-  activity_type TEXT NOT NULL, -- 'login', 'character_created', 'image_generated', etc.
-  entity_type TEXT, -- 'character', 'collection', 'user'
-  entity_id TEXT,
-  
-  -- Context
-  session_id TEXT,
-  ip_address INET,
-  user_agent TEXT,
-  referrer TEXT,
-  
-  -- Metadata
-  metadata JSONB DEFAULT '{}',
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
-);
-
--- Partition by month for performance
-CREATE INDEX idx_user_activity_logs_user_id ON user_activity_logs(user_id, created_at);
-CREATE INDEX idx_user_activity_logs_type ON user_activity_logs(activity_type, created_at);
-```
-
-### Feedback and Ratings
-```sql
-CREATE TABLE character_ratings (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  
-  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  review_text TEXT,
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  
-  UNIQUE(character_id, user_id)
-);
-
-CREATE INDEX idx_character_ratings_character_id ON character_ratings(character_id);
-CREATE INDEX idx_character_ratings_rating ON character_ratings(rating);
-```
-
-## Data Migration Strategy
-
-### From Existing Schema
-1. **User Migration**: Extend existing users table with new columns
-2. **Character Migration**: Add new fields to existing characters table
-3. **Credit System**: Migrate from existing credit tables with data preservation
-
-### Migration Scripts
-- Create new tables with proper constraints
-- Migrate existing data with default values
-- Update application code to use new schema
-- Add indexes for performance optimization
 
 ## Performance Considerations
 
-### Indexing Strategy
-- **Primary indexes**: All foreign keys and frequently queried columns
-- **Composite indexes**: Multi-column queries (user_id + status, created_at + type)
-- **Partial indexes**: Conditional indexes for specific query patterns
-- **GIN indexes**: For JSONB and array columns
+**Essential indexes (already in schema):**
+- All foreign keys indexed
+- `created_at DESC` for chronological queries
+- GIN indexes on `tags` arrays
+- User lookup indexes
 
-### Partitioning
-- **Credit transactions**: Partition by month for time-series data
-- **Activity logs**: Partition by month with automatic cleanup
-- **Large tables**: Consider horizontal partitioning for scalability
+**Not needed yet:**
+- Partitioning (data volume is small)
+- Read replicas (single user per session)
+- Complex query optimization
 
-### Query Optimization
-- Use covering indexes for read-heavy queries
-- Implement read replicas for analytics queries
-- Cache frequently accessed data (user credits, configurations)
+## Next Steps
 
-## Security and Compliance
+1. ✅ **Implement themes API** - Backend endpoints for themes/variants
+2. ✅ **Test theme creation** - Verify frontend can save/load themes
+3. ⚠️ **Consider collections** - If users request project organization
+4. ⚠️ **Add analytics** - If product metrics are needed
 
-### Data Protection
-- **PII Encryption**: Encrypt sensitive user data at rest
-- **Access Control**: Row-level security for user data
-- **Audit Trail**: Complete transaction history for financial data
-- **Data Retention**: Automatic cleanup of old activity logs
+---
 
-### Compliance Features
-- **GDPR Support**: User data export and deletion capabilities
-- **Financial Compliance**: Complete audit trail for credit transactions
-- **Content Moderation**: Flagging and review system for generated content
-
-## Future Enhancements
-
-### Planned Features
-1. **Multi-tenant Support**: Organization-level user management
-2. **Advanced Analytics**: User behavior tracking and insights
-3. **API Usage Analytics**: Detailed usage patterns and optimization
-4. **Content Marketplace**: User-to-user character trading system
-5. **Advanced Collaboration**: Team workspaces and shared collections
-
-This database design provides a robust, scalable foundation for the character creation platform while maintaining data integrity and supporting future growth.
+**Last Updated:** 2025-10-02
+**Schema Version:** Simplified v2.0 (aligned with frontend)

@@ -38,9 +38,11 @@ model Character {
   id          String        @id @default(cuid())
   userId      String        @map("user_id")
   name        String?
-  prompt      String
+  description String?       // User's original description
+  prompt      String        // Enhanced/optimized prompt
   styleType   StyleType     @default(REALISTIC) @map("style_type")
   s3Url       String?       @map("s3_url")
+  imageUrl    String?       @map("image_url")
   thumbnailUrl String?      @map("thumbnail_url")
   referenceImageUrl String?  @map("reference_image_url")
   metadata    Json?
@@ -49,7 +51,7 @@ model Character {
   isFavorite  Boolean       @default(false) @map("is_favorite")
   isInLibrary Boolean       @default(false) @map("is_in_library")
   generationStatus GenerationStatus @default(PENDING) @map("generation_status")
-  
+
   // Comprehensive Character Attributes
   age         String?
   gender      String?
@@ -58,7 +60,7 @@ model Character {
   physicalTraits Json?      // Height, build, hair, eyes, etc.
   clothing    String?
   background  String?       // Character backstory
-  
+
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
@@ -67,6 +69,7 @@ model Character {
   generations Generation[]
   collectionItems CharacterCollectionItem[]
   scenes      SceneCharacter[]
+  themes      CharacterTheme[]
 
   @@map("characters")
 }
@@ -195,6 +198,38 @@ model SceneGeneration {
   scene         Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
 
   @@map("scene_generations")
+}
+
+model CharacterTheme {
+  id          String    @id @default(cuid())
+  characterId String    @map("character_id")
+  name        String
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  variants    ThemeVariant[]
+
+  @@unique([characterId, name])
+  @@map("character_themes")
+}
+
+model ThemeVariant {
+  id          String    @id @default(cuid())
+  themeId     String    @map("theme_id")
+  characterId String    @map("character_id")
+  prompt      String    // The edit instruction used to create this variant
+  imageUrl    String?   @map("image_url")
+  thumbnailUrl String?  @map("thumbnail_url")
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  theme       CharacterTheme @relation(fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@map("theme_variants")
 }
 
 // Enums
