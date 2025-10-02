@@ -1,7 +1,8 @@
         async function updateCharacterGallery() {
             const gallery = document.getElementById('character-gallery');
-            
-            if (characters.length === 0) {
+
+            // Ensure characters is an array
+            if (!Array.isArray(characters) || characters.length === 0) {
                 gallery.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-magic"></i>

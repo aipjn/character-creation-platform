@@ -194,8 +194,10 @@ document.getElementById('menu-toggle').addEventListener('click', function() {
 // Initialize app
 document.addEventListener('DOMContentLoaded', async function() {
     await checkAuth();
-    await loadCharacters();
-    await updateCharacterGallery();
+    characters = await loadCharacters();
+    if (typeof updateCharacterGallery === 'function') {
+        await updateCharacterGallery();
+    }
 });
 
 // Handle clicks outside modal
