@@ -1331,24 +1331,32 @@ Examples:
                                         border-radius: var(--radius);
                                         padding: 1.5rem;
                                     ">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                                            <h3 style="font-size: 1.2rem; font-weight: 600; margin: 0;">Generated Variations</h3>
-                                            <span id="variant-count" style="font-size: 14px; color: var(--text-muted);">0 variants</span>
-                                        </div>
-
-                                        <!-- Variants Grid Container -->
-                                        <div id="variants-grid" style="
-                                            display: grid;
-                                            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                                            gap: 1rem;
+                                        <h3 style="font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem;">Generated Variation</h3>
+                                        <div id="edit-result-image" style="
+                                            width: 100%;
+                                            height: 300px;
+                                            background: var(--gradient-primary);
+                                            border-radius: var(--radius);
                                             margin-bottom: 1rem;
+                                            overflow: hidden;
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
                                         ">
-                                            <!-- Variant cards will be added here dynamically -->
+                                            <img id="edit-generated-image" style="width: 100%; height: 100%; object-fit: contain;" />
                                         </div>
 
-                                        <p style="font-size: 12px; color: var(--text-muted); text-align: center;">
-                                            Saving to theme: <strong id="save-theme-name"></strong>
-                                        </p>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn btn-primary" onclick="saveEditedCharacter()">
+                                                <i class="fas fa-save"></i> Save as New Character
+                                            </button>
+                                            <button class="btn btn-secondary" onclick="replaceCharacter()">
+                                                <i class="fas fa-sync"></i> Replace Original
+                                            </button>
+                                            <button class="btn btn-outline" onclick="discardEdit()">
+                                                <i class="fas fa-times"></i> Discard
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2325,6 +2333,512 @@ Examples:
             `;
         }
 
+        // Character actions (removed editCharacter function - editing is done in Edit page)
+            const editPage = document.getElementById('edit-page');
+            editPage.innerHTML = `
+                <div style="max-width: 1200px; margin: 0 auto;">
+                    <!-- Header -->
+                    <div style="
+                        background: var(--gradient-primary);
+                        color: white;
+                        padding: 2rem;
+                        border-radius: var(--radius-lg);
+                        margin-bottom: 2rem;
+                        text-align: center;
+                    ">
+                        <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Create Character Variants</h1>
+                        <p style="opacity: 0.9; font-size: 1.1rem;">Generate different poses, expressions, or settings for: <strong>${character.name}</strong></p>
+                    </div>
+
+                    <!-- Main Layout -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <!-- Left Side: Original Character Reference -->
+                        <div style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 1.5rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                        ">
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                                <i class="fas fa-user-circle"></i> Original Character
+                            </h3>
+                            
+                            <!-- Original Character Image -->
+                            <div style="
+                                width: 100%;
+                                height: 300px;
+                                border-radius: var(--radius);
+                                overflow: hidden;
+                                background: var(--surface);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin-bottom: 1rem;
+                            ">
+                                ${character.imageUrl ? 
+                                    `<img src="${character.imageUrl}" alt="${character.name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+                                    `<div style="text-align: center; color: var(--text-muted);">
+                                        <i class="fas fa-user" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p>Original Character</p>
+                                    </div>`
+                                }
+                            </div>
+
+                            <!-- Original Character Info -->
+                            <div style="padding: 1rem; background: var(--surface); border-radius: var(--radius); margin-bottom: 1rem;">
+                                <p style="margin: 0 0 0.5rem 0; font-weight: 600;">${character.name}</p>
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">${character.description || 'No description'}</p>
+                                ${character.tags && character.tags.length > 0 ? `
+                                    <div style="margin-top: 0.5rem; display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                        ${character.tags.map(tag => `<span style="background: var(--primary-light); color: var(--primary); padding: 0.125rem 0.5rem; border-radius: 12px; font-size: 12px;">${tag}</span>`).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <!-- Variant Options -->
+                            <div style="margin-bottom: 1rem;">
+                                <h4 style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 16px;">Quick Variant Options</h4>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different pose')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-running"></i> Different Pose
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different expression')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-smile"></i> Different Expression
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different outfit')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-tshirt"></i> Different Outfit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="setVariantDescription('different background')" style="padding: 0.5rem; font-size: 14px;">
+                                        <i class="fas fa-image"></i> Different Background
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side: Variant Creation -->
+                        <div style="
+                            background: var(--background);
+                            border-radius: var(--radius-lg);
+                            padding: 1.5rem;
+                            border: 1px solid var(--border);
+                            box-shadow: var(--shadow);
+                        ">
+                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">
+                                <i class="fas fa-magic"></i> Create Variant
+                            </h3>
+
+                            <!-- Theme Selection -->
+                            <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);">
+                                <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary); font-size: 14px;">
+                                    <i class="fas fa-folder"></i> Select Theme
+                                </label>
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                    <select
+                                        id="theme-selector"
+                                        style="
+                                            flex: 1;
+                                            padding: 0.5rem;
+                                            border: 1px solid var(--border);
+                                            border-radius: var(--radius);
+                                            background: var(--background);
+                                            color: var(--text-primary);
+                                            font-size: 14px;
+                                        "
+                                        onchange="onThemeSelected()"
+                                    >
+                                        <option value="">Loading themes...</option>
+                                    </select>
+                                    <button
+                                        class="btn btn-sm btn-outline"
+                                        onclick="showCreateThemeDialog()"
+                                        style="white-space: nowrap;"
+                                    >
+                                        <i class="fas fa-plus"></i> New
+                                    </button>
+                                </div>
+                                <div id="current-theme-info" style="font-size: 12px; color: var(--text-muted); display: none;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span id="theme-variant-count"></span>
+                                        <button class="btn btn-sm btn-outline" onclick="editCurrentTheme()" style="font-size: 11px; padding: 0.25rem 0.5rem;">
+                                            <i class="fas fa-edit"></i> Rename
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Variant Description Input -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-secondary);">
+                                    Describe the changes you want to make:
+                                </label>
+                                <textarea 
+                                    id="variant-description" 
+                                    placeholder="E.g., 'Make the character sitting instead of standing with a happy expression' or 'Change to a fantasy medieval setting with armor'"
+                                    style="
+                                        width: 100%;
+                                        min-height: 100px;
+                                        padding: 1rem;
+                                        border: 1px solid var(--border);
+                                        border-radius: var(--radius);
+                                        background: var(--surface);
+                                        color: var(--text-primary);
+                                        font-family: inherit;
+                                        resize: vertical;
+                                    "
+                                ></textarea>
+                            </div>
+
+                            <!-- Generate Variant Button -->
+                            <div style="margin-bottom: 1.5rem;">
+                                <button 
+                                    class="btn btn-primary" 
+                                    onclick="generateVariantPrompt()"
+                                    style="width: 100%; padding: 1rem; font-size: 16px;"
+                                >
+                                    <i class="fas fa-sparkles"></i> Generate Variant Prompt
+                                </button>
+                            </div>
+
+                            <!-- Variant Workflow Area -->
+                            <div id="variant-workflow-area">
+                                <!-- Empty state -->
+                                <div id="variant-empty" style="
+                                    text-align: center;
+                                    padding: 2rem;
+                                    color: var(--text-muted);
+                                ">
+                                    <i class="fas fa-wand-magic" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                    <p>Describe the changes you want to make to create a variant of this character.</p>
+                                </div>
+
+                                <!-- Prompt optimization results -->
+                                <div id="variant-prompt-optimization" style="display: none;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Optimized Variant Prompt</h4>
+                                    
+                                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: var(--radius);">
+                                        <h5 style="margin-bottom: 0.5rem; font-size: 14px; color: var(--text-secondary);">Enhanced Prompt:</h5>
+                                        <p id="variant-optimized-prompt" style="margin: 0; font-size: 14px; line-height: 1.5;"></p>
+                                    </div>
+                                    
+                                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: var(--radius);">
+                                        <h5 style="margin-bottom: 0.5rem; font-size: 14px; color: var(--text-secondary);">Reasoning:</h5>
+                                        <p id="variant-prompt-reasoning" style="margin: 0; font-size: 14px; line-height: 1.5;"></p>
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                                        <button class="btn btn-primary" onclick="generateCharacterVariant()" style="flex: 1;">
+                                            <i class="fas fa-play"></i> Generate Variant
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="showVariantModificationOptions()" style="flex: 1;">
+                                            <i class="fas fa-edit"></i> Modify Prompt
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Direct Variant Prompt Editing -->
+                                <div id="variant-direct-editing" style="display: none;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Edit Variant Prompt</h4>
+                                    
+                                    <div style="margin-bottom: 1rem;">
+                                        <textarea 
+                                            id="variant-direct-prompt-editor" 
+                                            style="
+                                                width: 100%;
+                                                min-height: 120px;
+                                                padding: 0.75rem;
+                                                border: 1px solid var(--border);
+                                                border-radius: var(--radius);
+                                                background: var(--surface);
+                                                color: var(--text-primary);
+                                                font-family: inherit;
+                                                resize: vertical;
+                                            "
+                                        ></textarea>
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <button class="btn btn-primary" onclick="generateVariantWithEditedPrompt()">
+                                            <i class="fas fa-magic"></i> Generate Variant
+                                        </button>
+                                        <button class="btn btn-outline" onclick="cancelVariantDirectEditing()">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Variant Preview -->
+                                <div id="variant-preview" style="display: none;">
+                                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Generated Variant</h4>
+                                    
+                                    <div style="
+                                        width: 100%;
+                                        height: 300px;
+                                        border-radius: var(--radius);
+                                        overflow: hidden;
+                                        background: var(--surface);
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        margin-bottom: 1rem;
+                                    ">
+                                        <div id="variant-image-container" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                                            <div style="text-align: center; color: var(--text-muted);">
+                                                <i class="fas fa-user" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                                <p>Generated Variant</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: var(--radius);">
+                                        <h5 style="margin-bottom: 0.5rem; font-size: 14px; color: var(--text-secondary);">Variant Name:</h5>
+                                        <input 
+                                            type="text" 
+                                            id="variant-name" 
+                                            placeholder="Enter variant name..."
+                                            style="
+                                                width: 100%;
+                                                padding: 0.5rem;
+                                                border: 1px solid var(--border);
+                                                border-radius: var(--radius);
+                                                background: var(--background);
+                                                color: var(--text-primary);
+                                                font-family: inherit;
+                                            "
+                                        />
+                                    </div>
+
+                                    <div style="display: flex; gap: 0.75rem;">
+                                        <button class="btn btn-primary" onclick="saveCharacterVariant()">
+                                            <i class="fas fa-save"></i> Save Variant
+                                        </button>
+                                        <button class="btn btn-secondary" onclick="modifyVariant()">
+                                            <i class="fas fa-edit"></i> Modify
+                                        </button>
+                                        <button class="btn btn-outline" onclick="abandonVariant()">
+                                            <i class="fas fa-trash"></i> Abandon
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation -->
+                    <div style="
+                        margin-top: 2rem;
+                        padding: 1.5rem;
+                        background: var(--background);
+                        border-radius: var(--radius-lg);
+                        border: 1px solid var(--border);
+                        text-align: center;
+                    ">
+                        <button class="btn btn-secondary" onclick="showCharacterDetail(currentCharacterForVariant)">
+                            <i class="fas fa-arrow-left"></i> Back to Character Detail
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile responsive styles -->
+                <style>
+                    @media (max-width: 768px) {
+                        #edit-page > div > div[style*="grid-template-columns"] {
+                            grid-template-columns: 1fr !important;
+                            gap: 1rem !important;
+                        }
+                    }
+                </style>
+            `;
+
+            // Store current character
+            currentCharacterForVariant = character;
+
+            // Load themes for this character
+            loadCharacterThemes(character.id);
+        }
+
+        // Theme Management Functions
+        let currentSelectedTheme = null;
+        let characterThemes = [];
+
+        async function loadCharacterThemes(characterId) {
+            try {
+                const response = await fetch(`${API_BASE}/themes/character/${characterId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    characterThemes = data.data || [];
+
+                    const themeSelector = document.getElementById('theme-selector');
+                    if (!themeSelector) return;
+
+                    // Clear existing options
+                    themeSelector.innerHTML = '';
+
+                    if (characterThemes.length === 0) {
+                        // No themes yet, create first theme automatically
+                        await createDefaultTheme(characterId);
+                        return;
+                    }
+
+                    // Add themes to selector
+                    characterThemes.forEach((theme, index) => {
+                        const option = document.createElement('option');
+                        option.value = theme.id;
+                        option.textContent = theme.name || `Theme ${index + 1}`;
+                        themeSelector.appendChild(option);
+                    });
+
+                    // Select first theme by default
+                    if (characterThemes.length > 0) {
+                        themeSelector.value = characterThemes[0].id;
+                        currentSelectedTheme = characterThemes[0];
+                        updateThemeInfo();
+                    }
+                } else {
+                    console.error('Failed to load themes:', data.error);
+                    // Create first theme if loading fails
+                    await createDefaultTheme(characterId);
+                }
+            } catch (error) {
+                console.error('Error loading themes:', error);
+                // Create first theme if error occurs
+                await createDefaultTheme(characterId);
+            }
+        }
+
+        async function createDefaultTheme(characterId) {
+            const themeName = `Theme ${Date.now()}`;
+            const theme = await createTheme(characterId, themeName);
+            if (theme) {
+                characterThemes = [theme];
+                currentSelectedTheme = theme;
+
+                const themeSelector = document.getElementById('theme-selector');
+                if (themeSelector) {
+                    themeSelector.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.value = theme.id;
+                    option.textContent = theme.name;
+                    themeSelector.appendChild(option);
+                    themeSelector.value = theme.id;
+                }
+
+                updateThemeInfo();
+            }
+        }
+
+        async function createTheme(characterId, name, description = '') {
+            try {
+                const response = await fetch(`${API_BASE}/themes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ characterId, name, description })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    return data.data;
+                }
+                return null;
+            } catch (error) {
+                console.error('Error creating theme:', error);
+                return null;
+            }
+        }
+
+        function onThemeSelected() {
+            const themeSelector = document.getElementById('theme-selector');
+            const selectedThemeId = themeSelector.value;
+
+            currentSelectedTheme = characterThemes.find(t => t.id === selectedThemeId);
+            updateThemeInfo();
+        }
+
+        function updateThemeInfo() {
+            const infoDiv = document.getElementById('current-theme-info');
+            const countSpan = document.getElementById('theme-variant-count');
+
+            if (currentSelectedTheme && infoDiv && countSpan) {
+                const variantCount = currentSelectedTheme.variants ? currentSelectedTheme.variants.length : 0;
+                countSpan.textContent = `${variantCount} variant${variantCount !== 1 ? 's' : ''} in this theme`;
+                infoDiv.style.display = 'block';
+            }
+        }
+
+        function showCreateThemeDialog() {
+            const themeName = prompt('Enter theme name:', `Theme ${Date.now()}`);
+            if (themeName && currentCharacterForVariant) {
+                createThemeAndSelect(currentCharacterForVariant.id, themeName);
+            }
+        }
+
+        async function createThemeAndSelect(characterId, themeName) {
+            const theme = await createTheme(characterId, themeName);
+            if (theme) {
+                characterThemes.push(theme);
+
+                const themeSelector = document.getElementById('theme-selector');
+                if (themeSelector) {
+                    const option = document.createElement('option');
+                    option.value = theme.id;
+                    option.textContent = theme.name;
+                    themeSelector.appendChild(option);
+                    themeSelector.value = theme.id;
+
+                    currentSelectedTheme = theme;
+                    updateThemeInfo();
+                }
+
+                showNotification(`Theme "${themeName}" created successfully!`, 'success');
+            }
+        }
+
+        function editCurrentTheme() {
+            if (!currentSelectedTheme) return;
+
+            const newName = prompt('Enter new theme name:', currentSelectedTheme.name);
+            if (newName && newName !== currentSelectedTheme.name) {
+                updateThemeName(currentSelectedTheme.id, newName);
+            }
+        }
+
+        async function updateThemeName(themeId, newName) {
+            try {
+                const response = await fetch(`${API_BASE}/themes/${themeId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Update local data
+                    const theme = characterThemes.find(t => t.id === themeId);
+                    if (theme) {
+                        theme.name = newName;
+                    }
+                    if (currentSelectedTheme && currentSelectedTheme.id === themeId) {
+                        currentSelectedTheme.name = newName;
+                    }
+
+                    // Update selector
+                    const themeSelector = document.getElementById('theme-selector');
+                    if (themeSelector) {
+                        const option = themeSelector.querySelector(`option[value="${themeId}"]`);
+                        if (option) {
+                            option.textContent = newName;
+                        }
+                    }
+
+                    showNotification('Theme name updated!', 'success');
+                }
+            } catch (error) {
+                console.error('Error updating theme name:', error);
+                showNotification('Failed to update theme name', 'error');
+            }
+        }
+
         async function deleteCharacter(id) {
             if (confirm('Are you sure you want to delete this character?')) {
                 try {
@@ -2978,40 +3492,6 @@ Please optimize this into a detailed prompt for generating a character variant t
             const selectedThemeId = themeSelector.value;
             editCurrentTheme = editCharacterThemes.find(t => t.id === selectedThemeId);
             updateEditThemeInfo();
-
-            // Load existing variants for this theme
-            loadThemeVariants();
-        }
-
-        // Load and display existing variants for current theme
-        function loadThemeVariants() {
-            const grid = document.getElementById('variants-grid');
-            grid.innerHTML = ''; // Clear existing variants
-
-            if (editCurrentTheme && editCurrentTheme.variants) {
-                // Sort by creation date (newest first)
-                const sortedVariants = [...editCurrentTheme.variants].sort((a, b) =>
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
-
-                // Add each variant to grid
-                sortedVariants.forEach(variant => {
-                    addVariantToGrid(variant);
-                });
-
-                // Show result section if there are variants
-                if (sortedVariants.length > 0) {
-                    document.getElementById('edit-result').style.display = 'block';
-                }
-            }
-
-            // Update theme name display
-            const themeNameSpan = document.getElementById('save-theme-name');
-            if (themeNameSpan && editCurrentTheme) {
-                themeNameSpan.textContent = editCurrentTheme.name;
-            }
-
-            updateVariantCount();
         }
 
         function updateEditThemeInfo() {
@@ -3149,28 +3629,17 @@ Please optimize this into a detailed prompt for generating a character variant t
                         variantId: variant.id
                     };
 
-                    // Update theme variant count and add to list
+                    // Show the result
+                    document.getElementById('edit-result').style.display = 'block';
+                    document.getElementById('edit-generated-image').src = variant.imageUrl;
+
+                    // Update theme variant count
                     if (editCurrentTheme.variants) {
                         editCurrentTheme.variants.push(variant);
                     } else {
                         editCurrentTheme.variants = [variant];
                     }
                     updateEditThemeInfo();
-
-                    // Add variant card to grid (prepend to show newest first)
-                    addVariantToGrid(variant);
-
-                    // Show result section if first variant
-                    document.getElementById('edit-result').style.display = 'block';
-
-                    // Update theme name display
-                    const themeNameSpan = document.getElementById('save-theme-name');
-                    if (themeNameSpan) {
-                        themeNameSpan.textContent = editCurrentTheme.name;
-                    }
-
-                    // Clear prompt for next generation
-                    document.getElementById('edit-prompt').value = '';
 
                     showNotification('Variant generated and saved to theme!', 'success');
                 } else {
@@ -3183,75 +3652,6 @@ Please optimize this into a detailed prompt for generating a character variant t
             } finally {
                 document.getElementById('loading-overlay').style.display = 'none';
             }
-        }
-
-        // Add variant card to grid
-        function addVariantToGrid(variant) {
-            const grid = document.getElementById('variants-grid');
-
-            // Create variant card
-            const card = document.createElement('div');
-            card.style.cssText = `
-                background: var(--background);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                overflow: hidden;
-                transition: transform 0.2s, box-shadow 0.2s;
-                cursor: pointer;
-            `;
-            card.onmouseover = () => {
-                card.style.transform = 'translateY(-4px)';
-                card.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
-            };
-            card.onmouseout = () => {
-                card.style.transform = 'translateY(0)';
-                card.style.boxShadow = 'none';
-            };
-
-            card.innerHTML = `
-                <div style="
-                    width: 100%;
-                    height: 200px;
-                    background: var(--surface);
-                    overflow: hidden;
-                ">
-                    <img src="${variant.imageUrl}"
-                         alt="${variant.prompt}"
-                         style="width: 100%; height: 100%; object-fit: cover;" />
-                </div>
-                <div style="padding: 0.75rem;">
-                    <p style="
-                        font-size: 12px;
-                        color: var(--text-muted);
-                        margin: 0;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                    " title="${variant.prompt}">
-                        ${variant.prompt}
-                    </p>
-                    <p style="
-                        font-size: 11px;
-                        color: var(--text-muted);
-                        margin: 0.25rem 0 0 0;
-                    ">
-                        ${new Date(variant.createdAt).toLocaleString()}
-                    </p>
-                </div>
-            `;
-
-            // Prepend to show newest first
-            grid.insertBefore(card, grid.firstChild);
-
-            // Update variant count
-            updateVariantCount();
-        }
-
-        // Update variant count display
-        function updateVariantCount() {
-            const grid = document.getElementById('variants-grid');
-            const count = grid.children.length;
-            document.getElementById('variant-count').textContent = `${count} variant${count !== 1 ? 's' : ''}`;
         }
 
         // Save edited character as new
@@ -3374,6 +3774,12 @@ Please optimize this into a detailed prompt for generating a character variant t
         }
 
         // Discard edit
+        function discardEdit() {
+            currentEditedImage = null;
+            document.getElementById('edit-result').style.display = 'none';
+            document.getElementById('edit-prompt').value = '';
+            showNotification('Edit discarded', 'info');
+        }
 
         // ===== END CHARACTER EDIT PAGE FUNCTIONS =====
 

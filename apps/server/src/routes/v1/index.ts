@@ -13,6 +13,7 @@ import charactersRouter from './characters';
 import collectionsRouter from './collections';
 import scenesRouter from './scenes';
 import creditsRouter from './credits';
+import themesRouter from './themes';
 
 const router = express.Router();
 
@@ -31,6 +32,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
         auth: '/api/v1/auth',
         users: '/api/v1/users',
         characters: '/api/v1/characters',
+        themes: '/api/v1/themes',
         collections: '/api/v1/collections',
         scenes: '/api/v1/scenes',
         credits: '/api/v1/credits',
@@ -60,6 +62,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
 router.use('/auth', authRouter);
 router.use('/users', usersRouter);
 router.use('/characters', charactersRouter);
+router.use('/themes', themesRouter);
 router.use('/collections', collectionsRouter);
 router.use('/scenes', scenesRouter);
 router.use('/credits', creditsRouter);

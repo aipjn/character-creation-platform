@@ -223,6 +223,125 @@ export class GeminiClient {
   }
 
   /**
+   * Generate image with input image (image-to-image) using gemini-2.5-flash-image-preview
+   * Used for image editing and variations
+   */
+  async generateWithImage(
+    prompt: string,
+    imageBase64: string,
+    mimeType: string = 'image/jpeg',
+    model: 'gemini-2.5-flash-image-preview' = 'gemini-2.5-flash-image-preview'
+  ): Promise<GeminiResponse> {
+    try {
+      console.log(`[GeminiClient] Calling ${model} with image input, prompt length: ${prompt.length}`);
+
+      const url = `${this.baseUrl}/${model}:generateContent`;
+
+      // Build request with both text and image
+      const requestBody = {
+        contents: [{
+          parts: [
+            { text: prompt },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: imageBase64
+              }
+            }
+          ]
+        }]
+      };
+
+      const fetchOptions: any = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.apiKey,
+          'User-Agent': 'character-creator/1.0.0'
+        },
+        body: JSON.stringify(requestBody)
+      };
+
+      if (this.proxyAgent) {
+        fetchOptions.agent = this.proxyAgent;
+        console.log(`[GeminiClient] Using proxy agent for image-to-image request`);
+      }
+
+      const response = await fetch(url, fetchOptions);
+
+      console.log(`[GeminiClient] ${model} image-to-image response status:`, response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[GeminiClient] ${model} API error:`, errorText);
+        return {
+          success: false,
+          error: `${model} API error: ${response.status} ${response.statusText} - ${errorText}`
+        };
+      }
+
+      const responseData = await response.json();
+      console.log(`[GeminiClient] ${model} image-to-image API call successful!`);
+
+      const candidates = responseData.candidates || [];
+
+      if (candidates.length === 0) {
+        return {
+          success: false,
+          error: 'No candidates found in API response'
+        };
+      }
+
+      const candidate = candidates[0];
+      const content = candidate.content;
+      const parts = content?.parts || [];
+
+      console.log(`[GeminiClient] Processing ${parts.length} parts for image data`);
+
+      // Look for generated image in response
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        console.log(`[GeminiClient] Part ${i} keys:`, Object.keys(part));
+
+        if (part.inlineData || part.inline_data) {
+          const imageData = part.inlineData || part.inline_data;
+          const imageMimeType = imageData.mime_type || imageData.mimeType || 'image/png';
+          const base64Data = imageData.data;
+          const imageUrl = `data:${imageMimeType};base64,${base64Data}`;
+
+          console.log(`[GeminiClient] Generated edited image: ${imageMimeType}, data length: ${base64Data.length}`);
+
+          return {
+            success: true,
+            data: {
+              imageUrl: imageUrl,
+              thumbnailUrl: imageUrl,
+              mimeType: imageMimeType
+            }
+          };
+        }
+
+        if (part.text) {
+          console.log(`[GeminiClient] Part ${i} contains text:`, part.text.substring(0, 100));
+        }
+      }
+
+      console.log(`[GeminiClient] No image data found in response`);
+      return {
+        success: false,
+        error: 'No image data found in response - model may not support image-to-image'
+      };
+
+    } catch (error: any) {
+      console.error(`[GeminiClient] Image-to-image API call failed:`, error.message);
+      return {
+        success: false,
+        error: `Image-to-image API call failed: ${error.message || 'Unknown error'}`
+      };
+    }
+  }
+
+  /**
    * Health check for the service
    */
   async healthCheck(): Promise<boolean> {

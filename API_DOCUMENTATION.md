@@ -482,26 +482,31 @@ Content-Type: application/json
 ## 第三方服务状态
 
 ### Google Gemini API
-- **状态:** ✅ 完全正常工作
-- **测试结果:**
-  - ✅ **直接API调用成功**: 通过代理可以正常访问 Gemini API
-  - ✅ **提示词优化功能**: 完全正常
-  - ✅ **对话继续功能**: 完全正常
+- **状态:** ✅ 完全配置并正常工作
+- **配置详情:**
+  - **API密钥:** `GOOGLE_API_KEY=AIzaSyBV9rMaHcKwriNY-LuT8XU3kFhiJBAKva0`
+  - **代理配置:**
+    - `HTTP_PROXY=http://127.0.0.1:7890`
+    - `HTTPS_PROXY=http://127.0.0.1:7890`
+- **支持功能:**
+  - ✅ **文本生成** - 模型: `gemini-2.5-flash`
+    - 提示词优化
+    - 对话继续功能
+  - ✅ **图像生成** - 模型: `gemini-2.5-flash-image-preview`
+    - 文本到图像生成
+    - 图像编辑（image-to-image）
+    - 支持 base64 内联图像数据
 - **技术实现:**
-  - ✅ 代理环境变量配置 (HTTP_PROXY, HTTPS_PROXY)  
-  - ✅ 直接HTTP API调用绕过SDK限制
-  - ✅ HttpsProxyAgent正确配置
-  - ✅ 与curl行为完全一致的实现
-- **解决方案:**
-  - 实现了直接HTTP API调用方法，完全复制curl的成功行为
-  - 保留@google/genai SDK作为fallback
-  - 代理配置正确传递给fetch请求
-- **当前配置:** `HTTPS_PROXY=http://127.0.0.1:7890`
-
-### nanoBanana API (图像生成)
-- **状态:** 📋 未测试
-- **配置:** 在.env文件中已配置
-- **影响功能:** 实际图像生成
+  - ✅ 统一的 GeminiClient 类处理所有 Gemini API 调用
+  - ✅ 代理支持通过 HttpsProxyAgent 实现
+  - ✅ 自动检测和处理响应格式
+  - ✅ 支持系统提示词（文本生成）
+  - ✅ 图像数据自动转换为 base64 data URL
+- **API端点:**
+  - 基础URL: `https://generativelanguage.googleapis.com/v1beta/models`
+  - 文本生成: `/{model}:generateContent`
+  - 图像生成: `/{model}:generateContent`
+- **当前服务状态:** ✅ 启动时已初始化并验证
 
 ## 使用示例
 

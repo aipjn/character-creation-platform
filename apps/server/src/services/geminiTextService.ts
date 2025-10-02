@@ -155,6 +155,77 @@ USER DESCRIPTION: "${request.userDescription}"`;
 
 
   /**
+   * Edit image using Gemini 2.5 Flash Image model with image-to-image capability
+   */
+  async editImageWithGemini(request: {
+    imageUrl: string;
+    prompt: string;
+    characterId?: string;
+  }): Promise<any> {
+    const { imageUrl, prompt, characterId } = request;
+
+    try {
+      console.log(`[GeminiTextService] Editing image with Gemini 2.5 Flash Image...`);
+      console.log(`Image URL: ${imageUrl.substring(0, 100)}...`);
+      console.log(`Edit prompt: ${prompt}`);
+
+      let imageBase64: string;
+      let mimeType: string = 'image/jpeg';
+
+      // Check if the imageUrl is already a base64 data URL
+      if (imageUrl.startsWith('data:')) {
+        // Extract mime type and base64 data from data URL
+        const matches = imageUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (!matches || !matches[1] || !matches[2]) {
+          throw new Error('Invalid data URL format');
+        }
+        mimeType = matches[1];
+        imageBase64 = matches[2];
+        console.log(`[GeminiTextService] Using base64 data URL directly`);
+      } else {
+        // Fetch the image from the URL
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to fetch image from URL: ${imageResponse.statusText}`);
+        }
+
+        const imageBuffer = await imageResponse.arrayBuffer();
+        imageBase64 = Buffer.from(imageBuffer).toString('base64');
+        console.log(`[GeminiTextService] Image fetched and converted to base64`);
+      }
+
+      // Use Gemini 2.5 Flash Image model for image editing
+      const result = await this.geminiClient.generateWithImage(
+        prompt,
+        imageBase64,
+        mimeType,
+        'gemini-2.5-flash-image-preview' // Use the image-capable model
+      );
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to edit image with Gemini');
+      }
+
+      console.log(`[GeminiTextService] Image editing successful!`);
+
+      // Return the edited image result
+      return {
+        editedImageUrl: result.data.imageUrl, // Base64 data URL
+        thumbnailUrl: result.data.thumbnailUrl,
+        prompt: prompt,
+        originalImageUrl: imageUrl,
+        characterId: characterId,
+        model: 'gemini-2.5-flash-image-preview',
+        mimeType: result.data.mimeType
+      };
+
+    } catch (error: any) {
+      console.error(`[GeminiTextService] Image editing failed:`, error.message);
+      throw new Error(`Image editing error: ${error.message || 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Health check for the service
    */
   async healthCheck(): Promise<boolean> {

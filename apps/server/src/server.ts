@@ -92,10 +92,10 @@ class ServerManager {
   private configureServer(): void {
     if (!this.server) return;
 
-    // Set server timeout
-    this.server.timeout = 30000; // 30 seconds
+    // Set server timeout - increased for AI image operations
+    this.server.timeout = 120000; // 120 seconds (2 minutes) for AI operations
     this.server.keepAliveTimeout = 5000; // 5 seconds
-    this.server.headersTimeout = 60000; // 60 seconds
+    this.server.headersTimeout = 130000; // 130 seconds (slightly more than timeout)
 
     // Handle server errors
     this.server.on('error', (error: any) => {

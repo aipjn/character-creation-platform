@@ -762,4 +762,70 @@ router.post('/optimize-prompt-25flash', async (req: express.Request, res: expres
   }
 });
 
+/**
+ * POST /api/v1/characters/edit-image
+ * Edit character image using Gemini 2.5 Flash Image model
+ *
+ * Request body:
+ * - imageUrl: string (URL of the image to edit)
+ * - prompt: string (description of desired changes)
+ * - characterId: string (optional, ID of the character being edited)
+ */
+router.post('/edit-image', async (req: express.Request, res: express.Response) => {
+  try {
+    const { imageUrl, prompt, characterId } = req.body;
+
+    if (!imageUrl || !prompt) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'imageUrl and prompt are required',
+          statusCode: 400
+        }
+      });
+    }
+
+    // Check if Gemini service is available
+    if (!geminiService) {
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Gemini image editing service is not available',
+          statusCode: 503
+        }
+      });
+    }
+
+    console.log('🎨 Editing image with Gemini 2.5 Flash Image model');
+    console.log('Image URL:', imageUrl);
+    console.log('Edit prompt:', prompt);
+
+    // Call Gemini service to edit the image
+    const result = await (geminiService as any).editImageWithGemini({
+      imageUrl,
+      prompt,
+      characterId
+    });
+
+    return res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Error editing image with Gemini:', error);
+
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: `Failed to edit image: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        statusCode: 500
+      }
+    });
+  }
+});
+
 export default router;
