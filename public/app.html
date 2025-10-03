@@ -333,9 +333,9 @@ Examples:
                             </div>
 
                             <!-- Generate Button -->
-                            <button class="btn btn-primary" onclick="generateCharacter()" style="
-                                padding: 16px 24px; 
-                                font-size: 16px; 
+                            <button id="optimize-prompt-btn" class="btn btn-primary" onclick="generateCharacter()" style="
+                                padding: 16px 24px;
+                                font-size: 16px;
                                 font-weight: 600;
                                 width: 100%;
                                 margin-top: auto;
@@ -421,7 +421,7 @@ Examples:
                                     </div>
 
                                     <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                                        <button class="btn btn-primary btn-sm" onclick="generateWithOptimizedPrompt()">
+                                        <button id="generate-image-btn" class="btn btn-primary btn-sm" onclick="generateWithOptimizedPrompt()">
                                             <i class="fas fa-magic"></i> Generate Image
                                         </button>
                                         <button id="back-to-preview-btn" class="btn btn-secondary btn-sm" onclick="backToCharacterPreview()" style="display: none;">
@@ -457,7 +457,7 @@ Examples:
                                     </div>
                                     
                                     <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                                        <button class="btn btn-primary btn-sm" onclick="generateWithEditedPrompt()">
+                                        <button id="generate-edited-image-btn" class="btn btn-primary btn-sm" onclick="generateWithEditedPrompt()">
                                             <i class="fas fa-magic"></i> Generate Image
                                         </button>
                                         <button class="btn btn-secondary btn-sm" onclick="cancelDirectEditing()">
@@ -836,6 +836,7 @@ Examples:
     <script src="/js/themes.js"></script>
     <script src="/js/gallery.js"></script>
     <script src="/js/creation.js"></script>
+    <script src="/js/button-credits.js"></script>
 
     <!-- Initialize Credits Display -->
     <script>
@@ -929,6 +930,14 @@ Examples:
                     if (balance) {
                         document.getElementById('credits-count').textContent = balance.balance;
                         document.getElementById('total-credits').textContent = balance.balance;
+                    }
+
+                    // Load API costs for button display
+                    await window.CreditsModule.loadCosts();
+
+                    // Update buttons with credit costs after costs are loaded
+                    if (window.ButtonCredits) {
+                        window.ButtonCredits.initializeButtonCosts();
                     }
 
                     // Load characters for gallery

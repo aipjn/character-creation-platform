@@ -424,7 +424,9 @@
          */
         async function showThemeModal(characterId, themeId) {
             try {
-                const response = await fetch(`${API_BASE}/themes/${themeId}`);
+                const response = await fetch(`${API_BASE}/themes/${themeId}`, {
+                    headers: window.AuthModule.getAuthHeaders()
+                });
                 const data = await response.json();
 
                 if (!data.success) {

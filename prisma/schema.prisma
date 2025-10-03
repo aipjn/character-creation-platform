@@ -16,6 +16,7 @@ model User {
   auth0Id       String?  @unique @map("auth0_id")
   name          String?
   avatar        String?
+  credits       Int      @default(100) // User's current credit balance
   subscriptionTier SubscriptionTier @default(FREE) @map("subscription_tier")
   dailyQuota    Int      @default(3) @map("daily_quota")
   dailyUsed     Int      @default(0) @map("daily_used")
@@ -26,10 +27,7 @@ model User {
 
   // Relations
   characters    Character[]
-  generations   Generation[]
-  collections   CharacterCollection[]
-  scenes        Scene[]
-  sceneGenerations SceneGeneration[]
+  creditTransactions CreditTransaction[]
 
   @@map("users")
 }
@@ -40,164 +38,16 @@ model Character {
   name        String?
   description String?       // User's original description
   prompt      String        // Enhanced/optimized prompt
-  styleType   StyleType     @default(REALISTIC) @map("style_type")
-  s3Url       String?       @map("s3_url")
   imageUrl    String?       @map("image_url")
   thumbnailUrl String?      @map("thumbnail_url")
-  referenceImageUrl String?  @map("reference_image_url")
-  metadata    Json?
-  tags        String[]
-  isPublic    Boolean       @default(false) @map("is_public")
-  isFavorite  Boolean       @default(false) @map("is_favorite")
-  isInLibrary Boolean       @default(false) @map("is_in_library")
-  generationStatus GenerationStatus @default(PENDING) @map("generation_status")
-
-  // Comprehensive Character Attributes
-  age         String?
-  gender      String?
-  occupation  String?
-  personality String[]
-  physicalTraits Json?      // Height, build, hair, eyes, etc.
-  clothing    String?
-  background  String?       // Character backstory
-
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
 
   // Relations
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  generations Generation[]
-  collectionItems CharacterCollectionItem[]
-  scenes      SceneCharacter[]
   themes      CharacterTheme[]
 
   @@map("characters")
-}
-
-model Generation {
-  id            String           @id @default(cuid())
-  userId        String           @map("user_id")
-  characterId   String?          @map("character_id")
-  status        GenerationStatus @default(PENDING)
-  batchSize     Int              @default(1) @map("batch_size")
-  nanoBananaRequestId String?    @map("nano_banana_request_id")
-  prompt        String
-  styleType     StyleType        @default(REALISTIC) @map("style_type")
-  errorMessage  String?          @map("error_message")
-  completedAt   DateTime?        @map("completed_at")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  character     Character?       @relation(fields: [characterId], references: [id], onDelete: SetNull)
-
-  @@map("generations")
-}
-
-model CharacterTemplate {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  prompt      String
-  styleType   StyleType @default(REALISTIC) @map("style_type")
-  tags        String[]
-  isActive    Boolean   @default(true) @map("is_active")
-  usageCount  Int       @default(0) @map("usage_count")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-
-  @@map("character_templates")
-}
-
-model CharacterCollection {
-  id          String    @id @default(cuid())
-  userId      String    @map("user_id")
-  name        String
-  description String?
-  isPublic    Boolean   @default(false) @map("is_public")
-  coverImageUrl String? @map("cover_image_url")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items       CharacterCollectionItem[]
-
-  @@map("character_collections")
-}
-
-model CharacterCollectionItem {
-  id           String    @id @default(cuid())
-  collectionId String    @map("collection_id")
-  characterId  String    @map("character_id")
-  addedAt      DateTime  @default(now()) @map("added_at")
-
-  // Relations
-  collection   CharacterCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
-  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
-
-  @@unique([collectionId, characterId])
-  @@map("character_collection_items")
-}
-
-model Scene {
-  id          String    @id @default(cuid())
-  userId      String    @map("user_id")
-  name        String
-  description String?
-  environment String?   // Indoor, outdoor, fantasy world, etc.
-  setting     String?   // Specific location description
-  mood        String?   // Happy, dramatic, mysterious, etc.
-  lighting    String?   // Bright, dark, cinematic, etc.
-  s3Url       String?   @map("s3_url")
-  thumbnailUrl String? @map("thumbnail_url")
-  isPublic    Boolean   @default(false) @map("is_public")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  characters  SceneCharacter[]
-  generations SceneGeneration[]
-
-  @@map("scenes")
-}
-
-model SceneCharacter {
-  id          String    @id @default(cuid())
-  sceneId     String    @map("scene_id")
-  characterId String    @map("character_id")
-  pose        String?   // Standing, sitting, running, etc.
-  expression  String?   // Happy, sad, surprised, etc.
-  action      String?   // What the character is doing
-  position    Json?     // X, Y coordinates or positioning info
-  addedAt     DateTime  @default(now()) @map("added_at")
-
-  // Relations
-  scene       Scene     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
-  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
-
-  @@unique([sceneId, characterId])
-  @@map("scene_characters")
-}
-
-model SceneGeneration {
-  id            String           @id @default(cuid())
-  userId        String           @map("user_id")
-  sceneId       String           @map("scene_id")
-  status        GenerationStatus @default(PENDING)
-  prompt        String
-  errorMessage  String?          @map("error_message")
-  completedAt   DateTime?        @map("completed_at")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scene         Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
-
-  @@map("scene_generations")
 }
 
 model CharacterTheme {
@@ -232,6 +82,39 @@ model ThemeVariant {
   @@map("theme_variants")
 }
 
+// API Cost Configuration
+model ApiCostConfig {
+  id          String   @id @default(cuid())
+  apiEndpoint String   @unique @map("api_endpoint") // e.g., "/characters/generate-image"
+  cost        Int      // Credits required for this API call
+  description String?  // Description of what this API does
+  enabled     Boolean  @default(true) // Whether this cost is currently active
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("api_cost_config")
+}
+
+// Credit Transaction Log
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  amount      Int      // Positive for credits added, negative for credits spent
+  balance     Int      // Balance after this transaction
+  type        TransactionType
+  apiEndpoint String?  @map("api_endpoint") // API endpoint if this is a usage transaction
+  description String?  // Description of the transaction
+  metadata    Json?    // Additional metadata (e.g., character ID, prompt, etc.)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("credit_transactions")
+}
+
 // Enums
 enum SubscriptionTier {
   FREE
@@ -239,19 +122,10 @@ enum SubscriptionTier {
   PRO
 }
 
-enum StyleType {
-  REALISTIC
-  CARTOON
-  ANIME
-  FANTASY
-  CYBERPUNK
-  VINTAGE
-  MINIMALIST
-}
-
-enum GenerationStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
+enum TransactionType {
+  PURCHASE    // User bought credits
+  REWARD      // User received credits (e.g., signup bonus)
+  USAGE       // User spent credits on API call
+  REFUND      // Credits refunded
+  ADMIN       // Admin adjustment
 }

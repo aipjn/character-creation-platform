@@ -68,7 +68,9 @@ async function renderCharacterThemes(characterId) {
  */
 async function loadCharacterThemes(characterId) {
     try {
-        const response = await fetch(`${API_BASE}/themes/character/${characterId}`);
+        const response = await fetch(`${API_BASE}/themes/character/${characterId}`, {
+            headers: window.AuthModule.getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -91,9 +93,7 @@ async function createTheme(characterId, name, description = '') {
     try {
         const response = await fetch(`${API_BASE}/themes`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: window.AuthModule.getAuthHeaders(),
             body: JSON.stringify({
                 characterId,
                 name,
@@ -123,9 +123,7 @@ async function generateVariant(themeId, prompt, metadata = {}) {
     try {
         const response = await fetch(`${API_BASE}/themes/${themeId}/variants/generate`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: window.AuthModule.getAuthHeaders(),
             body: JSON.stringify({
                 prompt,
                 metadata
@@ -151,7 +149,8 @@ async function generateVariant(themeId, prompt, metadata = {}) {
 async function deleteTheme(themeId) {
     try {
         const response = await fetch(`${API_BASE}/themes/${themeId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: window.AuthModule.getAuthHeaders()
         });
 
         const data = await response.json();
@@ -173,7 +172,8 @@ async function deleteTheme(themeId) {
 async function deleteVariant(variantId) {
     try {
         const response = await fetch(`${API_BASE}/themes/variants/${variantId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: window.AuthModule.getAuthHeaders()
         });
 
         const data = await response.json();
@@ -225,7 +225,9 @@ function showEditStep1_SelectCharacter() {
  */
 async function loadEditCharacters() {
     try {
-        const response = await fetch(`${API_BASE}/characters`);
+        const response = await fetch(`${API_BASE}/characters`, {
+            headers: window.AuthModule.getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -280,7 +282,9 @@ async function loadEditCharacters() {
  */
 async function selectCharacterForEdit(characterId) {
     try {
-        const response = await fetch(`${API_BASE}/characters/${characterId}`);
+        const response = await fetch(`${API_BASE}/characters/${characterId}`, {
+            headers: window.AuthModule.getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -475,7 +479,9 @@ async function deleteThemeWithConfirm(themeId, characterId) {
  */
 async function selectThemeForEdit(themeId) {
     try {
-        const response = await fetch(`${API_BASE}/themes/${themeId}`);
+        const response = await fetch(`${API_BASE}/themes/${themeId}`, {
+            headers: window.AuthModule.getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success) {
@@ -735,7 +741,9 @@ async function onThemeChange() {
     } else {
         // Existing theme selected, load its variants
         try {
-            const response = await fetch(`${API_BASE}/themes/${themeId}`);
+            const response = await fetch(`${API_BASE}/themes/${themeId}`, {
+                headers: window.AuthModule.getAuthHeaders()
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -1056,9 +1064,7 @@ async function renameTheme(themeId, characterId) {
     try {
         const response = await fetch(`${API_BASE}/themes/${themeId}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: window.AuthModule.getAuthHeaders(),
             body: JSON.stringify({
                 name: newName.trim()
             })
@@ -1106,7 +1112,9 @@ async function deleteVariantWithConfirm(variantId) {
             await onThemeChange();
         } else {
             // Old page flow - reload theme data
-            const response = await fetch(`${API_BASE}/themes/${window._themeEditor.currentTheme.id}`);
+            const response = await fetch(`${API_BASE}/themes/${window._themeEditor.currentTheme.id}`, {
+                headers: window.AuthModule.getAuthHeaders()
+            });
             const data = await response.json();
 
             if (data.success) {
@@ -1221,7 +1229,9 @@ async function generateVariantWithTheme() {
         }
 
         // Reload the theme to get updated variants
-        const response = await fetch(`${API_BASE}/themes/${targetThemeId}`);
+        const response = await fetch(`${API_BASE}/themes/${targetThemeId}`, {
+            headers: window.AuthModule.getAuthHeaders()
+        });
         const data = await response.json();
 
         if (data.success) {

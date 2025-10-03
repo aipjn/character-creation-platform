@@ -162,7 +162,9 @@ function showNotification(message, type = 'info') {
 async function loadCharacters() {
     try {
         console.log('[Common] Loading characters from API...');
-        const response = await fetch(`${API_BASE}/characters`);
+        const response = await fetch(`${API_BASE}/characters`, {
+            headers: window.AuthModule.getAuthHeaders()
+        });
         const data = await response.json();
 
         console.log('[Common] API response:', data);

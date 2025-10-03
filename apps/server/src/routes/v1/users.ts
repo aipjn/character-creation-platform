@@ -30,10 +30,9 @@ router.get('/', async (req: express.Request, res: express.Response) => {
     const mockUsers: User[] = [
       {
         id: '1',
-        role: 'user' as const,
+        auth0Id: 'auth0|mock1',
         email: 'test@example.com',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        name: 'Test User'
       }
     ];
 
@@ -109,10 +108,9 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
     // TODO: Implement actual user fetching logic
     const mockUser: User = {
       id,
-      role: 'user' as const,
+      auth0Id: `auth0|${id}`,
       email: `user${id}@example.com`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      name: `User ${id}`
     };
 
     const response: ApiResponse<User> = {
@@ -155,13 +153,12 @@ router.post('/', async (req: express.Request, res: express.Response) => {
   try {
     // TODO: Add validation and actual user creation logic
     const userData = req.body;
-    
+
     const newUser: User = {
       id: Date.now().toString(),
-      role: 'user' as const,
+      auth0Id: userData.auth0Id || `auth0|${Date.now()}`,
       email: userData.email || 'new@example.com',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      name: userData.name || null
     };
 
     const response: ApiResponse<User> = {

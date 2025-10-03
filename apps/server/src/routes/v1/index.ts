@@ -8,12 +8,13 @@ import { ApiResponse } from '../../types/api';
 
 // Route imports
 import { authRoutes } from '../../modules/auth';
-// import { creditsRoutes } from '../../modules/credits'; // Temporarily disabled - schema issues
+import { creditsRouter } from '../../modules/credits';
 import usersRouter from './users';
 import charactersRouter from './characters';
 import collectionsRouter from './collections';
 import scenesRouter from './scenes';
 import themesRouter from './themes';
+import imagesRouter from './images';
 
 const router = express.Router();
 
@@ -35,6 +36,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
         themes: '/api/v1/themes',
         collections: '/api/v1/collections',
         scenes: '/api/v1/scenes',
+        images: '/api/v1/images',
         credits: '/api/v1/credits',
         health: '/health'
       },
@@ -60,12 +62,13 @@ router.get('/', (req: express.Request, res: express.Response) => {
  * Mount sub-routers
  */
 router.use('/auth', authRoutes);
-// router.use('/credits', creditsRoutes); // Temporarily disabled - schema issues
+router.use('/credits', creditsRouter);
 router.use('/users', usersRouter);
 router.use('/characters', charactersRouter);
 router.use('/themes', themesRouter);
 router.use('/collections', collectionsRouter);
 router.use('/scenes', scenesRouter);
+router.use('/images', imagesRouter);
 
 /**
  * API v1 catch-all route for undefined endpoints

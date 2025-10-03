@@ -56,10 +56,9 @@ export type AsyncApiHandler<T = any> = (
 // User Types (minimal, will be extended by auth stream)
 export interface User {
   id: string;
+  auth0Id: string | null;
   email: string;
-  role: 'user' | 'admin';
-  createdAt: string;
-  updatedAt: string;
+  name: string | null;
 }
 
 // Character Types (basic structure for API endpoints)

@@ -21,9 +21,7 @@
                 // Step 1: Optimize prompt with Gemini
                 const response = await fetch('/api/v1/characters/optimize-prompt', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: window.AuthModule.getAuthHeaders(),
                     body: JSON.stringify({
                         userDescription: description,
                         style: style,
@@ -464,9 +462,7 @@
                 // Save to API
                 const response = await fetch(`${API_BASE}/characters`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: window.AuthModule.getAuthHeaders(),
                     body: JSON.stringify({
                         name: currentGeneratedCharacter.name,
                         description: currentGeneratedCharacter.description,
@@ -483,6 +479,12 @@
 
                 if (result.success) {
                     showNotification('Character saved to gallery!', 'success');
+
+                    // Reload characters to update gallery
+                    characters = await loadCharacters();
+                    if (typeof updateCharacterGallery === 'function') {
+                        updateCharacterGallery();
+                    }
                 } else {
                     throw new Error(result.error?.message || 'Failed to save character');
                 }

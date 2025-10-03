@@ -1,6 +1,7 @@
 .DS_Store
 CLAUDE.md
 uploads/
+uploads-1111/
 node_modules/
 
 # Environment variables - NEVER commit these!

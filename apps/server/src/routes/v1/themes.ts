@@ -5,7 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
 import {
   CharacterTheme,
@@ -15,55 +15,96 @@ import {
   CreateVariantRequest
 } from '../../../../../shared/types/theme';
 import { getDefaultGeminiClient } from '../../api/geminiClient';
+import { PrismaClient } from '@prisma/client';
+import { requireAuth } from '../../middleware/requireAuth';
+import { checkCredits } from '../../modules/credits';
 
 const router = Router();
+const prisma = new PrismaClient();
 
 // Initialize Gemini client for image generation
 const geminiClient = getDefaultGeminiClient();
 
-// Storage paths - use absolute paths
-const THEMES_DIR = '/Users/h0270/Documents/code/character-creator/uploads/themes';
-const VARIANTS_DIR = '/Users/h0270/Documents/code/character-creator/uploads/variants';
-
-// Ensure directories exist
-async function ensureDirectories() {
-  await fs.mkdir(THEMES_DIR, { recursive: true });
-  await fs.mkdir(VARIANTS_DIR, { recursive: true });
+// Helper function to save base64 as file
+function saveBase64AsFile(base64Data: string, outputPath: string): void {
+  const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
+  if (!matches || !matches[2]) {
+    throw new Error('Invalid base64 format');
+  }
+  const base64Content = matches[2];
+  const buffer = Buffer.from(base64Content, 'base64');
+  const dir = path.dirname(outputPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(outputPath, buffer);
 }
-
-ensureDirectories();
 
 /**
  * GET /api/v1/themes/character/:characterId
  * 获取某个角色的所有主题及其变体
  */
-router.get('/character/:characterId', async (req: Request, res: Response) => {
+router.get('/character/:characterId', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { characterId } = req.params;
 
-    // 读取所有主题文件
-    const files = await fs.readdir(THEMES_DIR);
-    const themeFiles = files.filter(f => f.endsWith('.json'));
+    // Verify character ownership first
+    const character = await prisma.character.findUnique({
+      where: { id: characterId },
+      select: { userId: true }
+    });
 
-    const themes: ThemeWithVariants[] = [];
-
-    for (const file of themeFiles) {
-      const themePath = path.join(THEMES_DIR, file);
-      const themeData = JSON.parse(await fs.readFile(themePath, 'utf-8'));
-
-      // 检查characterId是否匹配
-      if (themeData.characterId === characterId) {
-        // 读取该主题的所有变体
-        const variants = await getVariantsByThemeId(themeData.id);
-
-        themes.push({
-          ...themeData,
-          variants
-        });
-      }
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Character not found'
+        }
+      });
     }
 
-    res.json({
+    if (character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to access this character'
+        }
+      });
+    }
+
+    // Read themes from database with variants
+    const dbThemes = await prisma.characterTheme.findMany({
+      where: { characterId },
+      include: {
+        variants: {
+          orderBy: { createdAt: 'desc' }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Map to API format
+    const themes: ThemeWithVariants[] = dbThemes.map(theme => ({
+      id: theme.id,
+      characterId: theme.characterId,
+      name: theme.name,
+      description: theme.description || undefined,
+      createdAt: theme.createdAt,
+      updatedAt: theme.updatedAt,
+      variants: theme.variants.map(v => ({
+        id: v.id,
+        themeId: v.themeId,
+        prompt: v.prompt,
+        imageUrl: v.imageUrl || '',
+        thumbnailUrl: v.thumbnailUrl || undefined,
+        metadata: (v.metadata as any) || undefined,
+        createdAt: v.createdAt
+      }))
+    }));
+
+    return res.json({
       success: true,
       data: themes,
       meta: {
@@ -87,7 +128,7 @@ router.get('/character/:characterId', async (req: Request, res: Response) => {
  * POST /api/v1/themes
  * 创建新主题
  */
-router.post('/', async (req: Request, res: Response): Promise<any> => {
+router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { characterId, name, description }: CreateThemeRequest = req.body;
 
@@ -101,18 +142,50 @@ router.post('/', async (req: Request, res: Response): Promise<any> => {
       });
     }
 
-    const theme: CharacterTheme = {
-      id: `theme_${Date.now()}_${uuidv4().slice(0, 8)}`,
-      characterId,
-      name,
-      ...(description && { description }),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    // Verify character ownership before creating theme
+    const character = await prisma.character.findUnique({
+      where: { id: characterId },
+      select: { userId: true }
+    });
 
-    // 保存主题
-    const themePath = path.join(THEMES_DIR, `${theme.id}.json`);
-    await fs.writeFile(themePath, JSON.stringify(theme, null, 2));
+    if (!character) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Character not found'
+        }
+      });
+    }
+
+    if (character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to create themes for this character'
+        }
+      });
+    }
+
+    // Create theme in database
+    const dbTheme = await prisma.characterTheme.create({
+      data: {
+        id: `theme_${Date.now()}_${uuidv4().slice(0, 8)}`,
+        characterId,
+        name,
+        ...(description && { description })
+      }
+    });
+
+    const theme: CharacterTheme = {
+      id: dbTheme.id,
+      characterId: dbTheme.characterId,
+      name: dbTheme.name,
+      ...(dbTheme.description && { description: dbTheme.description }),
+      createdAt: dbTheme.createdAt,
+      updatedAt: dbTheme.updatedAt
+    };
 
     res.status(201).json({
       success: true,
@@ -137,21 +210,62 @@ router.post('/', async (req: Request, res: Response): Promise<any> => {
  * GET /api/v1/themes/:themeId
  * 获取单个主题及其变体
  */
-router.get('/:themeId', async (req: Request, res: Response) => {
+router.get('/:themeId', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { themeId } = req.params;
 
-    const themePath = path.join(THEMES_DIR, `${themeId!}.json`);
-    const themeData = JSON.parse(await fs.readFile(themePath, 'utf-8'));
+    const dbTheme = await prisma.characterTheme.findUnique({
+      where: { id: themeId! },
+      include: {
+        character: {
+          select: { userId: true }
+        },
+        variants: {
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
 
-    const variants = await getVariantsByThemeId(themeId!);
+    if (!dbTheme) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Theme not found'
+        }
+      });
+    }
+
+    // Verify ownership via character
+    if (dbTheme.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to access this theme'
+        }
+      });
+    }
 
     const themeWithVariants: ThemeWithVariants = {
-      ...themeData,
-      variants
+      id: dbTheme.id,
+      characterId: dbTheme.characterId,
+      name: dbTheme.name,
+      description: dbTheme.description || undefined,
+      createdAt: dbTheme.createdAt,
+      updatedAt: dbTheme.updatedAt,
+      variants: dbTheme.variants.map(v => ({
+        id: v.id,
+        themeId: v.themeId,
+        prompt: v.prompt,
+        imageUrl: v.imageUrl || '',
+        thumbnailUrl: v.thumbnailUrl || undefined,
+        metadata: (v.metadata as any) || undefined,
+        createdAt: v.createdAt
+      }))
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: themeWithVariants,
       meta: {
@@ -160,7 +274,7 @@ router.get('/:themeId', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error fetching theme:', error);
-    res.status(404).json({
+    return res.status(404).json({
       success: false,
       error: {
         code: 'NOT_FOUND',
@@ -174,26 +288,61 @@ router.get('/:themeId', async (req: Request, res: Response) => {
  * PUT /api/v1/themes/:themeId
  * 更新主题
  */
-router.put('/:themeId', async (req: Request, res: Response) => {
+router.put('/:themeId', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { themeId } = req.params;
     const { name, description } = req.body;
 
-    const themePath = path.join(THEMES_DIR, `${themeId}.json`);
-    const themeData = JSON.parse(await fs.readFile(themePath, 'utf-8'));
+    // First verify ownership via character
+    const existingTheme = await prisma.characterTheme.findUnique({
+      where: { id: themeId },
+      include: {
+        character: {
+          select: { userId: true }
+        }
+      }
+    });
 
-    const updatedTheme: CharacterTheme = {
-      ...themeData,
-      name: name || themeData.name,
-      description: description !== undefined ? description : themeData.description,
-      updatedAt: new Date()
+    if (!existingTheme) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Theme not found'
+        }
+      });
+    }
+
+    if (existingTheme.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to update this theme'
+        }
+      });
+    }
+
+    const updatedTheme = await prisma.characterTheme.update({
+      where: { id: themeId },
+      data: {
+        ...(name && { name }),
+        ...(description !== undefined && { description })
+      }
+    });
+
+    const theme: CharacterTheme = {
+      id: updatedTheme.id,
+      characterId: updatedTheme.characterId,
+      name: updatedTheme.name,
+      ...(updatedTheme.description && { description: updatedTheme.description }),
+      createdAt: updatedTheme.createdAt,
+      updatedAt: updatedTheme.updatedAt
     };
 
-    await fs.writeFile(themePath, JSON.stringify(updatedTheme, null, 2));
-
-    res.json({
+    return res.json({
       success: true,
-      data: updatedTheme,
+      data: theme,
       meta: {
         timestamp: new Date().toISOString()
       }
@@ -214,28 +363,69 @@ router.put('/:themeId', async (req: Request, res: Response) => {
  * DELETE /api/v1/themes/:themeId
  * 删除主题及其所有变体
  */
-router.delete('/:themeId', async (req: Request, res: Response) => {
+router.delete('/:themeId', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { themeId } = req.params;
 
-    // 删除所有变体
-    const variants = await getVariantsByThemeId(themeId!);
-    for (const variant of variants) {
-      const variantPath = path.join(VARIANTS_DIR, `${variant.id}.json`);
-      await fs.unlink(variantPath).catch(() => {});
+    // First verify ownership via character
+    const themeWithCharacter = await prisma.characterTheme.findUnique({
+      where: { id: themeId },
+      include: {
+        character: {
+          select: { userId: true }
+        }
+      }
+    });
 
-      // 删除变体图片
+    if (!themeWithCharacter) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Theme not found'
+        }
+      });
+    }
+
+    if (themeWithCharacter.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to delete this theme'
+        }
+      });
+    }
+
+    // Get variants to delete their images
+    const variants = await prisma.themeVariant.findMany({
+      where: { themeId: themeId! }
+    });
+
+    // Delete variant image files
+    for (const variant of variants) {
       if (variant.imageUrl) {
-        const imagePath = path.join(process.cwd(), variant.imageUrl);
-        await fs.unlink(imagePath).catch(() => {});
+        const filename = variant.imageUrl.split('/').pop();
+        if (filename) {
+          const imagePath = path.join(process.cwd(), 'uploads', 'variants', filename);
+          try { fs.unlinkSync(imagePath); } catch {}
+        }
+      }
+      if (variant.thumbnailUrl) {
+        const filename = variant.thumbnailUrl.split('/').pop();
+        if (filename) {
+          const thumbPath = path.join(process.cwd(), 'uploads', 'variants', filename);
+          try { fs.unlinkSync(thumbPath); } catch {}
+        }
       }
     }
 
-    // 删除主题
-    const themePath = path.join(THEMES_DIR, `${themeId}.json`);
-    await fs.unlink(themePath);
+    // Delete theme (cascades to variants)
+    await prisma.characterTheme.delete({
+      where: { id: themeId }
+    });
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         message: `Theme ${themeId} and ${variants.length} variants deleted successfully`
@@ -257,7 +447,7 @@ router.delete('/:themeId', async (req: Request, res: Response) => {
  * POST /api/v1/themes/:themeId/variants
  * 在主题下创建新变体
  */
-router.post('/:themeId/variants', async (req: Request, res: Response): Promise<any> => {
+router.post('/:themeId/variants', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { themeId } = req.params;
     const { prompt, metadata }: CreateVariantRequest = req.body;
@@ -272,18 +462,57 @@ router.post('/:themeId/variants', async (req: Request, res: Response): Promise<a
       });
     }
 
-    const variant: CharacterVariant = {
-      id: `variant_${Date.now()}_${uuidv4().slice(0, 8)}`,
-      themeId: themeId!,
-      prompt,
-      imageUrl: '',  // 将在图像生成后更新
-      ...(metadata && { metadata }),
-      createdAt: new Date()
-    };
+    // Get theme and verify ownership via character
+    const theme = await prisma.characterTheme.findUnique({
+      where: { id: themeId! },
+      include: {
+        character: {
+          select: { userId: true }
+        }
+      }
+    });
 
-    // 保存变体元数据
-    const variantPath = path.join(VARIANTS_DIR, `${variant.id}.json`);
-    await fs.writeFile(variantPath, JSON.stringify(variant, null, 2));
+    if (!theme) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Theme not found'
+        }
+      });
+    }
+
+    if (theme.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to create variants for this theme'
+        }
+      });
+    }
+
+    // Create variant in database
+    const dbVariant = await prisma.themeVariant.create({
+      data: {
+        id: `variant_${Date.now()}_${uuidv4().slice(0, 8)}`,
+        themeId: themeId!,
+        characterId: theme.characterId,
+        prompt,
+        imageUrl: '',  // 将在图像生成后更新
+        ...(metadata && { metadata })
+      }
+    });
+
+    const variant: CharacterVariant = {
+      id: dbVariant.id,
+      themeId: dbVariant.themeId,
+      prompt: dbVariant.prompt,
+      imageUrl: dbVariant.imageUrl || '',
+      thumbnailUrl: dbVariant.thumbnailUrl || undefined,
+      metadata: (dbVariant.metadata as any) || undefined,
+      createdAt: dbVariant.createdAt
+    };
 
     res.status(201).json({
       success: true,
@@ -308,12 +537,56 @@ router.post('/:themeId/variants', async (req: Request, res: Response): Promise<a
  * GET /api/v1/themes/:themeId/variants
  * 获取主题的所有变体
  */
-router.get('/:themeId/variants', async (req: Request, res: Response) => {
+router.get('/:themeId/variants', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { themeId } = req.params;
-    const variants = await getVariantsByThemeId(themeId!);
 
-    res.json({
+    // Verify theme ownership via character
+    const theme = await prisma.characterTheme.findUnique({
+      where: { id: themeId! },
+      include: {
+        character: {
+          select: { userId: true }
+        }
+      }
+    });
+
+    if (!theme) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Theme not found'
+        }
+      });
+    }
+
+    if (theme.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to access this theme'
+        }
+      });
+    }
+
+    const dbVariants = await prisma.themeVariant.findMany({
+      where: { themeId: themeId! },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const variants: CharacterVariant[] = dbVariants.map(v => ({
+      id: v.id,
+      themeId: v.themeId,
+      prompt: v.prompt,
+      imageUrl: v.imageUrl || '',
+      thumbnailUrl: v.thumbnailUrl || undefined,
+      metadata: (v.metadata as any) || undefined,
+      createdAt: v.createdAt
+    }));
+
+    return res.json({
       success: true,
       data: variants,
       meta: {
@@ -337,23 +610,67 @@ router.get('/:themeId/variants', async (req: Request, res: Response) => {
  * DELETE /api/v1/themes/variants/:variantId
  * 删除单个变体
  */
-router.delete('/variants/:variantId', async (req: Request, res: Response) => {
+router.delete('/variants/:variantId', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const { variantId } = req.params;
 
-    const variantPath = path.join(VARIANTS_DIR, `${variantId}.json`);
-    const variantData = JSON.parse(await fs.readFile(variantPath, 'utf-8'));
+    // Get variant with theme and character to verify ownership
+    const variant = await prisma.themeVariant.findUnique({
+      where: { id: variantId! },
+      include: {
+        theme: {
+          include: {
+            character: {
+              select: { userId: true }
+            }
+          }
+        }
+      }
+    });
 
-    // 删除变体图片
-    if (variantData.imageUrl) {
-      const imagePath = path.join(process.cwd(), variantData.imageUrl);
-      await fs.unlink(imagePath).catch(() => {});
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Variant not found'
+        }
+      });
     }
 
-    // 删除变体元数据
-    await fs.unlink(variantPath);
+    // Verify ownership via theme→character
+    if (variant.theme.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to delete this variant'
+        }
+      });
+    }
 
-    res.json({
+    // Delete variant image files
+    if (variant.imageUrl) {
+      const filename = variant.imageUrl.split('/').pop();
+      if (filename) {
+        const imagePath = path.join(process.cwd(), 'uploads', 'variants', filename);
+        try { fs.unlinkSync(imagePath); } catch {}
+      }
+    }
+    if (variant.thumbnailUrl) {
+      const filename = variant.thumbnailUrl.split('/').pop();
+      if (filename) {
+        const thumbPath = path.join(process.cwd(), 'uploads', 'variants', filename);
+        try { fs.unlinkSync(thumbPath); } catch {}
+      }
+    }
+
+    // Delete variant from database
+    await prisma.themeVariant.delete({
+      where: { id: variantId }
+    });
+
+    return res.json({
       success: true,
       data: {
         message: `Variant ${variantId} deleted successfully`
@@ -361,7 +678,7 @@ router.delete('/variants/:variantId', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Error deleting variant:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: {
         code: 'INTERNAL_ERROR',
@@ -375,7 +692,7 @@ router.delete('/variants/:variantId', async (req: Request, res: Response) => {
  * POST /api/v1/themes/:themeId/variants/generate
  * 生成变体图像
  */
-router.post('/:themeId/variants/generate', async (req: Request, res: Response): Promise<any> => {
+router.post('/:themeId/variants/generate', requireAuth, checkCredits('/themes/variants/generate'), async (req: Request, res: Response): Promise<any> => {
   try {
     const { themeId } = req.params;
     const { prompt, metadata }: {
@@ -393,6 +710,36 @@ router.post('/:themeId/variants/generate', async (req: Request, res: Response): 
       });
     }
 
+    // Get theme and verify ownership via character
+    const theme = await prisma.characterTheme.findUnique({
+      where: { id: themeId! },
+      include: {
+        character: {
+          select: { userId: true }
+        }
+      }
+    });
+
+    if (!theme) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Theme not found'
+        }
+      });
+    }
+
+    if (theme.character.userId !== req.user!.id) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to generate variants for this theme'
+        }
+      });
+    }
+
     console.log(`[Variant Generation] Generating variant for theme ${themeId}`);
     console.log(`[Variant Generation] Prompt: ${prompt}`);
 
@@ -403,20 +750,49 @@ router.post('/:themeId/variants/generate', async (req: Request, res: Response): 
       throw new Error(result.error || 'Failed to generate image');
     }
 
-    // 创建变体记录
-    const variant: CharacterVariant = {
-      id: `variant_${Date.now()}_${uuidv4().slice(0, 8)}`,
-      themeId: themeId!,
-      prompt,
-      imageUrl: result.data.result.imageUrl,  // Base64 data URL
-      ...(result.data.result.thumbnailUrl && { thumbnailUrl: result.data.result.thumbnailUrl }),
-      ...(metadata && { metadata }),
-      createdAt: new Date()
-    };
+    // Generate variant ID
+    const variantId = `variant_${Date.now()}_${uuidv4().slice(0, 8)}`;
 
-    // 保存变体元数据
-    const variantPath = path.join(VARIANTS_DIR, `${variant.id}.json`);
-    await fs.writeFile(variantPath, JSON.stringify(variant, null, 2));
+    // Save images as files
+    let imageUrl = '';
+    let thumbnailUrl = '';
+
+    if (result.data.result.imageUrl) {
+      const imageFilename = `${variantId}.png`;
+      const imagePath = path.join(process.cwd(), 'uploads', 'variants', imageFilename);
+      saveBase64AsFile(result.data.result.imageUrl, imagePath);
+      imageUrl = `/uploads/variants/${imageFilename}`;
+    }
+
+    if (result.data.result.thumbnailUrl) {
+      const thumbnailFilename = `${variantId}_thumb.png`;
+      const thumbnailPath = path.join(process.cwd(), 'uploads', 'variants', thumbnailFilename);
+      saveBase64AsFile(result.data.result.thumbnailUrl, thumbnailPath);
+      thumbnailUrl = `/uploads/variants/${thumbnailFilename}`;
+    }
+
+    // Create variant in database
+    const dbVariant = await prisma.themeVariant.create({
+      data: {
+        id: variantId,
+        themeId: themeId!,
+        characterId: theme.characterId,
+        prompt,
+        imageUrl,
+        thumbnailUrl,
+        ...(metadata && { metadata })
+      }
+    });
+
+    const variant: CharacterVariant = {
+      id: dbVariant.id,
+      themeId: dbVariant.themeId,
+      prompt: dbVariant.prompt,
+      imageUrl: dbVariant.imageUrl || '',
+      thumbnailUrl: dbVariant.thumbnailUrl || undefined,
+      metadata: (dbVariant.metadata as any) || undefined,
+      createdAt: dbVariant.createdAt
+    };
 
     console.log(`[Variant Generation] Variant ${variant.id} generated successfully`);
 
@@ -438,31 +814,5 @@ router.post('/:themeId/variants/generate', async (req: Request, res: Response): 
     });
   }
 });
-
-// Helper function: 获取主题的所有变体
-async function getVariantsByThemeId(themeId: string): Promise<CharacterVariant[]> {
-  try {
-    const files = await fs.readdir(VARIANTS_DIR);
-    const variantFiles = files.filter(f => f.endsWith('.json'));
-
-    const variants: CharacterVariant[] = [];
-
-    for (const file of variantFiles) {
-      const variantPath = path.join(VARIANTS_DIR, file);
-      const variantData = JSON.parse(await fs.readFile(variantPath, 'utf-8'));
-
-      if (variantData.themeId === themeId) {
-        variants.push(variantData);
-      }
-    }
-
-    // 按创建时间降序排序
-    variants.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    return variants;
-  } catch (error) {
-    return [];
-  }
-}
 
 export default router;

@@ -112,11 +112,12 @@ export const authenticate = async (
  * Require authentication - returns 401 if user is not authenticated
  */
 export const requireAuth = (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response,
   next: NextFunction
 ): void => {
-  if (!req.auth?.isAuthenticated || !req.user) {
+  const authReq = req as AuthenticatedRequest;
+  if (!authReq.auth?.isAuthenticated || !authReq.user) {
     throw new AuthenticationError('Authentication required', 401, 'AUTH_REQUIRED');
   }
   next();

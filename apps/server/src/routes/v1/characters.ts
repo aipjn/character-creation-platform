@@ -6,16 +6,21 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { 
-  ApiResponse, 
+import { PrismaClient } from '@prisma/client';
+import {
+  ApiResponse,
   Character,
   PaginatedResponse,
-  API_CONSTANTS 
+  API_CONSTANTS
 } from '../../types/api';
 import GeminiTextService, { PromptOptimizationRequest, PromptOptimizationResponse } from '../../services/geminiTextService';
 import { getDefaultNanoBananaClient, GenerationRequest } from '../../services/nanoBananaClient';
+import { requireAuth } from '../../middleware/requireAuth';
+import { checkCredits } from '../../modules/credits';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // Initialize services
 let geminiService: GeminiTextService | null = null;
@@ -38,7 +43,7 @@ try {
  * GET /api/v1/characters
  * List characters with pagination and filtering
  */
-router.get('/', async (req: express.Request, res: express.Response) => {
+router.get('/', requireAuth, async (req: express.Request, res: express.Response) => {
   try {
     const {
       page = API_CONSTANTS.DEFAULT_PAGINATION.PAGE,
@@ -52,56 +57,55 @@ router.get('/', async (req: express.Request, res: express.Response) => {
       // sortOrder = 'desc'
     } = req.query;
 
-    // Read characters from uploads directory
-    const uploadsPath = path.join(process.cwd(), 'uploads', 'characters');
-    let characters: Character[] = [];
-
-    try {
-      if (fs.existsSync(uploadsPath)) {
-        const files = fs.readdirSync(uploadsPath);
-        const jsonFiles = files.filter(file => file.endsWith('.json'));
-        
-        characters = jsonFiles.map(file => {
-          const filePath = path.join(uploadsPath, file);
-          const fileData = fs.readFileSync(filePath, 'utf8');
-          const characterData = JSON.parse(fileData);
-          
-          return {
-            id: characterData.id || file.replace('.json', ''),
-            name: characterData.name || 'Unnamed Character',
-            description: characterData.prompt || 'No description available',
-            imageUrl: characterData.s3Url || characterData.imageUrl || '',
-            thumbnailUrl: characterData.thumbnailUrl || '',
-            userId: 'demo-user',
-            tags: characterData.styleType ? [characterData.styleType.toLowerCase()] : ['generated'],
-            createdAt: characterData.createdAt || new Date().toISOString(),
-            updatedAt: characterData.completedAt || characterData.createdAt || new Date().toISOString(),
-            metadata: characterData.metadata
-          };
-        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      }
-    } catch (error) {
-      console.error('Error reading character files:', error);
-      // Fall back to empty array if there's an error
-    }
-
-    // Apply pagination
+    // Read characters from database - only for current user
     const pageNum = Number(page);
     const limitNum = Number(limit);
-    const startIndex = (pageNum - 1) * limitNum;
-    const endIndex = startIndex + limitNum;
-    const paginatedCharacters = characters.slice(startIndex, endIndex);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [dbCharacters, totalCount] = await Promise.all([
+      prisma.character.findMany({
+        where: { userId: req.user!.id },
+        skip,
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true
+            }
+          }
+        }
+      }),
+      prisma.character.count({ where: { userId: req.user!.id } })
+    ]);
+
+    // Map database characters to API format
+    const characters: Character[] = dbCharacters.map(char => ({
+      id: char.id,
+      name: char.name || 'Unnamed Character',
+      description: char.description || 'No description available',
+      enhancedDescription: char.prompt,
+      imageUrl: char.imageUrl || '',
+      thumbnailUrl: char.thumbnailUrl || '',
+      userId: char.userId,
+      tags: [], // TODO: add tags support
+      createdAt: char.createdAt.toISOString(),
+      updatedAt: char.updatedAt.toISOString(),
+      metadata: {}
+    }));
 
     const response: ApiResponse<PaginatedResponse<Character>> = {
       success: true,
       data: {
-        items: paginatedCharacters,
+        items: characters,
         pagination: {
           currentPage: pageNum,
           itemsPerPage: limitNum,
-          totalItems: characters.length,
-          totalPages: Math.ceil(characters.length / limitNum),
-          hasNextPage: endIndex < characters.length,
+          totalItems: totalCount,
+          totalPages: Math.ceil(totalCount / limitNum),
+          hasNextPage: skip + limitNum < totalCount,
           hasPreviousPage: pageNum > 1
         }
       },
@@ -138,7 +142,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
  * GET /api/v1/characters/:id
  * Get character by ID
  */
-router.get('/:id', async (req: express.Request, res: express.Response) => {
+router.get('/:id', requireAuth, async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
@@ -161,11 +165,24 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
     }
 
-    // Read character from uploads directory
-    const uploadsPath = path.join(process.cwd(), 'uploads', 'characters');
-    const filePath = path.join(uploadsPath, `${id}.json`);
+    // Read character from database - only if owned by current user
+    const dbCharacter = await prisma.character.findFirst({
+      where: {
+        id,
+        userId: req.user!.id
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true
+          }
+        }
+      }
+    });
 
-    if (!fs.existsSync(filePath)) {
+    if (!dbCharacter) {
       const response: ApiResponse = {
         success: false,
         error: {
@@ -184,21 +201,18 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
     }
 
-    const fileData = fs.readFileSync(filePath, 'utf8');
-    const characterData = JSON.parse(fileData);
-    
     const character: Character = {
-      id: characterData.id || id,
-      name: characterData.name || 'Unnamed Character',
-      description: characterData.description || characterData.prompt || 'No description available',
-      enhancedDescription: characterData.enhancedDescription,
-      imageUrl: characterData.imageUrl || characterData.s3Url || '',
-      thumbnailUrl: characterData.thumbnailUrl || '',
-      userId: characterData.userId || 'demo-user',
-      tags: characterData.tags || (characterData.styleType ? [characterData.styleType.toLowerCase()] : ['generated']),
-      createdAt: characterData.createdAt || new Date().toISOString(),
-      updatedAt: characterData.updatedAt || characterData.completedAt || characterData.createdAt || new Date().toISOString(),
-      metadata: characterData.metadata
+      id: dbCharacter.id,
+      name: dbCharacter.name || 'Unnamed Character',
+      description: dbCharacter.description || 'No description available',
+      enhancedDescription: dbCharacter.prompt,
+      imageUrl: dbCharacter.imageUrl || '',
+      thumbnailUrl: dbCharacter.thumbnailUrl || '',
+      userId: dbCharacter.userId,
+      tags: [], // TODO: add tags support
+      createdAt: dbCharacter.createdAt.toISOString(),
+      updatedAt: dbCharacter.updatedAt.toISOString(),
+      metadata: {}
     };
 
     const response: ApiResponse<Character> = {
@@ -237,10 +251,10 @@ router.get('/:id', async (req: express.Request, res: express.Response) => {
  * POST /api/v1/characters
  * Create new character
  */
-router.post('/', async (req: express.Request, res: express.Response) => {
+router.post('/', requireAuth, async (req: express.Request, res: express.Response) => {
   try {
     const characterData = req.body;
-    
+
     // Validate required fields
     if (!characterData.name || !characterData.description) {
       const response: ApiResponse = {
@@ -262,30 +276,67 @@ router.post('/', async (req: express.Request, res: express.Response) => {
     }
 
     const id = Date.now().toString();
-    const newCharacter: Character = {
-      id,
-      name: characterData.name,
-      description: characterData.description,
-      enhancedDescription: characterData.enhancedDescription,
-      imageUrl: characterData.imageUrl || '',
-      thumbnailUrl: characterData.thumbnailUrl || '',
-      userId: characterData.userId || 'demo-user',
-      tags: characterData.tags || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      metadata: characterData.metadata
+
+    // Helper function to save base64 as file
+    const saveBase64AsFile = (base64Data: string, outputPath: string): void => {
+      const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (!matches || !matches[2]) {
+        throw new Error('Invalid base64 format');
+      }
+      const base64Content: string = matches[2];
+      const buffer = Buffer.from(base64Content, 'base64');
+      const dir = path.dirname(outputPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(outputPath, buffer);
     };
 
-    // Save to uploads directory
-    const uploadsPath = path.join(process.cwd(), 'uploads', 'characters');
-    
-    // Ensure directory exists
-    if (!fs.existsSync(uploadsPath)) {
-      fs.mkdirSync(uploadsPath, { recursive: true });
+    // Save images as files
+    let imageUrl = '';
+    let thumbnailUrl = '';
+
+    if (characterData.imageUrl) {
+      const imageFilename = `${id}.png`;
+      const imagePath = path.join(process.cwd(), 'uploads', 'characters', imageFilename);
+      saveBase64AsFile(characterData.imageUrl, imagePath);
+      imageUrl = `/uploads/characters/${imageFilename}`;
     }
 
-    const filePath = path.join(uploadsPath, `${id}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(newCharacter, null, 2));
+    if (characterData.thumbnailUrl) {
+      const thumbnailFilename = `${id}_thumb.png`;
+      const thumbnailPath = path.join(process.cwd(), 'uploads', 'characters', thumbnailFilename);
+      saveBase64AsFile(characterData.thumbnailUrl, thumbnailPath);
+      thumbnailUrl = `/uploads/characters/${thumbnailFilename}`;
+    }
+
+    // Save to database
+    const dbCharacter = await prisma.character.create({
+      data: {
+        id,
+        userId: req.user!.id,  // Use user from middleware
+        name: characterData.name,
+        description: characterData.description,
+        prompt: characterData.enhancedDescription || characterData.description,
+        imageUrl,
+        thumbnailUrl
+      }
+    });
+
+    // Map to API format
+    const newCharacter: Character = {
+      id: dbCharacter.id,
+      name: dbCharacter.name || 'Unnamed Character',
+      description: dbCharacter.description || 'No description available',
+      enhancedDescription: dbCharacter.prompt,
+      imageUrl: dbCharacter.imageUrl || '',
+      thumbnailUrl: dbCharacter.thumbnailUrl || '',
+      userId: dbCharacter.userId,
+      tags: characterData.tags || [],
+      createdAt: dbCharacter.createdAt.toISOString(),
+      updatedAt: dbCharacter.updatedAt.toISOString(),
+      metadata: characterData.metadata
+    };
 
     const response: ApiResponse<Character> = {
       success: true,
@@ -300,6 +351,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
 
     return res.status(API_CONSTANTS.HTTP_STATUS.CREATED).json(response);
   } catch (error) {
+    console.error('Error creating character:', error);
     const response: ApiResponse = {
       success: false,
       error: {
@@ -323,7 +375,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
  * PUT /api/v1/characters/:id
  * Update character by ID
  */
-router.put('/:id', async (req: express.Request, res: express.Response) => {
+router.put('/:id', requireAuth, async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -347,11 +399,13 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
     }
 
-    // Read existing character
-    const uploadsPath = path.join(process.cwd(), 'uploads', 'characters');
-    const filePath = path.join(uploadsPath, `${id}.json`);
+    // First check ownership
+    const existingCharacter = await prisma.character.findUnique({
+      where: { id },
+      select: { userId: true }
+    });
 
-    if (!fs.existsSync(filePath)) {
+    if (!existingCharacter) {
       const response: ApiResponse = {
         success: false,
         error: {
@@ -370,19 +424,48 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
     }
 
-    // Read existing data
-    const existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    
-    // Update with new data
-    const updatedCharacter: Character = {
-      ...existingData,
-      ...updateData,
-      id, // Keep original ID
-      updatedAt: new Date().toISOString()
-    };
+    if (existingCharacter.userId !== req.user!.id) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: API_CONSTANTS.ERROR_CODES.FORBIDDEN,
+          message: 'You do not have permission to update this character',
+          statusCode: API_CONSTANTS.HTTP_STATUS.FORBIDDEN
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.get('X-Request-ID') || 'unknown',
+          version: '1.0.0',
+          path: req.path
+        }
+      };
 
-    // Save updated character
-    fs.writeFileSync(filePath, JSON.stringify(updatedCharacter, null, 2));
+      return res.status(API_CONSTANTS.HTTP_STATUS.FORBIDDEN).json(response);
+    }
+
+    // Update character in database
+    const dbCharacter = await prisma.character.update({
+      where: { id },
+      data: {
+        ...(updateData.name && { name: updateData.name }),
+        ...(updateData.description && { description: updateData.description }),
+        ...(updateData.enhancedDescription && { prompt: updateData.enhancedDescription })
+      }
+    });
+
+    const updatedCharacter: Character = {
+      id: dbCharacter.id,
+      name: dbCharacter.name || 'Unnamed Character',
+      description: dbCharacter.description || 'No description available',
+      enhancedDescription: dbCharacter.prompt,
+      imageUrl: dbCharacter.imageUrl || '',
+      thumbnailUrl: dbCharacter.thumbnailUrl || '',
+      userId: dbCharacter.userId,
+      tags: [],
+      createdAt: dbCharacter.createdAt.toISOString(),
+      updatedAt: dbCharacter.updatedAt.toISOString(),
+      metadata: {}
+    };
 
     const response: ApiResponse<Character> = {
       success: true,
@@ -420,7 +503,7 @@ router.put('/:id', async (req: express.Request, res: express.Response) => {
  * DELETE /api/v1/characters/:id
  * Delete character by ID
  */
-router.delete('/:id', async (req: express.Request, res: express.Response) => {
+router.delete('/:id', requireAuth, async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
@@ -443,11 +526,12 @@ router.delete('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.BAD_REQUEST).json(response);
     }
 
-    // Delete character file
-    const uploadsPath = path.join(process.cwd(), 'uploads', 'characters');
-    const filePath = path.join(uploadsPath, `${id}.json`);
+    // Get character to delete its images and verify ownership
+    const dbCharacter = await prisma.character.findUnique({
+      where: { id }
+    });
 
-    if (!fs.existsSync(filePath)) {
+    if (!dbCharacter) {
       const response: ApiResponse = {
         success: false,
         error: {
@@ -466,8 +550,47 @@ router.delete('/:id', async (req: express.Request, res: express.Response) => {
       return res.status(API_CONSTANTS.HTTP_STATUS.NOT_FOUND).json(response);
     }
 
-    // Delete the file
-    fs.unlinkSync(filePath);
+    // Verify ownership
+    if (dbCharacter.userId !== req.user!.id) {
+      const response: ApiResponse = {
+        success: false,
+        error: {
+          code: API_CONSTANTS.ERROR_CODES.FORBIDDEN,
+          message: 'You do not have permission to delete this character',
+          statusCode: API_CONSTANTS.HTTP_STATUS.FORBIDDEN
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          requestId: req.get('X-Request-ID') || 'unknown',
+          version: '1.0.0',
+          path: req.path
+        }
+      };
+
+      return res.status(API_CONSTANTS.HTTP_STATUS.FORBIDDEN).json(response);
+    }
+
+    // Delete character image files
+    if (dbCharacter.imageUrl) {
+      // Extract filename from /api/v1/images/characters/xxx.png
+      const filename = dbCharacter.imageUrl.split('/').pop();
+      if (filename) {
+        const imagePath = path.join(process.cwd(), 'uploads', 'characters', filename);
+        try { fs.unlinkSync(imagePath); } catch {}
+      }
+    }
+    if (dbCharacter.thumbnailUrl) {
+      const filename = dbCharacter.thumbnailUrl.split('/').pop();
+      if (filename) {
+        const thumbPath = path.join(process.cwd(), 'uploads', 'characters', filename);
+        try { fs.unlinkSync(thumbPath); } catch {}
+      }
+    }
+
+    // Delete character from database (cascades to themes and variants)
+    await prisma.character.delete({
+      where: { id }
+    });
     
     const response: ApiResponse = {
       success: true,
@@ -504,8 +627,9 @@ router.delete('/:id', async (req: express.Request, res: express.Response) => {
 /**
  * POST /api/v1/characters/optimize-prompt
  * Optimize user description into detailed prompt using Gemini
+ * Requires authentication to prevent API abuse
  */
-router.post('/optimize-prompt', async (req: express.Request, res: express.Response) => {
+router.post('/optimize-prompt', requireAuth, checkCredits('/characters/optimize-prompt'), async (req: express.Request, res: express.Response) => {
   try {
     if (!geminiService) {
       const response: ApiResponse = {
@@ -592,8 +716,9 @@ router.post('/optimize-prompt', async (req: express.Request, res: express.Respon
 /**
  * POST /api/v1/characters/generate-image
  * Generate character image using AI
+ * Requires authentication to prevent API abuse
  */
-router.post('/generate-image', async (req: express.Request, res: express.Response) => {
+router.post('/generate-image', requireAuth, checkCredits('/characters/generate-image'), async (req: express.Request, res: express.Response) => {
   try {
     const { prompt, style } = req.body;
 
@@ -669,13 +794,14 @@ router.post('/generate-image', async (req: express.Request, res: express.Respons
 /**
  * POST /api/v1/characters/optimize-prompt-25flash
  * Test Gemini 2.5 Flash model for prompt optimization
- * 
+ * Requires authentication to prevent API abuse
+ *
  * Network Requirements:
  * - Access to generativelanguage.googleapis.com
  * - If behind firewall/proxy, may need proxy configuration
  * - For China: may need VPN or proxy to access Google APIs
  */
-router.post('/optimize-prompt-25flash', async (req: express.Request, res: express.Response) => {
+router.post('/optimize-prompt-25flash', requireAuth, checkCredits('/characters/optimize-prompt-25flash'), async (req: express.Request, res: express.Response) => {
   try {
     if (!geminiService) {
       const response: ApiResponse = {
@@ -765,13 +891,14 @@ router.post('/optimize-prompt-25flash', async (req: express.Request, res: expres
 /**
  * POST /api/v1/characters/edit-image
  * Edit character image using Gemini 2.5 Flash Image model
+ * Requires authentication to prevent API abuse
  *
  * Request body:
  * - imageUrl: string (URL of the image to edit)
  * - prompt: string (description of desired changes)
  * - characterId: string (optional, ID of the character being edited)
  */
-router.post('/edit-image', async (req: express.Request, res: express.Response) => {
+router.post('/edit-image', requireAuth, async (req: express.Request, res: express.Response) => {
   try {
     const { imageUrl, prompt, characterId } = req.body;
 
