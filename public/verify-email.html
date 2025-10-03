@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - AI Character Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --background: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius-lg: 16px;
+            --radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gradient-hero);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 15px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .verify-container {
+            background: var(--background);
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .icon-container i {
+            font-size: 40px;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .email-sent {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .user-email {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .instructions {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .instructions h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .instructions ol {
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .instructions li {
+            margin-bottom: 0.5rem;
+        }
+
+        .resend-section {
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .resend-text {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            margin-top: 1rem;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: #f8fafc;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .notification {
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .notification.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .notification.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .countdown {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="icon-container">
+            <i class="fas fa-envelope"></i>
+        </div>
+
+        <h1>Check Your Email</h1>
+
+        <p class="email-sent">
+            We've sent a verification email to<br>
+            <span class="user-email" id="user-email">your email address</span>
+        </p>
+
+        <div id="notification" class="notification"></div>
+
+        <div class="instructions">
+            <h3>Next Steps:</h3>
+            <ol>
+                <li>Open your email inbox</li>
+                <li>Find the email from AI Character Generator</li>
+                <li>Click the verification link in the email</li>
+                <li>You'll be redirected back to login</li>
+            </ol>
+        </div>
+
+        <div class="resend-section">
+            <p class="resend-text">Didn't receive the email?</p>
+            <button class="btn btn-primary" id="resend-btn" onclick="resendEmail()">
+                <span id="resend-text">Resend Verification Email</span>
+                <span id="resend-loading" class="loading" style="display: none;"></span>
+            </button>
+            <div id="countdown" class="countdown" style="display: none;"></div>
+
+            <button class="btn btn-outline" onclick="window.location.href='/login.html'">
+                Back to Login
+            </button>
+        </div>
+    </div>
+
+    <script src="/modules/auth.js"></script>
+    <script>
+        // Get email from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email');
+
+        if (email) {
+            document.getElementById('user-email').textContent = email;
+        }
+
+        let resendCooldown = 0;
+        let cooldownInterval = null;
+
+        async function resendEmail() {
+            if (resendCooldown > 0) return;
+
+            const resendBtn = document.getElementById('resend-btn');
+            const resendText = document.getElementById('resend-text');
+            const resendLoading = document.getElementById('resend-loading');
+            const notification = document.getElementById('notification');
+            const countdown = document.getElementById('countdown');
+
+            // Show loading
+            resendBtn.disabled = true;
+            resendText.style.display = 'none';
+            resendLoading.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/api/v1/auth/resend-verification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show success message
+                    notification.textContent = 'Verification email sent successfully!';
+                    notification.className = 'notification success';
+                    notification.style.display = 'block';
+
+                    // Start cooldown
+                    resendCooldown = 60;
+                    countdown.style.display = 'block';
+                    cooldownInterval = setInterval(() => {
+                        resendCooldown--;
+                        countdown.textContent = `You can resend again in ${resendCooldown} seconds`;
+
+                        if (resendCooldown <= 0) {
+                            clearInterval(cooldownInterval);
+                            countdown.style.display = 'none';
+                            resendBtn.disabled = false;
+                        }
+                    }, 1000);
+                } else {
+                    throw new Error(data.error?.message || 'Failed to send email');
+                }
+            } catch (error) {
+                notification.textContent = error.message;
+                notification.className = 'notification error';
+                notification.style.display = 'block';
+                resendBtn.disabled = false;
+            } finally {
+                resendText.style.display = 'inline';
+                resendLoading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

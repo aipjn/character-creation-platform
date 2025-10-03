@@ -2,3 +2,8 @@
 CLAUDE.md
 uploads/
 node_modules/
+
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.*.local

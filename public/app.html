@@ -827,9 +827,159 @@ Examples:
     </div>
 
     <!-- JavaScript Modules - Load in order -->
+    <!-- Auth and Credits Modules -->
+    <script src="/modules/auth.js"></script>
+    <script src="/modules/credits.js"></script>
+
+    <!-- Application Scripts -->
     <script src="/js/common.js"></script>
     <script src="/js/themes.js"></script>
     <script src="/js/gallery.js"></script>
     <script src="/js/creation.js"></script>
+
+    <!-- Initialize Credits Display -->
+    <script>
+        // Update credits display when balance changes
+        window.CreditsModule.onBalanceChange((data) => {
+            const creditsCountElement = document.getElementById('credits-count');
+            const totalCreditsElement = document.getElementById('total-credits');
+
+            if (creditsCountElement) {
+                creditsCountElement.textContent = data.balance;
+            }
+            if (totalCreditsElement) {
+                totalCreditsElement.textContent = data.balance;
+            }
+        });
+
+        // Check authentication and load credits
+        window.addEventListener('DOMContentLoaded', async () => {
+            console.log('[APP] ===== DOMContentLoaded START =====');
+
+            try {
+                // Get Bearer token from storage
+                const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+                console.log('[APP] Token from storage:', token ? `exists (${token.substring(0, 20)}...)` : 'NONE');
+
+                if (!token) {
+                    console.error('[APP] ❌ NO TOKEN - redirecting to login');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Verify token with /auth/me endpoint
+                console.log('[APP] Calling /api/v1/auth/me...');
+                const response = await fetch('/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('[APP] Response status:', response.status, response.statusText);
+
+                // Only clear token on explicit 401 Unauthorized
+                if (response.status === 401) {
+                    console.error('[APP] ❌ 401 UNAUTHORIZED - Invalid token, clearing and redirecting');
+                    localStorage.removeItem('auth_token');
+                    sessionStorage.removeItem('auth_token');
+                    localStorage.removeItem('user');
+                    sessionStorage.removeItem('user');
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // For other errors (network issues, 500, etc), don't clear token
+                if (!response.ok) {
+                    console.error('[APP] ❌ RESPONSE ERROR - Status:', response.status, '(Not clearing token - may be temporary network issue)');
+                    // Still try to use cached user data if available
+                    const cachedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+                    if (cachedUser) {
+                        try {
+                            const user = JSON.parse(cachedUser);
+                            console.log('[APP] Using cached user data:', user.email);
+                            document.getElementById('user-name').textContent = user.name || 'User';
+                            document.getElementById('user-email').textContent = user.email || '';
+                            document.getElementById('user-initial').textContent = (user.name || 'U')[0].toUpperCase();
+                        } catch (e) {
+                            console.error('[APP] Failed to parse cached user:', e);
+                        }
+                    }
+                    return;
+                }
+
+                const result = await response.json();
+                console.log('[APP] Response data:', result);
+
+                if (result.success && result.data.user) {
+                    console.log('[APP] ✅ AUTH SUCCESS - User:', result.data.user.email);
+
+                    // User is authenticated
+                    const user = result.data.user;
+
+                    // Update user info in the UI
+                    document.getElementById('user-name').textContent = user.name || 'User';
+                    document.getElementById('user-email').textContent = user.email || '';
+                    document.getElementById('user-initial').textContent = (user.name || 'U')[0].toUpperCase();
+
+                    // Start polling for credit updates
+                    window.CreditsModule.startPolling(30000); // Poll every 30 seconds
+
+                    // Load initial balance
+                    const balance = await window.CreditsModule.getBalance();
+                    if (balance) {
+                        document.getElementById('credits-count').textContent = balance.balance;
+                        document.getElementById('total-credits').textContent = balance.balance;
+                    }
+
+                    // Load characters for gallery
+                    console.log('[APP] Loading characters...');
+                    if (typeof loadCharacters === 'function') {
+                        characters = await loadCharacters();
+                        if (typeof updateCharacterGallery === 'function') {
+                            await updateCharacterGallery();
+                        }
+                    }
+                } else {
+                    console.error('[APP] ❌ INVALID RESPONSE - Result:', result);
+                    // Only clear on explicit authentication failure
+                    if (result.error?.code === 'UNAUTHORIZED') {
+                        console.error('[APP] Clearing token and redirecting');
+                        localStorage.removeItem('auth_token');
+                        sessionStorage.removeItem('auth_token');
+                        localStorage.removeItem('user');
+                        sessionStorage.removeItem('user');
+                        window.location.href = '/login.html';
+                    }
+                }
+            } catch (error) {
+                console.error('[APP] ❌ EXCEPTION:', error);
+                console.error('[APP] Error stack:', error.stack);
+                // Don't clear token on network errors - may be temporary
+                console.error('[APP] Network or other error - NOT clearing token (may be temporary)');
+
+                // Try to use cached user data
+                const cachedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+                if (cachedUser) {
+                    try {
+                        const user = JSON.parse(cachedUser);
+                        console.log('[APP] Using cached user data:', user.email);
+                        document.getElementById('user-name').textContent = user.name || 'User';
+                        document.getElementById('user-email').textContent = user.email || '';
+                        document.getElementById('user-initial').textContent = (user.name || 'U')[0].toUpperCase();
+                    } catch (e) {
+                        console.error('[APP] Failed to parse cached user:', e);
+                    }
+                }
+            }
+
+            console.log('[APP] ===== DOMContentLoaded END =====');
+        });
+
+        // Stop polling when user logs out
+        window.addEventListener('auth:logout', () => {
+            window.CreditsModule.stopPolling();
+            window.location.href = '/login.html';
+        });
+    </script>
 </body>
 </html>

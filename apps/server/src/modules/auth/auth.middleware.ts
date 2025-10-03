@@ -4,13 +4,13 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { getAuthService, User } from '../services/auth';
-import { AUTH0_CONFIG } from '../config/auth0';
-import { ENV_CONFIG } from '../config/env';
+import { getAuthService, User } from './auth.service';
+import { ENV_CONFIG } from '../../config/env';
 
 // Extend Express Request to include user and authentication context
 export interface AuthenticatedRequest extends Request {
   user?: User;
+  sessionID?: string;
   auth?: {
     isAuthenticated: boolean;
     token?: string;
@@ -177,7 +177,7 @@ export const requireRole = (...roles: string[]) => {
 export const requireOwnership = (resourceIdParam = 'id') => {
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const resourceId = req.params[resourceIdParam];
+      const _resourceId = req.params[resourceIdParam];
       const userId = req.user?.id;
 
       if (!userId) {

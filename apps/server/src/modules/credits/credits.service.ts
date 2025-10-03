@@ -3,7 +3,7 @@
  * 用户积分管理服务
  */
 
-import { UserCredits, CreditTransaction, ApiCreditConfig, CreditCheckResult, CreditStatus } from '../models/UserCredits';
+import { UserCredits, CreditTransaction, ApiCreditConfig, CreditCheckResult, CreditStatus } from '../../models/UserCredits';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

@@ -1,8 +1,23 @@
 # Character Creation Platform - Database Design Document
 
+**Version:** 2.0 (Frontend-Aligned)
+**Last Updated:** 2025-10-02
+
+---
+
+## 📚 Documentation Index
+
+This database design is split into focused documents:
+
+1. **[DATABASE_DESIGN.md](./DATABASE_DESIGN.md)** (this file) - Character generation system
+2. **[AUTH_AND_CREDITS_SCHEMA.md](./AUTH_AND_CREDITS_SCHEMA.md)** - User auth & credit system
+3. **[SCHEMA_ALIGNMENT_REPORT.md](./SCHEMA_ALIGNMENT_REPORT.md)** - What changed from original design
+
+---
+
 ## Overview
 
-This document outlines the **actual implemented** database schema for the AI-powered character creation platform. This design is aligned with the frontend implementation and focuses on what's currently in use.
+This document outlines the **character generation system** schema for the AI-powered character creation platform. This design is aligned with the frontend implementation and focuses on what's currently in use.
 
 ## Design Principles
 
@@ -18,112 +33,21 @@ This design reflects **what is actually implemented**, not a wishlist of feature
 
 ## Database Schema Design
 
-### 1. User Information System
+> **Note:** User authentication and credit system schemas have been moved to [AUTH_AND_CREDITS_SCHEMA.md](./AUTH_AND_CREDITS_SCHEMA.md)
 
-#### Primary Users Table
-```sql
-CREATE TABLE users (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  email TEXT UNIQUE NOT NULL,
-  auth0_id TEXT UNIQUE,
-  username TEXT UNIQUE,
-  display_name TEXT,
-  avatar_url TEXT,
-  
-  -- Subscription and Limits
-  subscription_tier TEXT DEFAULT 'FREE' 
-    CHECK (subscription_tier IN ('FREE', 'PREMIUM', 'PRO', 'ENTERPRISE')),
-  subscription_start_date TIMESTAMP WITH TIME ZONE,
-  subscription_end_date TIMESTAMP WITH TIME ZONE,
-  
-  -- Daily Usage Tracking
-  daily_quota INTEGER DEFAULT 3 NOT NULL,
-  daily_used INTEGER DEFAULT 0 NOT NULL,
-  last_reset_date TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  
-  -- Profile Settings
-  preferred_language TEXT DEFAULT 'en' CHECK (preferred_language IN ('en', 'zh', 'ja', 'ko')),
-  timezone TEXT DEFAULT 'UTC',
-  notification_settings JSONB DEFAULT '{"email": true, "push": false}',
-  
-  -- Privacy and Preferences
-  profile_visibility TEXT DEFAULT 'private' 
-    CHECK (profile_visibility IN ('public', 'friends', 'private')),
-  allow_gallery_showcase BOOLEAN DEFAULT false,
-  content_filter_level TEXT DEFAULT 'moderate'
-    CHECK (content_filter_level IN ('strict', 'moderate', 'relaxed')),
-  
-  -- Statistics
-  total_characters_created INTEGER DEFAULT 0 NOT NULL,
-  total_images_generated INTEGER DEFAULT 0 NOT NULL,
-  account_status TEXT DEFAULT 'active'
-    CHECK (account_status IN ('active', 'suspended', 'banned', 'deleted')),
-  
-  -- Metadata
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  last_login_at TIMESTAMP WITH TIME ZONE,
-  email_verified_at TIMESTAMP WITH TIME ZONE,
-  
-  -- Constraints
-  CONSTRAINT users_email_format 
-    CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'),
-  CONSTRAINT users_daily_quota_positive CHECK (daily_quota >= 0),
-  CONSTRAINT users_daily_used_positive CHECK (daily_used >= 0),
-  CONSTRAINT users_username_format CHECK (username ~ '^[a-zA-Z0-9_]{3,30}$')
-);
+### Core Tables Overview
 
--- Indexes for user table
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_auth0_id ON users(auth0_id);
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_subscription_tier ON users(subscription_tier);
-CREATE INDEX idx_users_last_login ON users(last_login_at);
-CREATE INDEX idx_users_created_at ON users(created_at);
-CREATE INDEX idx_users_account_status ON users(account_status);
-```
+This document focuses on the **character generation system** - the core functionality of the platform:
 
-#### User Profiles Extended Table
-```sql
-CREATE TABLE user_profiles (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  
-  -- Personal Information
-  first_name TEXT,
-  last_name TEXT,
-  bio TEXT,
-  website_url TEXT,
-  social_links JSONB DEFAULT '{}', -- {"twitter": "username", "instagram": "username"}
-  
-  -- Professional Information
-  profession TEXT,
-  company TEXT,
-  industry TEXT,
-  experience_level TEXT CHECK (experience_level IN ('beginner', 'intermediate', 'advanced', 'professional')),
-  
-  -- Content Creation Focus
-  primary_use_case TEXT[], -- Array: ["gaming", "writing", "marketing", "education"]
-  favorite_art_styles TEXT[], -- Array: ["anime", "realistic", "cartoon", "fantasy"]
-  
-  -- Achievements and Badges
-  badges JSONB DEFAULT '[]', -- [{"type": "early_adopter", "earned_at": "2024-01-01"}]
-  total_likes_received INTEGER DEFAULT 0,
-  total_downloads INTEGER DEFAULT 0,
-  featured_character_count INTEGER DEFAULT 0,
-  
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  
-  UNIQUE(user_id)
-);
+1. **Characters** - Base character data with images
+2. **Character Themes** - Theme-based organization
+3. **Theme Variants** - Individual variation images
+4. **Generations** - Generation history tracking
+5. **Collections** - Project organization (future)
 
-CREATE INDEX idx_user_profiles_user_id ON user_profiles(user_id);
-CREATE INDEX idx_user_profiles_profession ON user_profiles(profession);
-CREATE INDEX idx_user_profiles_industry ON user_profiles(industry);
-```
+---
 
-### 2. Image Generation System
+## 1. Character Generation System
 
 #### Characters Table (Simplified & Aligned with Frontend)
 ```sql
@@ -298,43 +222,20 @@ CREATE INDEX idx_collection_items_character_id ON character_collection_items(cha
 
 **Status:** ⚠️ Schema exists in Prisma but not actively used by frontend yet
 
-### 3. Credit System (Simplified)
+## 2. User & Credit System
 
-**Current Implementation:** Credits tracked directly in `users` table with daily quota system.
+> **📄 See detailed documentation:** [AUTH_AND_CREDITS_SCHEMA.md](./AUTH_AND_CREDITS_SCHEMA.md)
 
-Frontend shows: `<span id="credits-count">0</span> Credits`
+**Quick Summary:**
+- User authentication via Auth0
+- Simple daily quota system (no complex credits)
+- Tracked in `users` table: `daily_quota`, `daily_used`, `last_reset_date`
+- Frontend shows: `<span id="credits-count">0</span> Credits`
 
-The credit system is **simplified** compared to original design:
-
-#### Users Table (includes credit fields)
-```sql
--- Credit-related fields in users table:
-daily_quota INTEGER DEFAULT 3,           -- Daily generation limit
-daily_used INTEGER DEFAULT 0,            -- How many used today
-total_generated INTEGER DEFAULT 0,       -- Lifetime count
-last_reset_date TIMESTAMP,               -- When quota resets
-```
-
-**Why simplified:**
-- ✅ Frontend only shows daily quota, not complex credit balance
-- ✅ No marketplace, gifting, or referral system implemented
-- ✅ No reserved balance needed (synchronous generation)
-- ❌ Future expansion may need separate `user_credits` table
-
-#### ❌ Removed Complex Credit Tables
-
-The following tables from the original design are **NOT implemented**:
-
-- ❌ `credit_transactions` - No transaction history tracking yet
-- ❌ `api_credit_configs` - No per-endpoint credit costs configured
-- ❌ `credit_packages` - No credit purchase system implemented
-- ❌ `user_credits` - Credits tracked in `users` table instead
-
-**Rationale:**
-- Frontend doesn't display transaction history
-- No payment integration implemented
-- No credit marketplace features
-- Simpler is better for MVP
+**Subscription Tiers:**
+- FREE: 3 generations/day
+- PREMIUM: 20 generations/day
+- PRO: 100 generations/day
 
 ## ❌ Removed: Supporting Tables
 
@@ -369,7 +270,7 @@ The following "nice-to-have" tables are **NOT implemented**:
 ### 📊 Actual Core Schema
 
 **Tables actively used by frontend:**
-1. `users` - User accounts with daily quota
+1. `users` - User accounts with daily quota (see [AUTH_AND_CREDITS_SCHEMA.md](./AUTH_AND_CREDITS_SCHEMA.md))
 2. `characters` - Character definitions with images
 3. `character_themes` - Theme organization (**NEW!**)
 4. `theme_variants` - Variant images (**NEW!**)

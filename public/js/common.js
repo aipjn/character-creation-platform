@@ -15,50 +15,37 @@ async function checkAuth() {
         window.location.href = '/login.html';
         return false;
     }
-    
+
     // Verify token with server
     try {
-        const response = await fetch('/api/v1/auth/verify', {
-            method: 'POST',
+        const response = await fetch('/api/v1/auth/me', {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}`
             }
         });
-        
+
         if (response.ok) {
             const result = await response.json();
-            if (result.success) {
+            if (result.success && result.data.user) {
                 currentUser = result.data.user;
                 updateUserUI();
                 return true;
             }
-        } else {
-            console.warn('Auth verification failed, continuing without auth');
-            currentUser = {
-                id: 'demo-user',
-                name: 'Demo User',
-                email: 'demo@example.com',
-                credits: 10
-            };
-            updateUserUI();
-            return true;
         }
+
+        // Token invalid, clear and redirect
+        console.error('Auth verification failed');
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login.html';
+        return false;
     } catch (error) {
         console.error('Token verification failed:', error);
-        currentUser = {
-            id: 'demo-user',
-            name: 'Demo User',
-            email: 'demo@example.com', 
-            credits: 10
-        };
-        updateUserUI();
-        return true;
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login.html';
+        return false;
     }
-    
-    localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_token');
-    return false;
 }
 
 // Update user interface
@@ -212,13 +199,8 @@ document.getElementById('menu-toggle').addEventListener('click', function() {
 });
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', async function() {
-    await checkAuth();
-    characters = await loadCharacters();
-    if (typeof updateCharacterGallery === 'function') {
-        await updateCharacterGallery();
-    }
-});
+// NOTE: Auth check and ALL initialization is handled by app.html DOMContentLoaded listener
+// This file ONLY provides utility functions - it should NOT execute anything on load
 
 // Handle clicks outside modal
 document.addEventListener('click', function(e) {

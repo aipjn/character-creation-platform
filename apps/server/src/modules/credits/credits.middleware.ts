@@ -4,7 +4,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { CreditService } from '../services/creditService';
+import { CreditService } from './credits.service';
 
 // 扩展Request接口，添加用户和积分信息
 declare global {
