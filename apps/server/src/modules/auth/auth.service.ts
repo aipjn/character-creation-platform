@@ -14,6 +14,9 @@ import {
   getManagementClient,
   getAuthenticationClient
 } from '../../config/auth0';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // User interfaces
 export interface User {
@@ -127,16 +130,19 @@ export class AuthService extends EventEmitter {
         metadata: auth0User.user_metadata
       };
 
+      // Sync user to local database (creates new user)
+      const syncedUser = await this.syncUserToDatabase(user);
+
       // Emit registration event
       this.emit('user:register', {
-        userId: user.id,
-        email: user.email,
+        userId: syncedUser.id,
+        email: syncedUser.email,
         metadata: { registrationMethod: 'email' }
       } as AuthEventPayload);
 
       return {
         success: true,
-        user,
+        user: syncedUser,
         refreshToken: undefined
       };
     } catch (error) {
@@ -199,19 +205,22 @@ export class AuthService extends EventEmitter {
         metadata: detailedUser.user_metadata
       };
 
+      // Sync user to local database (creates or updates)
+      const syncedUser = await this.syncUserToDatabase(user);
+
       // Update last login timestamp
-      await this.updateUserLastLogin(user.id);
+      await this.updateUserLastLogin(user.auth0Id);
 
       // Emit login event
       this.emit('user:login', {
-        userId: user.id,
-        email: user.email,
+        userId: syncedUser.id,
+        email: syncedUser.email,
         metadata: { loginMethod: 'email' }
       } as AuthEventPayload);
 
       return {
         success: true,
-        user,
+        user: syncedUser,
         accessToken: authResult.access_token,
         idToken: authResult.id_token, // Include id_token
         refreshToken: authResult.refresh_token,
@@ -463,6 +472,58 @@ export class AuthService extends EventEmitter {
       { provider: 'google', enabled: SOCIAL_PROVIDERS_CONFIG.google.enabled },
       { provider: 'github', enabled: SOCIAL_PROVIDERS_CONFIG.github.enabled }
     ];
+  }
+
+  /**
+   * Sync Auth0 user to local database
+   * Creates or updates user record in PostgreSQL
+   */
+  private async syncUserToDatabase(auth0User: User): Promise<User> {
+    try {
+      // Check if user exists in database
+      let dbUser = await prisma.user.findUnique({
+        where: { auth0Id: auth0User.auth0Id }
+      });
+
+      if (dbUser) {
+        // Update existing user
+        dbUser = await prisma.user.update({
+          where: { auth0Id: auth0User.auth0Id },
+          data: {
+            email: auth0User.email,
+            name: auth0User.name,
+            avatar: auth0User.picture
+          }
+        });
+        console.log(`[Auth] Updated user in database: ${dbUser.email}`);
+      } else {
+        // Create new user with FREE tier and default quota
+        dbUser = await prisma.user.create({
+          data: {
+            email: auth0User.email,
+            auth0Id: auth0User.auth0Id,
+            name: auth0User.name,
+            avatar: auth0User.picture,
+            subscriptionTier: 'FREE',
+            dailyQuota: 3,
+            dailyUsed: 0,
+            totalGenerated: 0,
+            lastResetDate: new Date()
+          }
+        });
+        console.log(`[Auth] Created new user in database: ${dbUser.email}`);
+      }
+
+      // Return user with database ID
+      return {
+        ...auth0User,
+        id: dbUser.id // Use database ID instead of Auth0 ID
+      };
+    } catch (error) {
+      console.error('[Auth] Failed to sync user to database:', error);
+      // Return original Auth0 user if sync fails
+      return auth0User;
+    }
   }
 
   /**
