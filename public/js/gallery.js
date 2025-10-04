@@ -2,7 +2,19 @@
             console.log('[Gallery] updateCharacterGallery called, characters:', characters);
             const gallery = document.getElementById('character-gallery');
 
-            // Ensure characters is an array
+            // Show loading state if characters haven't been loaded yet
+            if (!characters) {
+                console.log('[Gallery] Loading characters...');
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <div style="width: 48px; height: 48px; border: 4px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                        <h3 style="color: var(--text-secondary);">Loading your characters...</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show empty state if no characters exist
             if (!Array.isArray(characters) || characters.length === 0) {
                 console.log('[Gallery] No characters to display');
                 gallery.innerHTML = `
@@ -65,7 +77,7 @@
                                     ${themesHTML}
                                 </div>
                                 <div class="character-actions" style="margin-top: 1rem;">
-                                    <button class="btn btn-secondary btn-sm" onclick="deleteCharacter('${character.id}')">
+                                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); deleteCharacter('${character.id}')">
                                         <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </div>
@@ -240,9 +252,10 @@
 
                     if (response.ok) {
                         // Refresh from real API
-                        await loadCharacters();
+                        characters = await loadCharacters();
+                        await updateCharacterGallery();
                         showNotification('Character deleted successfully', 'success');
-                        
+
                         // If we're viewing this character, go back to gallery
                         if (currentCharacterDetail && currentCharacterDetail.id === id) {
                             switchPage('library');

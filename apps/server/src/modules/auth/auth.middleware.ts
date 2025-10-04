@@ -108,20 +108,6 @@ export const authenticate = async (
   }
 };
 
-/**
- * Require authentication - returns 401 if user is not authenticated
- */
-export const requireAuth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  const authReq = req as AuthenticatedRequest;
-  if (!authReq.auth?.isAuthenticated || !authReq.user) {
-    throw new AuthenticationError('Authentication required', 401, 'AUTH_REQUIRED');
-  }
-  next();
-};
 
 /**
  * Optional authentication - continues regardless of authentication status
@@ -379,34 +365,9 @@ export const createAuthMiddleware = (options: {
   return middlewares;
 };
 
-// Export commonly used middleware combinations
-export const authMiddleware = {
-  // Basic authentication (optional)
-  optional: optionalAuth,
-  
-  // Required authentication
-  required: [authenticate, validateSession, requireAuth],
-  
-  // Required authentication with email verification
-  requiredVerified: [authenticate, validateSession, requireAuth, requireVerifiedEmail],
-  
-  // Admin only access
-  adminOnly: [authenticate, validateSession, requireAuth, requireRole('admin')],
-  
-  // Owner or admin access
-  ownerOrAdmin: [
-    authenticate, 
-    validateSession, 
-    requireAuth, 
-    requireOwnership(),
-    // Note: In real implementation, you'd add logic to allow admins to bypass ownership
-  ],
-};
-
 // Export all middleware functions
 export default {
   authenticate,
-  requireAuth,
   optionalAuth,
   requireVerifiedEmail,
   requireRole,
@@ -415,6 +376,5 @@ export default {
   validateSession,
   logout,
   authErrorHandler,
-  createAuthMiddleware,
-  authMiddleware
+  createAuthMiddleware
 };

@@ -4,7 +4,7 @@
  */
 
 import express from 'express';
-import { requireAuth } from '../auth/auth.middleware';
+import { requireAuth } from '../../middleware/requireAuth';
 import { creditService } from './credits.service';
 
 const router = express.Router();

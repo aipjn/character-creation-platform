@@ -113,9 +113,11 @@ function switchPage(pageId) {
 
 // Logout
 function logout() {
-    localStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_token');
-    window.location.href = '/login.html';
+    if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('auth_token');
+        sessionStorage.removeItem('auth_token');
+        window.location.href = '/login.html';
+    }
 }
 
 // Show notification

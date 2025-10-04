@@ -668,6 +668,11 @@ async function showGenerateVariantsPage(character, themes) {
     if (existingDefaultTheme && existingDefaultTheme.variants) {
         updateVariantsDisplay(existingDefaultTheme.variants);
     }
+
+    // Update button with credit cost
+    if (window.ButtonCredits) {
+        window.ButtonCredits.updateButtonWithCost('generate-variant-btn', 'Generate Variant', '/themes/variants/generate');
+    }
 }
 
 /**
