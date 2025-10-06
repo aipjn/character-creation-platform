@@ -5,6 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { getAuthService, User } from './auth.service';
+import { requireAuth } from '../../middleware/requireAuth';
 import { ENV_CONFIG } from '../../config/env';
 
 // Extend Express Request to include user and authentication context

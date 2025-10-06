@@ -30,6 +30,26 @@ This platform provides a streamlined two-step workflow:
 
 Coming soon - development in progress.
 
+### Google Gemini Proxy (Optional)
+
+The Gemini client now treats proxy usage as opt-in. By default, it connects directly.
+
+To enable the proxy for environments that cannot reach Google, export the
+environment variable before starting the server:
+
+```bash
+export GEMINI_PROXY_ENABLED=true
+export GEMINI_PROXY_URL="http://127.0.0.1:7890" # optional; falls back to HTTPS_PROXY/HTTP_PROXY
+npm run dev
+```
+
+Unset or skip the variables to let the service run without any proxy:
+
+```bash
+unset GEMINI_PROXY_ENABLED GEMINI_PROXY_URL
+npm run dev
+```
+
 ## Project Management
 
 This project uses Claude Code PM system with structured PRDs and task breakdown.

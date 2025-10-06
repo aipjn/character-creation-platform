@@ -121,12 +121,22 @@ async function createTheme(characterId, name, description = '') {
  */
 async function generateVariant(themeId, prompt, metadata = {}) {
     try {
+        const currentCharacterImage = window._themeEditor?.currentCharacter?.imageUrl;
+        const mergedMetadata = { ...metadata };
+        if (currentCharacterImage && !mergedMetadata.inputImage) {
+            mergedMetadata.inputImage = currentCharacterImage;
+        }
+
+        if (window._appDebug) {
+            console.log('[Variant] Request metadata:', mergedMetadata);
+        }
+
         const response = await fetch(`${API_BASE}/themes/${themeId}/variants/generate`, {
             method: 'POST',
             headers: window.AuthModule.getAuthHeaders(),
             body: JSON.stringify({
                 prompt,
-                metadata
+                metadata: mergedMetadata
             })
         });
 
@@ -140,6 +150,20 @@ async function generateVariant(themeId, prompt, metadata = {}) {
     } catch (error) {
         console.error('Error generating variant:', error);
         throw error;
+    }
+}
+
+async function refreshCurrentThemeVariants(themeId) {
+    const response = await fetch(`${API_BASE}/themes/${themeId}`, {
+        headers: window.AuthModule.getAuthHeaders()
+    });
+    const data = await response.json();
+
+    if (data.success) {
+        window._themeEditor.currentTheme = data.data;
+        updateVariantsDisplay(data.data.variants || []);
+    } else {
+        throw new Error(data.error?.message || 'Failed to refresh theme variants');
     }
 }
 
@@ -1234,15 +1258,7 @@ async function generateVariantWithTheme() {
         }
 
         // Reload the theme to get updated variants
-        const response = await fetch(`${API_BASE}/themes/${targetThemeId}`, {
-            headers: window.AuthModule.getAuthHeaders()
-        });
-        const data = await response.json();
-
-        if (data.success) {
-            window._themeEditor.currentTheme = data.data;
-            updateVariantsDisplay(data.data.variants || []);
-        }
+        await refreshCurrentThemeVariants(targetThemeId);
 
         if (window.showNotification) {
             window.showNotification('Variant generated successfully!', 'success');
@@ -1279,3 +1295,4 @@ window.onThemeChange = onThemeChange;
 window.updateVariantsDisplay = updateVariantsDisplay;
 window.generateVariantWithTheme = generateVariantWithTheme;
 window.createNewThemeInUI = createNewThemeInUI;
+window.refreshCurrentThemeVariants = refreshCurrentThemeVariants;

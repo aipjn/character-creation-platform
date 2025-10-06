@@ -9,6 +9,11 @@
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import fetch from 'node-fetch';
 
+export interface GeminiClientOptions {
+  enableProxy?: boolean;
+  proxyUrl?: string;
+}
+
 interface GeminiRequest {
   model: 'gemini-2.5-flash' | 'gemini-2.5-flash-image-preview';
   prompt: string;
@@ -26,7 +31,13 @@ export class GeminiClient {
   private baseUrl: string;
   private proxyAgent: any;
 
-  constructor() {
+  constructor(options: GeminiClientOptions = {}) {
+    const proxyEnabledEnv = process.env['GEMINI_PROXY_ENABLED'];
+    const enableProxy =
+      typeof options.enableProxy === 'boolean'
+        ? options.enableProxy
+        : proxyEnabledEnv === '1' || proxyEnabledEnv === 'true';
+
     // Use Google API key
     this.apiKey = process.env['GOOGLE_API_KEY'] || '';
     this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -35,22 +46,34 @@ export class GeminiClient {
       throw new Error('GOOGLE_API_KEY environment variable is required');
     }
     
-    // Configure proxy support
-    const httpsProxy = process.env['HTTPS_PROXY'] || process.env['https_proxy'];
-    const httpProxy = process.env['HTTP_PROXY'] || process.env['http_proxy'];
-    
-    if (httpsProxy || httpProxy) {
-      const proxyUrl: string = httpsProxy || httpProxy || '';
-      console.log(`[GeminiClient] Using proxy: ${proxyUrl}`);
-      
+    // Configure proxy support (disabled by default)
+    if (enableProxy) {
+      const proxyUrl =
+        options.proxyUrl ||
+        process.env['GEMINI_PROXY_URL'] ||
+        process.env['HTTPS_PROXY'] ||
+        process.env['https_proxy'] ||
+        process.env['HTTP_PROXY'] ||
+        process.env['http_proxy'] ||
+        '';
+
       if (proxyUrl) {
+        console.log(`[GeminiClient] Proxy enabled via configuration: ${proxyUrl}`);
         this.proxyAgent = new HttpsProxyAgent(proxyUrl);
       } else {
+        console.warn('[GeminiClient] Proxy requested but no proxy URL provided');
         this.proxyAgent = null;
       }
     } else {
-      console.log(`[GeminiClient] No proxy configuration found`);
       this.proxyAgent = null;
+      if (
+        process.env['HTTPS_PROXY'] ||
+        process.env['https_proxy'] ||
+        process.env['HTTP_PROXY'] ||
+        process.env['http_proxy']
+      ) {
+        console.log('[GeminiClient] Proxy variables ignored (GEMINI_PROXY_ENABLED is not set)');
+      }
     }
   }
 
@@ -351,14 +374,27 @@ export class GeminiClient {
 
 // Singleton instance
 let defaultClient: GeminiClient | null = null;
+let defaultClientOptions: GeminiClientOptions | undefined;
 
 /**
  * Get the default Gemini client
  */
-export const getDefaultGeminiClient = (): GeminiClient => {
-  if (!defaultClient) {
-    defaultClient = new GeminiClient();
+export const getDefaultGeminiClient = (options: GeminiClientOptions = {}): GeminiClient => {
+  const normalize = (config: GeminiClientOptions = {}) => ({
+    enableProxy: config.enableProxy ?? undefined,
+    proxyUrl: config.proxyUrl ?? undefined,
+  });
+
+  const normalizedOptions = normalize(options);
+
+  if (
+    !defaultClient ||
+    JSON.stringify(normalize(defaultClientOptions)) !== JSON.stringify(normalizedOptions)
+  ) {
+    defaultClient = new GeminiClient(options);
+    defaultClientOptions = { ...options };
   }
+
   return defaultClient;
 };
 

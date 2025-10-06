@@ -4,9 +4,10 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import fetch from 'node-fetch';
 import {
   CharacterTheme,
   CharacterVariant,
@@ -28,16 +29,67 @@ const geminiClient = getDefaultGeminiClient();
 // Helper function to save base64 as file
 function saveBase64AsFile(base64Data: string, outputPath: string): void {
   const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
-  if (!matches || !matches[2]) {
-    throw new Error('Invalid base64 format');
-  }
-  const base64Content = matches[2];
-  const buffer = Buffer.from(base64Content, 'base64');
+  const content = matches?.[2] ?? base64Data;
+  const buffer = Buffer.from(content, 'base64');
   const dir = path.dirname(outputPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
   fs.writeFileSync(outputPath, buffer);
+}
+
+async function loadImageAsBase64(imageReference?: string): Promise<{ base64: string; mimeType: string } | null> {
+  if (!imageReference) {
+    return null;
+  }
+
+  try {
+    if (imageReference.startsWith('data:')) {
+      const matches = imageReference.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches || !matches[1] || !matches[2]) {
+        throw new Error('Invalid data URL format');
+      }
+      return { base64: matches[2], mimeType: matches[1] };
+    }
+
+    if (imageReference.startsWith('http://') || imageReference.startsWith('https://')) {
+      const response = await fetch(imageReference);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch remote image: ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      let mimeType = 'image/jpeg';
+      const headerContentType = response.headers.get('content-type');
+      if (headerContentType) {
+        const [primaryType] = headerContentType.split(';');
+        if (primaryType) {
+          mimeType = primaryType;
+        }
+      }
+      return { base64: Buffer.from(arrayBuffer).toString('base64'), mimeType };
+    }
+
+    // Treat as local path (relative or absolute)
+    const normalizedPath = imageReference.startsWith('/')
+      ? path.resolve(process.cwd(), imageReference.slice(1))
+      : path.resolve(process.cwd(), imageReference);
+
+    if (!fs.existsSync(normalizedPath)) {
+      throw new Error(`Local image not found at ${normalizedPath}`);
+    }
+
+    const fileBuffer = fs.readFileSync(normalizedPath);
+    const ext = path.extname(normalizedPath).toLowerCase();
+    let mimeType = 'image/png';
+    if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+    else if (ext === '.webp') mimeType = 'image/webp';
+    else if (ext === '.gif') mimeType = 'image/gif';
+
+    return { base64: fileBuffer.toString('base64'), mimeType };
+  } catch (error) {
+    console.warn(`[Variant Generation] Failed to load base image (${imageReference}):`, error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 /**
@@ -171,7 +223,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
     // Create theme in database
     const dbTheme = await prisma.characterTheme.create({
       data: {
-        id: `theme_${Date.now()}_${uuidv4().slice(0, 8)}`,
+        id: `theme_${Date.now()}_${randomUUID().slice(0, 8)}`,
         characterId,
         name,
         ...(description && { description })
@@ -467,7 +519,11 @@ router.post('/:themeId/variants', requireAuth, async (req: Request, res: Respons
       where: { id: themeId! },
       include: {
         character: {
-          select: { userId: true }
+          select: {
+            id: true,
+            userId: true,
+            imageUrl: true
+          }
         }
       }
     });
@@ -495,7 +551,7 @@ router.post('/:themeId/variants', requireAuth, async (req: Request, res: Respons
     // Create variant in database
     const dbVariant = await prisma.themeVariant.create({
       data: {
-        id: `variant_${Date.now()}_${uuidv4().slice(0, 8)}`,
+        id: `variant_${Date.now()}_${randomUUID().slice(0, 8)}`,
         themeId: themeId!,
         characterId: theme.characterId,
         prompt,
@@ -742,32 +798,89 @@ router.post('/:themeId/variants/generate', requireAuth, checkCredits('/themes/va
 
     console.log(`[Variant Generation] Generating variant for theme ${themeId}`);
     console.log(`[Variant Generation] Prompt: ${prompt}`);
+    console.log('[Variant Generation] Incoming metadata:', metadata);
 
-    // 使用Gemini生成图像
-    const result = await geminiClient.generateImage(prompt);
+    // Variant generation should start from the user's selected character image
+    const characterImageUrl = ((theme.character ?? {}) as { imageUrl?: string }).imageUrl;
+    const baseImageSource = metadata?.inputImage ?? characterImageUrl ?? undefined;
 
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to generate image');
+    let result;
+    let generationMode: 'image-to-image' | 'text-to-image';
+    const baseImage = await loadImageAsBase64(baseImageSource);
+
+    const logGeminiSummary = (label: string, response: any) => {
+      const summary = {
+        success: response?.success ?? null,
+        error: response?.error ?? null,
+        dataKeys: response?.data ? Object.keys(response.data) : [],
+        resultKeys: response?.data?.result ? Object.keys(response.data.result) : []
+      };
+      console.log(`[Variant Generation] ${label} summary:`, summary);
+    };
+
+    if (baseImage) {
+      console.log(`[Variant Generation] Using base image for variant (${baseImageSource?.substring(0, 80) || 'inline'})`);
+      const imageResult = await geminiClient.generateWithImage(
+        prompt,
+        baseImage.base64,
+        baseImage.mimeType
+      );
+
+      logGeminiSummary('Image-to-image response', imageResult);
+
+      if (!imageResult.success) {
+        throw new Error(imageResult.error || 'Gemini image-to-image request failed');
+      }
+
+      if (!(imageResult.data?.imageUrl || imageResult.data?.result?.imageUrl)) {
+        throw new Error('Gemini image-to-image returned no image data');
+      }
+
+      result = imageResult;
+      generationMode = 'image-to-image';
+    } else {
+      const textResult = await geminiClient.generateImage(prompt);
+      logGeminiSummary('Text-to-image response', textResult);
+
+      if (!textResult.success) {
+        throw new Error(textResult.error || 'Gemini text-to-image request failed');
+      }
+
+      result = textResult;
+      generationMode = 'text-to-image';
+    }
+
+    console.log('[Variant Generation] Raw result keys:', Object.keys(result || {}));
+    if (result?.data?.result) {
+      console.log('[Variant Generation] Result payload keys:', Object.keys(result.data.result));
     }
 
     // Generate variant ID
-    const variantId = `variant_${Date.now()}_${uuidv4().slice(0, 8)}`;
+    const variantId = `variant_${Date.now()}_${randomUUID().slice(0, 8)}`;
 
     // Save images as files
     let imageUrl = '';
     let thumbnailUrl = '';
 
-    if (result.data.result.imageUrl) {
+    const generatedImage = result?.data?.imageUrl ?? result?.data?.result?.imageUrl;
+    const generatedThumbnail = result?.data?.thumbnailUrl ?? result?.data?.result?.thumbnailUrl ?? generatedImage;
+
+    console.log('[Variant Generation] generatedImage length:', generatedImage?.length || 0);
+    console.log('[Variant Generation] generatedThumbnail length:', generatedThumbnail?.length || 0);
+
+    if (generatedImage) {
       const imageFilename = `${variantId}.png`;
       const imagePath = path.join(process.cwd(), 'uploads', 'variants', imageFilename);
-      saveBase64AsFile(result.data.result.imageUrl, imagePath);
+      saveBase64AsFile(generatedImage, imagePath);
       imageUrl = `/uploads/variants/${imageFilename}`;
+    } else {
+      throw new Error('Gemini generation did not return image data');
     }
 
-    if (result.data.result.thumbnailUrl) {
+    if (generatedThumbnail) {
       const thumbnailFilename = `${variantId}_thumb.png`;
       const thumbnailPath = path.join(process.cwd(), 'uploads', 'variants', thumbnailFilename);
-      saveBase64AsFile(result.data.result.thumbnailUrl, thumbnailPath);
+      saveBase64AsFile(generatedThumbnail, thumbnailPath);
       thumbnailUrl = `/uploads/variants/${thumbnailFilename}`;
     }
 
@@ -778,9 +891,12 @@ router.post('/:themeId/variants/generate', requireAuth, checkCredits('/themes/va
         themeId: themeId!,
         characterId: theme.characterId,
         prompt,
-        imageUrl,
-        thumbnailUrl,
-        ...(metadata && { metadata })
+        imageUrl: imageUrl || null,
+        thumbnailUrl: thumbnailUrl || null,
+        metadata: {
+          ...(metadata || {}),
+          generationMode
+        }
       }
     });
 
@@ -790,7 +906,10 @@ router.post('/:themeId/variants/generate', requireAuth, checkCredits('/themes/va
       prompt: dbVariant.prompt,
       imageUrl: dbVariant.imageUrl || '',
       thumbnailUrl: dbVariant.thumbnailUrl || undefined,
-      metadata: (dbVariant.metadata as any) || undefined,
+      metadata: {
+        ...(dbVariant.metadata as any),
+        generationMode
+      },
       createdAt: dbVariant.createdAt
     };
 
