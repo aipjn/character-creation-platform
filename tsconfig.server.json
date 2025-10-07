@@ -20,13 +20,7 @@
   "include": [
     "apps/server/**/*",
     "shared/**/*",
-    "config/**/*",
-    "src/routes/**/*",
-    "src/types/**/*",
-    "src/middleware/**/*",
-    "src/controllers/**/*",
-    "src/services/**/*",
-    "src/models/**/*"
+    "config/**/*"
   ],
   "exclude": [
     "apps/web/**/*",

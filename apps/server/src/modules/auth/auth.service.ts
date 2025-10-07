@@ -529,7 +529,6 @@ export class AuthService extends EventEmitter {
       });
 
       if (dbUser) {
-        // Update existing user
         dbUser = await prisma.user.update({
           where: { auth0Id: auth0User.auth0Id },
           data: {
@@ -540,21 +539,35 @@ export class AuthService extends EventEmitter {
         });
         console.log(`[Auth] Updated user in database: ${dbUser.email}`);
       } else {
-        // Create new user with FREE tier and default quota
-        dbUser = await prisma.user.create({
-          data: {
-            email: auth0User.email,
-            auth0Id: auth0User.auth0Id,
-            name: auth0User.name,
-            avatar: auth0User.picture,
-            subscriptionTier: 'FREE',
-            dailyQuota: 3,
-            dailyUsed: 0,
-            totalGenerated: 0,
-            lastResetDate: new Date()
-          }
-        });
-        console.log(`[Auth] Created new user in database: ${dbUser.email}`);
+        // Check if a user already exists with the same email (e.g. legacy account)
+        dbUser = await prisma.user.findUnique({ where: { email: auth0User.email } });
+
+        if (dbUser) {
+          dbUser = await prisma.user.update({
+            where: { email: auth0User.email },
+            data: {
+              auth0Id: auth0User.auth0Id,
+              name: auth0User.name,
+              avatar: auth0User.picture
+            }
+          });
+          console.log(`[Auth] Linked existing account to Auth0 user: ${dbUser.email}`);
+        } else {
+          dbUser = await prisma.user.create({
+            data: {
+              email: auth0User.email,
+              auth0Id: auth0User.auth0Id,
+              name: auth0User.name,
+              avatar: auth0User.picture,
+              subscriptionTier: 'FREE',
+              dailyQuota: 3,
+              dailyUsed: 0,
+              totalGenerated: 0,
+              lastResetDate: new Date()
+            }
+          });
+          console.log(`[Auth] Created new user in database: ${dbUser.email}`);
+        }
       }
 
       // Return user with database ID
@@ -562,7 +575,24 @@ export class AuthService extends EventEmitter {
         ...auth0User,
         id: dbUser.id // Use database ID instead of Auth0 ID
       };
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.code === 'P2002' && Array.isArray(error?.meta?.target) && error.meta.target.includes('email')) {
+        console.warn('[Auth] Unique constraint on email encountered, attempting to link existing account.');
+        const existing = await prisma.user.findUnique({ where: { email: auth0User.email } });
+        if (existing) {
+          const updated = await prisma.user.update({
+            where: { email: auth0User.email },
+            data: {
+              auth0Id: auth0User.auth0Id,
+              name: auth0User.name,
+              avatar: auth0User.picture
+            }
+          });
+          console.log(`[Auth] Linked existing account after constraint: ${updated.email}`);
+          return { ...auth0User, id: updated.id };
+        }
+      }
+
       console.error('[Auth] Failed to sync user to database:', error);
       // Return original Auth0 user if sync fails
       return auth0User;

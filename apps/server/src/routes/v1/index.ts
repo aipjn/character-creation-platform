@@ -11,10 +11,7 @@ import { authRoutes } from '../../modules/auth';
 import { creditsRouter } from '../../modules/credits';
 import usersRouter from './users';
 import charactersRouter from './characters';
-import collectionsRouter from './collections';
-import scenesRouter from './scenes';
 import themesRouter from './themes';
-import imagesRouter from './images';
 
 const router = express.Router();
 
@@ -34,9 +31,6 @@ router.get('/', (req: express.Request, res: express.Response) => {
         users: '/api/v1/users',
         characters: '/api/v1/characters',
         themes: '/api/v1/themes',
-        collections: '/api/v1/collections',
-        scenes: '/api/v1/scenes',
-        images: '/api/v1/images',
         credits: '/api/v1/credits',
         health: '/health'
       },
@@ -66,9 +60,6 @@ router.use('/credits', creditsRouter);
 router.use('/users', usersRouter);
 router.use('/characters', charactersRouter);
 router.use('/themes', themesRouter);
-router.use('/collections', collectionsRouter);
-router.use('/scenes', scenesRouter);
-router.use('/images', imagesRouter);
 
 /**
  * API v1 catch-all route for undefined endpoints

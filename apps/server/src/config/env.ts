@@ -249,14 +249,6 @@ export const validateEnvConfig = (config: EnvConfig): {
   }
 
   // Optional feature warnings
-  if (!config.NANOBANANA_API_KEY && config.ENABLE_BATCH_PROCESSING) {
-    warnings.push('NANOBANANA_API_KEY is not set, batch processing may not work');
-  }
-
-  if (!config.AWS_S3_BUCKET_NAME) {
-    warnings.push('AWS_S3_BUCKET_NAME is not set, file uploads will use local storage');
-  }
-
   if (!config.REDIS_URL && config.NODE_ENV === 'production') {
     warnings.push('REDIS_URL is not set, caching will be disabled');
   }
