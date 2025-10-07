@@ -317,8 +317,23 @@ class AuthModule {
     const loginBtn = document.getElementById('login-btn');
     const loginText = document.getElementById('login-text');
     const loginLoading = document.getElementById('login-loading');
+    const loginAlert = document.getElementById('login-alert');
 
     if (!loginForm) return;
+
+    const clearLoginAlert = () => {
+      if (!loginAlert) return;
+      loginAlert.textContent = '';
+      loginAlert.className = 'form-alert';
+      loginAlert.style.display = 'none';
+    };
+
+    const showLoginAlert = (message, type = 'error') => {
+      if (!loginAlert) return;
+      loginAlert.textContent = message;
+      loginAlert.className = `form-alert ${type}`;
+      loginAlert.style.display = 'block';
+    };
 
     // Check if already logged in (but don't redirect if we just came from app.html)
     const fromApp = document.referrer.includes('/app.html');
@@ -339,6 +354,8 @@ class AuthModule {
         group.classList.remove('error');
       });
 
+      clearLoginAlert();
+
       if (!email.value.trim()) {
         email.parentElement.classList.add('error');
         return false;
@@ -356,6 +373,8 @@ class AuthModule {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      clearLoginAlert();
+
       if (!validateForm()) return;
 
       loginBtn.disabled = true;
@@ -370,11 +389,14 @@ class AuthModule {
 
       if (result.success) {
         this.showNotification('Login successful!', 'success');
+        clearLoginAlert();
         setTimeout(() => {
           window.location.href = '/app.html';
         }, 500);
       } else {
-        this.showNotification(result.error || 'Login failed', 'error');
+        const message = result.error || 'Login failed. Please try again.';
+        showLoginAlert(message, 'error');
+        this.showNotification(message, 'error');
         loginBtn.disabled = false;
         loginText.style.display = 'inline';
         loginLoading.style.display = 'none';
@@ -390,8 +412,23 @@ class AuthModule {
     const registerBtn = document.getElementById('register-btn');
     const registerText = document.getElementById('register-text');
     const registerLoading = document.getElementById('register-loading');
+    const registerAlert = document.getElementById('register-alert');
 
     if (!registerForm) return;
+
+    const clearRegisterAlert = () => {
+      if (!registerAlert) return;
+      registerAlert.textContent = '';
+      registerAlert.className = 'form-alert';
+      registerAlert.style.display = 'none';
+    };
+
+    const showRegisterAlert = (message, type = 'error') => {
+      if (!registerAlert) return;
+      registerAlert.textContent = message;
+      registerAlert.className = `form-alert ${type}`;
+      registerAlert.style.display = 'block';
+    };
 
     // Password strength checker
     const checkPasswordStrength = (password) => {
@@ -484,6 +521,8 @@ class AuthModule {
         group.classList.remove('error');
       });
 
+      clearRegisterAlert();
+
       let isValid = true;
 
       if (!email.value.trim()) {
@@ -513,6 +552,8 @@ class AuthModule {
     registerForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      clearRegisterAlert();
+
       if (!validateForm()) return;
 
       registerBtn.disabled = true;
@@ -527,11 +568,14 @@ class AuthModule {
 
       if (result.success) {
         this.showNotification('Registration successful! Please check your email to verify your account.', 'success');
+        clearRegisterAlert();
         setTimeout(() => {
           window.location.href = `/verify-email.html?email=${encodeURIComponent(email)}`;
         }, 1500);
       } else {
-        this.showNotification(result.error || 'Registration failed', 'error');
+        const message = result.error || 'Registration failed. Please try again.';
+        showRegisterAlert(message, 'error');
+        this.showNotification(message, 'error');
         registerBtn.disabled = false;
         registerText.style.display = 'inline';
         registerLoading.style.display = 'none';

@@ -146,8 +146,9 @@ export class AuthService extends EventEmitter {
         refreshToken: undefined
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      
+      const errorMessage = this.formatAuthError(error, 'Registration failed');
+      console.error('[AUTH] registerUser error:', error);
+
       this.emit('error', {
         error: error instanceof Error ? error : new Error(errorMessage),
         metadata: { operation: 'register', email: userData.email }
@@ -227,8 +228,9 @@ export class AuthService extends EventEmitter {
         expiresIn: authResult.expires_in
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      
+      const errorMessage = this.formatAuthError(error, 'Login failed');
+      console.error('[AUTH] loginUser error:', error);
+
       this.emit('error', {
         error: error instanceof Error ? error : new Error(errorMessage),
         metadata: { operation: 'login', email }
@@ -270,6 +272,47 @@ export class AuthService extends EventEmitter {
       console.error('Error fetching user by ID:', error);
       return null;
     }
+  }
+
+  private formatAuthError(error: unknown, fallback: string): string {
+    const err = error as any;
+    const responseData = err?.response?.data;
+
+    const candidates = [
+      responseData?.error_description,
+      responseData?.description,
+      responseData?.message,
+      typeof responseData === 'string' ? responseData : undefined,
+      err?.message,
+    ];
+
+    let message = fallback;
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim()) {
+        message = candidate.trim();
+        break;
+      }
+    }
+
+    const normalized = message.toLowerCase();
+
+    if (normalized.includes('invalid_grant') || normalized.includes('wrong email or password')) {
+      return 'Incorrect email or password. Please check your credentials and try again.';
+    }
+
+    if (normalized.includes('user already exists')) {
+      return 'An account with this email already exists. Try logging in or resetting your password.';
+    }
+
+    if (normalized.includes('passwordstrength') || normalized.includes('password strength') || normalized.includes('password is too weak')) {
+      return 'Password does not meet security requirements. Use at least 8 characters with upper & lower case letters, numbers, and a symbol.';
+    }
+
+    if (normalized.includes('invalid email')) {
+      return 'The email address looks invalid. Please enter a valid email (example@domain.com).';
+    }
+
+    return message;
   }
 
   /**

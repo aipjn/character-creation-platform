@@ -16,7 +16,7 @@ model User {
   auth0Id       String?  @unique @map("auth0_id")
   name          String?
   avatar        String?
-  credits       Int      @default(100) // User's current credit balance
+  credits       Int      @default(50) // User's current credit balance
   subscriptionTier SubscriptionTier @default(FREE) @map("subscription_tier")
   dailyQuota    Int      @default(3) @map("daily_quota")
   dailyUsed     Int      @default(0) @map("daily_used")
