@@ -84,18 +84,10 @@ export interface DatabaseConfig {
   ssl?: boolean;
 }
 
-export interface S3Config {
-  bucketName: string;
-  region: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-}
-
 export interface AppConfig {
   port: number;
   nodeEnv: string;
   database: DatabaseConfig;
-  s3: S3Config;
   jwtSecret: string;
 }
 
@@ -168,4 +160,3 @@ export interface BatchGenerationResult {
   createdAt: Date;
   completedAt?: Date;
 }
-

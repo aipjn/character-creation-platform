@@ -59,7 +59,7 @@ CREATE TABLE theme_variants (
 
 **Added fields that frontend uses:**
 - ✅ `description` - User's original input (distinct from optimized prompt)
-- ✅ `image_url` - Direct URL field (frontend uses this, not just s3_url)
+- ✅ `image_url` - Direct URL field consumed by frontend
 
 **Removed fields frontend doesn't use:**
 - ❌ `negative_prompt` - Not in UI
@@ -113,7 +113,7 @@ CREATE TABLE theme_variants (
 | Character themes | ❌ Missing | ✅ Fully implemented | ✅ **Added to schema** |
 | Theme variants | ❌ Missing | ✅ Fully implemented | ✅ **Added to schema** |
 | Description field | ❌ Missing | ✅ Used everywhere | ✅ **Added to schema** |
-| Image URL field | ⚠️ Only s3_url | ✅ Uses imageUrl | ✅ **Added to schema** |
+| Image URL field | ✅ Uses image_url | ✅ Uses imageUrl | ✅ **Added to schema** |
 | Generation queue | ✅ Complex system | ❌ Not needed | ✅ **Simplified** |
 | Credit system | ✅ 4 tables | ❌ Simple quota only | ✅ **Simplified** |
 | Collections | ✅ In schema | ⚠️ Not in UI yet | ⏸️ **Kept for future** |

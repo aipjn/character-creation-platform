@@ -29,7 +29,7 @@ export interface CoreConfig {
   
   // Storage
   storage: {
-    provider: 'local' | 's3';
+    provider: 'local';
     uploadPath: string;
     maxFileSize: number;
   };
@@ -65,7 +65,7 @@ export const config: CoreConfig = {
   }),
   
   storage: {
-    provider: (process.env['STORAGE_PROVIDER'] || 'local') as 'local' | 's3',
+    provider: 'local',
     uploadPath: process.env['UPLOAD_PATH'] || './uploads',
     maxFileSize: parseInt(process.env['MAX_FILE_SIZE'] || '10485760', 10), // 10MB
   },

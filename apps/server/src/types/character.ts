@@ -1,5 +1,6 @@
 // Character-specific types for gallery display and management
-import { StyleType, GenerationStatus, SubscriptionTier } from '@prisma/client';
+import { SubscriptionTier } from '@prisma/client';
+import { StyleType, GenerationStatus } from '../../../../shared/types/enums';
 
 // Physical traits structure
 export interface PhysicalTraits {
@@ -20,7 +21,7 @@ export interface Character {
   name?: string;
   prompt: string;
   styleType: StyleType;
-  s3Url?: string;
+  imageUrl?: string;
   thumbnailUrl?: string;
   referenceImageUrl?: string;
   metadata?: Record<string, any>;
@@ -90,6 +91,7 @@ export interface CharacterCreateFormData {
   name?: string;
   prompt: string;
   styleType: StyleType;
+  imageUrl?: string;
   referenceImageUrl?: string;
   tags: string[];
   isPublic: boolean;

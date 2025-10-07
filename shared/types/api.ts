@@ -57,6 +57,8 @@ export type AsyncApiHandler<T = any> = (
 export interface User {
   id: string;
   email: string;
+  auth0Id: string | null;
+  name: string | null;
   role: 'user' | 'admin';
   createdAt: string;
   updatedAt: string;
@@ -348,5 +350,3 @@ export type ContentType = 'application/json' | 'multipart/form-data' | 'applicat
 
 // Export all types for Stream B coordination
 export * from './character';
-export * from './generation'; // These files already exist
-export * from './index';

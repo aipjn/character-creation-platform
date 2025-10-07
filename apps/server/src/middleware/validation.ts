@@ -320,9 +320,15 @@ export function validateFileUpload(options: {
     required = false
   } = options;
 
+  type BasicUploadedFile = {
+    mimetype: string;
+    size: number;
+    originalname?: string;
+  };
+
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      const file = req.file;
+      const { file } = req as Request & { file?: BasicUploadedFile };
       const errors: string[] = [];
 
       if (!file && required) {

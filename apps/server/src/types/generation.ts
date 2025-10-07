@@ -3,16 +3,6 @@
  * Common types used across API client, queue system, and other streams
  */
 
-// Re-export core nanoBanana types for convenience
-export {
-  GenerationStatus,
-  Priority,
-  ImageFormat,
-  AspectRatio,
-  Quality,
-  Style
-} from './nanoBanana';
-
 // Base Generation Types
 export interface GenerationJobBase {
   id: string;
@@ -116,7 +106,7 @@ export interface GenerationResult {
   };
   createdAt: Date;
   storageInfo?: {
-    s3Key?: string;
+    storageKey?: string;
     cloudfrontUrl?: string;
     expiresAt?: Date;
   };
@@ -212,7 +202,7 @@ export interface ApiIntegrationConfig {
 
 // Storage Integration types (for coordination with other streams)
 export interface StorageConfig {
-  provider: 'AWS_S3' | 'GOOGLE_CLOUD' | 'LOCAL';
+  provider: 'GOOGLE_CLOUD' | 'LOCAL';
   bucketName?: string;
   region?: string;
   paths: {

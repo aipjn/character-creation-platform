@@ -21,7 +21,7 @@ This platform provides a streamlined two-step workflow:
 - **Frontend**: React with TypeScript
 - **Backend**: Node.js with Express
 - **Database**: PostgreSQL
-- **Storage**: AWS S3 + CloudFront CDN
+- **Storage**: Local filesystem storage
 - **Authentication**: Auth0
 - **Payments**: Stripe
 - **AI**: Google nanoBanana API

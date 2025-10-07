@@ -66,7 +66,7 @@ CREATE TABLE characters (
   )),
 
   -- Images (Frontend uses these)
-  s3_url TEXT,                          -- Legacy field, may contain S3 URL
+  image_url TEXT,                       -- Primary image location
   image_url TEXT,                       -- Direct image URL
   thumbnail_url TEXT,                   -- Thumbnail for gallery display
   reference_image_url TEXT,             -- Reference image if provided

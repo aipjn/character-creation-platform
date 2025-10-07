@@ -21,6 +21,7 @@ export interface CharacterCreateData {
   tags?: string[];
   isPublic?: boolean;
   metadata?: Record<string, any>;
+  imageUrl?: string;
 }
 
 export interface CharacterUpdateData {
@@ -30,7 +31,7 @@ export interface CharacterUpdateData {
   tags?: string[];
   isPublic?: boolean;
   metadata?: Record<string, any>;
-  s3Url?: string;
+  imageUrl?: string;
   thumbnailUrl?: string;
   generationStatus?: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
 }
@@ -75,7 +76,7 @@ export interface UserWithCharacters {
     name: string | null;
     prompt: string;
     styleType: string;
-    s3Url: string | null;
+    imageUrl: string | null;
     thumbnailUrl: string | null;
     createdAt: Date;
   }>;
@@ -86,7 +87,7 @@ export interface CharacterWithUser {
   name: string | null;
   prompt: string;
   styleType: string;
-  s3Url: string | null;
+  imageUrl: string | null;
   thumbnailUrl: string | null;
   tags: string[];
   isPublic: boolean;

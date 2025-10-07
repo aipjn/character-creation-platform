@@ -67,7 +67,6 @@ export interface Scene {
   setting?: string;
   mood?: string;
   lighting?: string;
-  s3Url?: string;
   thumbnailUrl?: string;
   isPublic: boolean;
   createdAt: Date;

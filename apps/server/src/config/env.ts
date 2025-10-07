@@ -54,13 +54,6 @@ export interface EnvConfig {
   NANOBANANA_API_URL: string;
   NANOBANANA_MODEL: string;
   
-  // AWS Configuration
-  AWS_REGION: string;
-  AWS_S3_BUCKET_NAME: string;
-  AWS_ACCESS_KEY_ID: string;
-  AWS_SECRET_ACCESS_KEY: string;
-  AWS_CLOUDFRONT_DOMAIN_NAME: string;
-  
   // Redis Configuration (optional)
   REDIS_URL?: string;
   REDIS_PASSWORD?: string;
@@ -182,14 +175,6 @@ export const loadEnvConfig = (): EnvConfig => {
       NANOBANANA_API_KEY: parseEnvVar.string('NANOBANANA_API_KEY', ''),
       NANOBANANA_API_URL: parseEnvVar.string('NANOBANANA_API_URL', 'https://api.nanobanana.ai/v1'),
       NANOBANANA_MODEL: parseEnvVar.string('NANOBANANA_MODEL', 'nano-banana'),
-      
-      // AWS Configuration
-      AWS_REGION: parseEnvVar.string('AWS_REGION', 'us-east-1'),
-      AWS_S3_BUCKET_NAME: parseEnvVar.string('AWS_S3_BUCKET_NAME', ''),
-      AWS_ACCESS_KEY_ID: parseEnvVar.string('AWS_ACCESS_KEY_ID', ''),
-      AWS_SECRET_ACCESS_KEY: parseEnvVar.string('AWS_SECRET_ACCESS_KEY', ''),
-      AWS_CLOUDFRONT_DOMAIN_NAME: parseEnvVar.string('AWS_CLOUDFRONT_DOMAIN_NAME', ''),
-      
       // Redis Configuration
       REDIS_URL: parseEnvVar.string('REDIS_URL'),
       REDIS_PASSWORD: parseEnvVar.string('REDIS_PASSWORD'),

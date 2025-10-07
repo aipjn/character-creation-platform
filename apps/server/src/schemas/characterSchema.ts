@@ -1,4 +1,4 @@
-import { StyleType, GenerationStatus } from '@prisma/client';
+import { STYLE_TYPES, StyleType, GENERATION_STATUSES, GenerationStatus } from '../../../../shared/types/enums';
 
 export interface CharacterValidationResult {
   isValid: boolean;
@@ -13,6 +13,7 @@ export interface CreateCharacterInput {
   tags?: string[];
   isPublic?: boolean;
   metadata?: any;
+  imageUrl?: string;
 }
 
 export interface UpdateCharacterInput {
@@ -22,7 +23,7 @@ export interface UpdateCharacterInput {
   tags?: string[];
   isPublic?: boolean;
   metadata?: any;
-  s3Url?: string;
+  imageUrl?: string;
   thumbnailUrl?: string;
   generationStatus?: GenerationStatus;
 }
@@ -154,7 +155,7 @@ export class CharacterSchema {
     const errors: string[] = [];
     
     if (styleType !== undefined) {
-      const validTypes = Object.values(StyleType);
+      const validTypes = STYLE_TYPES;
       if (!validTypes.includes(styleType)) {
         errors.push(`Style type must be one of: ${validTypes.join(', ')}`);
       }
@@ -173,7 +174,7 @@ export class CharacterSchema {
     const errors: string[] = [];
     
     if (status !== undefined) {
-      const validStatuses = Object.values(GenerationStatus);
+      const validStatuses = GENERATION_STATUSES;
       if (!validStatuses.includes(status)) {
         errors.push(`Generation status must be one of: ${validStatuses.join(', ')}`);
       }
@@ -241,7 +242,7 @@ export class CharacterSchema {
   }
   
   /**
-   * Validates URL fields (s3Url, thumbnailUrl)
+   * Validates optional URL fields
    */
   static validateUrl(url: string | undefined, fieldName: string): CharacterValidationResult {
     const errors: string[] = [];
@@ -352,6 +353,9 @@ export class CharacterSchema {
     const isPublicValidation = this.validateBoolean(input.isPublic, 'isPublic');
     allErrors.push(...isPublicValidation.errors);
     
+    const imageUrlValidation = this.validateUrl(input.imageUrl, 'Image URL');
+    allErrors.push(...imageUrlValidation.errors);
+    
     const metadataValidation = this.validateMetadata(input.metadata);
     allErrors.push(...metadataValidation.errors);
     
@@ -388,8 +392,8 @@ export class CharacterSchema {
     const isPublicValidation = this.validateBoolean(input.isPublic, 'isPublic');
     allErrors.push(...isPublicValidation.errors);
     
-    const s3UrlValidation = this.validateUrl(input.s3Url, 'S3 URL');
-    allErrors.push(...s3UrlValidation.errors);
+    const imageUrlValidation = this.validateUrl(input.imageUrl, 'Image URL');
+    allErrors.push(...imageUrlValidation.errors);
     
     const thumbnailValidation = this.validateUrl(input.thumbnailUrl, 'Thumbnail URL');
     allErrors.push(...thumbnailValidation.errors);
@@ -420,7 +424,8 @@ export class CharacterSchema {
       styleType: input.styleType,
       tags: input.tags?.map(tag => tag.trim()).filter(tag => tag.length > 0),
       isPublic: input.isPublic,
-      metadata: input.metadata
+      metadata: input.metadata,
+      imageUrl: input.imageUrl?.trim()
     };
   }
   
@@ -445,8 +450,8 @@ export class CharacterSchema {
     if (input.isPublic !== undefined) {
       sanitized.isPublic = input.isPublic;
     }
-    if (input.s3Url !== undefined) {
-      sanitized.s3Url = input.s3Url.trim();
+    if (input.imageUrl !== undefined) {
+      sanitized.imageUrl = input.imageUrl.trim();
     }
     if (input.thumbnailUrl !== undefined) {
       sanitized.thumbnailUrl = input.thumbnailUrl.trim();

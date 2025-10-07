@@ -1,4 +1,5 @@
-import { PrismaClient, SubscriptionTier, StyleType, GenerationStatus } from '@prisma/client';
+import { PrismaClient, SubscriptionTier } from '@prisma/client';
+import { STYLE_TYPE, GENERATION_STATUS } from '../shared/types/enums';
 
 const prisma = new PrismaClient();
 
@@ -11,35 +12,35 @@ async function main() {
       name: 'Fantasy Warrior',
       description: 'A brave warrior in fantasy armor',
       prompt: 'A heroic warrior wearing gleaming armor, holding a sword, standing in a mystical forest',
-      styleType: StyleType.FANTASY,
+      styleType: STYLE_TYPE.FANTASY,
       tags: ['warrior', 'armor', 'sword', 'fantasy', 'hero'],
     },
     {
       name: 'Cyberpunk Hacker',
       description: 'A futuristic hacker in neon-lit city',
       prompt: 'A tech-savvy character with cybernetic enhancements, neon lights, futuristic cityscape background',
-      styleType: StyleType.CYBERPUNK,
+      styleType: STYLE_TYPE.CYBERPUNK,
       tags: ['cyberpunk', 'hacker', 'neon', 'futuristic', 'technology'],
     },
     {
       name: 'Anime Protagonist',
       description: 'A classic anime-style main character',
       prompt: 'An energetic character with spiky hair, determined expression, anime art style',
-      styleType: StyleType.ANIME,
+      styleType: STYLE_TYPE.ANIME,
       tags: ['anime', 'protagonist', 'energetic', 'determined'],
     },
     {
       name: 'Cartoon Mascot',
       description: 'A friendly cartoon character',
       prompt: 'A cheerful, friendly character with big eyes and a bright smile, cartoon style',
-      styleType: StyleType.CARTOON,
+      styleType: STYLE_TYPE.CARTOON,
       tags: ['cartoon', 'mascot', 'friendly', 'cheerful'],
     },
     {
       name: 'Realistic Portrait',
       description: 'A photorealistic character portrait',
       prompt: 'A professional headshot of a person with natural lighting and realistic details',
-      styleType: StyleType.REALISTIC,
+      styleType: STYLE_TYPE.REALISTIC,
       tags: ['realistic', 'portrait', 'professional', 'natural'],
     },
   ];
@@ -74,10 +75,10 @@ async function main() {
       userId: demoUser.id,
       name: 'Sir Galahad',
       prompt: 'A noble knight in shining armor with a holy sword',
-      styleType: StyleType.FANTASY,
+      styleType: STYLE_TYPE.FANTASY,
       tags: ['knight', 'armor', 'sword', 'noble'],
-      generationStatus: GenerationStatus.COMPLETED,
-      s3Url: 'https://example.com/sample-knight.jpg',
+      generationStatus: GENERATION_STATUS.COMPLETED,
+      imageUrl: 'https://example.com/sample-knight.jpg',
       thumbnailUrl: 'https://example.com/sample-knight-thumb.jpg',
       isPublic: true,
     },
@@ -85,10 +86,10 @@ async function main() {
       userId: demoUser.id,
       name: 'Neo-Tokyo Runner',
       prompt: 'A street racer in a neon-lit cyberpunk city',
-      styleType: StyleType.CYBERPUNK,
+      styleType: STYLE_TYPE.CYBERPUNK,
       tags: ['racer', 'neon', 'city', 'cyberpunk'],
-      generationStatus: GenerationStatus.COMPLETED,
-      s3Url: 'https://example.com/sample-racer.jpg',
+      generationStatus: GENERATION_STATUS.COMPLETED,
+      imageUrl: 'https://example.com/sample-racer.jpg',
       thumbnailUrl: 'https://example.com/sample-racer-thumb.jpg',
       isPublic: true,
     },
@@ -111,7 +112,7 @@ async function main() {
       data: {
         userId: demoUser.id,
         characterId: character.id,
-        status: GenerationStatus.COMPLETED,
+        status: GENERATION_STATUS.COMPLETED,
         batchSize: 1,
         prompt: character.prompt,
         styleType: character.styleType,
