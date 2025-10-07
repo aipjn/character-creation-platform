@@ -4,10 +4,38 @@
  */
 
 import dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as pathModule from 'path';
 import { ServerConfig } from '../types/api';
 
 // Load environment variables from .env file
 dotenv.config();
+
+const configureTlsCertificates = (): void => {
+  const caPath = process.env.SUPABASE_CA_PATH;
+  if (!caPath) {
+    return;
+  }
+
+  const resolvedPath = pathModule.resolve(process.cwd(), caPath);
+
+  try {
+    if (!fs.existsSync(resolvedPath)) {
+      console.warn(`Supabase CA certificate not found at ${resolvedPath}`);
+      return;
+    }
+
+    if (!process.env.NODE_EXTRA_CA_CERTS) {
+      process.env.NODE_EXTRA_CA_CERTS = resolvedPath;
+    }
+
+    process.env.PGSSLROOTCERT = resolvedPath;
+  } catch (error) {
+    console.warn('Failed to configure Supabase CA certificate:', error);
+  }
+};
+
+configureTlsCertificates();
 
 // Environment validation
 export interface EnvConfig {
@@ -23,6 +51,7 @@ export interface EnvConfig {
   DATABASE_QUERY_TIMEOUT: number;
   DATABASE_IDLE_TIMEOUT: number;
   DATABASE_MAX_RETRIES: number;
+  SUPABASE_CA_PATH?: string;
   
   // Security Configuration
   JWT_SECRET: string;
@@ -143,6 +172,7 @@ export const loadEnvConfig = (): EnvConfig => {
       DATABASE_QUERY_TIMEOUT: parseEnvVar.number('DATABASE_QUERY_TIMEOUT', 30000),
       DATABASE_IDLE_TIMEOUT: parseEnvVar.number('DATABASE_IDLE_TIMEOUT', 30000),
       DATABASE_MAX_RETRIES: parseEnvVar.number('DATABASE_MAX_RETRIES', 3),
+      SUPABASE_CA_PATH: parseEnvVar.string('SUPABASE_CA_PATH'),
       
       // Security Configuration
       JWT_SECRET: parseEnvVar.string('JWT_SECRET', 'default-jwt-secret-change-in-production'),

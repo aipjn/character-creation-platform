@@ -1,5 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { Pool, PoolClient } from 'pg';
+import * as fs from 'fs';
+import * as path from 'path';
+import { ConnectionOptions } from 'tls';
 
 interface DatabaseConfig {
   url: string;
@@ -16,6 +19,7 @@ class DatabaseConnection {
   private pgPool: Pool | null = null;
   private config: DatabaseConfig;
   private isConnected = false;
+  private sslConfig: (ConnectionOptions & { rejectUnauthorized?: boolean }) | undefined;
 
   private constructor(config: DatabaseConfig) {
     this.config = {
@@ -26,6 +30,7 @@ class DatabaseConnection {
       retryDelayMs: 5000,
       ...config,
     };
+    this.sslConfig = this.resolveSslConfiguration();
   }
 
   public static getInstance(config?: DatabaseConfig): DatabaseConnection {
@@ -72,6 +77,7 @@ class DatabaseConnection {
         idleTimeoutMillis: this.config.idleTimeoutMs,
         connectionTimeoutMillis: this.config.connectionTimeoutMs,
         application_name: 'character-creator-api',
+        ssl: this.sslConfig,
       });
 
       // Handle pool errors
@@ -103,6 +109,24 @@ class DatabaseConnection {
    */
   public getPostgreSQLPool(): Pool {
     return this.initializePostgreSQLPool();
+  }
+
+
+  private resolveSslConfiguration(): (ConnectionOptions & { rejectUnauthorized?: boolean }) | undefined {
+    const caPath = process.env.SUPABASE_CA_PATH;
+    if (!caPath) {
+      return undefined;
+    }
+
+    const resolvedPath = path.resolve(process.cwd(), caPath);
+
+    try {
+      const ca = fs.readFileSync(resolvedPath);
+      return { ca: ca.toString(), rejectUnauthorized: true, servername: new URL(this.config.url).hostname };
+    } catch (error) {
+      console.warn('Unable to load Supabase CA certificate, falling back to insecure SSL configuration.', error);
+      return { rejectUnauthorized: false };
+    }
   }
 
   /**
